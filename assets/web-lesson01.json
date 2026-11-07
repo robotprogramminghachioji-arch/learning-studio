@@ -1,0 +1,30 @@
+[
+  {
+    "id": "web-html-l1-lesson01",
+    "course": "web",
+    "level": 1,
+    "order": 10,
+    "title": "第1回 はじめてのWebページを作ろう！",
+    "goal": "HTMLが何かを説明できる。見出しと文章のタグを入力し、ブラウザで結果を確認できる。",
+    "explanation": "【HTMLって何？】\nHTMLは、Webページの「内容や構造」を作るための言語です。文字・見出し・画像などに役割をつけます。ブラウザ（Chromeなど）がHTMLを読み取り、ページを表示します。\n\n【タグのしくみ】\n<h1> は大きな見出し、<p> は文章です。開始タグと終了タグで内容を囲みます。\n\n【ページの構造】\n<head> にはページの設定、<body> には画面に表示する内容を書きます。",
+    "practice": "① 左のHTMLコードを実行して、見出しと文章が表示されることを確認する。\n② <h1>の中を好きな見出しに変える。\n③ 最初の<p>の中を好きな文章に変える。\n④ <p>をもう1つ追加する。\n⑤ 「ミッションをチェックする」で3項目の達成状況を確認する。",
+    "question": "大きな見出しを表すHTMLタグはどれですか？",
+    "options": [
+      "<h1>",
+      "<p>",
+      "<head>",
+      "<title>"
+    ],
+    "correct": 0,
+    "answerExplanation": "<h1>は大きな見出しを表すタグです。文章には<p>を使います。",
+    "hint": "授業PDFの「タグのしくみ」を確認しましょう。",
+    "imageUrl": "",
+    "imageCaption": "",
+    "videoUrl": "",
+    "pdfUrl": "assets/pdfs/html_lesson01.pdf",
+    "starterHtml": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>はじめてのページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>HTMLを勉強中です。</p>\n</body>\n</html>",
+    "starterCss": "",
+    "starterJs": "",
+    "published": false
+  }
+]
