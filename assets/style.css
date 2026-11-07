@@ -39,3 +39,11 @@ textarea.web-editor[hidden]{display:none!important}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.web-workspace-grid{grid-template-columns:minmax(0,1fr)}#webPreview{height:290px}textarea.web-editor{min-height:280px}}
 @media(max-width:600px){.grid,.two{grid-template-columns:1fr}header{padding:14px}.panel{padding:16px}.level-grid{gap:4px}.level-grid button{font-size:11px;padding:9px 0}.web-workspace{padding:10px}.pdf-frame{min-height:400px}}
+
+/* Student-specific course permissions in the teacher console */
+.course-access-fieldset{border:1px solid #d8e2f0;border-radius:12px;margin:15px 0;padding:12px}
+.course-access-fieldset legend{font-weight:700;padding:0 7px}
+.course-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.course-choice{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #e2e7f1;border-radius:9px;margin:0;font-weight:500}
+.course-choice input{width:auto;flex:0 0 auto}
+@media(max-width:600px){.course-choice-grid{grid-template-columns:1fr}}
