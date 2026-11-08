@@ -53,15 +53,7 @@ const IMAGE_HTML = `<!DOCTYPE html>
 </html>`;
 
 const PAGES=[
-  {title:'今日の目標と完成見本',intro:'見本を見ながら、今日どんなWebページを作るか考えよう。',editorHint:'HTMLタブに書くと、プレビューにWebページが現れます。まずは見本を見て、作りたいページを考えましょう。',sample:'',tasks:[
-    q('今日の目標に入っているものは？',['ゲームをインストールする','HTMLで自己紹介ページを作る','ブラウザを作り直す'],1,'ページを作ることが今回の目標です。'),
-    q('HTMLを書いて表示するために必要な組み合わせは？',['エディターとブラウザ','カメラと電卓','プリンターとマウスだけ'],0,'エディターで書き、ブラウザで表示を確認します。'),
-    q('完成見本にある大きな「こんにちは！」は何の役割？',['見出し','画像','リンク'],0,'見出しはページの内容を表す言葉です。'),
-    c('PDFの完成見本で、見出しと文章をそれぞれ見つけた'),
-    c('自己紹介ページで紹介したいものを3つ考えた'),
-    t('どんな自己紹介ページを作りたい？','好きなものや紹介したいテーマを2行ほど書こう。'),
-    t('今日、できるようになりたいことは？','具体的な操作を1つ書こう。')
-  ]},
+  {title:'教材の使い方とHTMLの基礎',mode:'introduction',intro:'まずは教材の進め方を読み、HTMLでどのような学習をするか確認しましょう。',editorHint:'実習のページでは、HTMLエディターにコードを入力して表示を確認します。今は教材と画面の使い方を確認しましょう。',sample:'',tasks:[]},
   {title:'Webページが見えるしくみ・ブラウザ',intro:'「書く → HTMLファイル → ブラウザで見る」という流れと、ブラウザの操作を覚えよう。',editorHint:'HTMLタブでコードを修正すると、右側のプレビューに新しい表示が出ます。',sample:'',tasks:[
     q('HTMLコードを書く道具は？',['ブラウザ','エディター','アドレスバー'],1,'エディターはコードを書いたり直したりする道具です。'),
     q('HTMLをWebページとして表示する道具は？',['ブラウザ','フォルダー','メモ帳だけ'],0,'ChromeやEdgeなどがブラウザです。'),
@@ -242,7 +234,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
       </aside>
       <div class="hl1-practice" tabindex="0" role="region" aria-label="このページのミッション・確認問題">
         <div class="hl1-page-info"><span class="pill" id="hl1Current">PDF 1ページ</span><h3 id="hl1SectionHeading">このページの学習・進捗チェック</h3><p class="hl1-theme">学習テーマ：<span id="hl1Title"></span></p><p id="hl1Intro"></p></div>
-        <div class="hl1-exercises"><h3>✏️ このページのミッション・確認問題</h3><div id="hl1Questions"></div><div class="hl1-check-actions"><button type="button" id="hl1Check">✅ 回答とコードをチェック</button><button type="button" class="ghost" id="hl1Save">☁ このページを保存</button></div><div id="hl1Result" aria-live="polite"></div><p id="hl1GateStatus" class="hl1-gate-status" aria-live="polite"></p><div class="hl1-progress"><div id="hl1ProgressBar"></div></div><p class="muted small" id="hl1Progress"></p><p class="muted small" id="hl1AnswerStatus"></p><p class="muted small" id="hl1SaveStatus" aria-live="polite"></p></div>
+        <div class="hl1-exercises"><h3 id="hl1ExercisesHeading">✏️ このページのミッション・確認問題</h3><div id="hl1Questions"></div><div class="hl1-check-actions"><button type="button" id="hl1Check">✅ 回答とコードをチェック</button><button type="button" class="ghost" id="hl1Save">☁ このページを保存</button></div><div id="hl1Result" aria-live="polite"></div><p id="hl1GateStatus" class="hl1-gate-status" aria-live="polite"></p><div class="hl1-progress"><div id="hl1ProgressBar"></div></div><p class="muted small" id="hl1Progress"></p><p class="muted small" id="hl1AnswerStatus"></p><p class="muted small" id="hl1SaveStatus" aria-live="polite"></p></div>
       </div>
     </div>
     <button type="button" id="hl1EditorOpen" class="hl1-editor-open" aria-controls="hl1EditorWindow" aria-expanded="true">💻 エディターを表示</button>
@@ -282,7 +274,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     }
     $('#hl1PageSelect').value=String(page);
     $('#hl1Prev').disabled=page===1;
-    $('#hl1Next').disabled=page===maxPage||!allowed(page+1);
+    $('#hl1Next').disabled=page===maxPage||(PAGES[page-1].mode!=='introduction'&&!allowed(page+1));
     $('#hl1PageList').innerHTML=PAGES.map((data,index)=>{
       const n=index+1,status=pageStatus(state,n);
       return `<button type="button" data-page="${n}" class="ghost hl1-page-item" data-state="${status}" ${!allowed(n)?'disabled':''} ${n===page?'aria-current="page"':''}><strong>${n}. ${escapeHtml(data.title)}</strong><span>${status}</span></button>`;
@@ -291,6 +283,11 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   }
   function updateProgress(){
     const record=getRecord(),tasks=PAGES[page-1].tasks;
+    if(PAGES[page-1].mode==='introduction'){
+      $('#hl1ProgressBar').style.width=state.completed.p01?'100%':'0%';
+      $('#hl1GateStatus').textContent='内容を確認したら「次へ」で2ページ目へ進みましょう。このページに確認問題はありません。';
+      updateOverview();return;
+    }
     const required=tasks.filter((task,i)=>requiredTask(task,page,i));
     const done=tasks.filter((task,i)=>requiredTask(task,page,i)&&record.results[i]===true).length;
     const answered=tasks.filter((task,i)=>{
@@ -336,6 +333,10 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   }
   function renderTasks(){
     const entry=getRecord(),data=PAGES[page-1];
+    if(data.mode==='introduction'){
+      $('#hl1Questions').innerHTML=`<div class="hl1-introduction"><section><h4>この教材の進め方</h4><p>「知る → 読む → 作る → 試す」の順に学習します。</p><p>左の説明や図を読みながら、分からない言葉は先生に聞こう。</p></section><section><h4>HTMLのはじめの一歩</h4><p>HTMLは、Webページの内容や構造を表すために使う言葉です。この教材で、コードが画面に表示されるしくみを学びます。</p></section><section><h4>画面の使い方</h4><ul><li>上の「前のページ」「次へ」で教材を進めます。</li><li>教材の「表示倍率」で文字や図を読みやすい大きさにします。</li><li>実習では「エディターを開く」からコードを入力し、表示を確認します。</li></ul></section></div>`;
+      updateProgress();return;
+    }
     $('#hl1Questions').innerHTML=data.tasks.map((task,i)=>{
       const saved=entry.answers[i]??'',status=entry.results[i],required=requiredTask(task,page,i);
       const badge=status===true?'<span class="hl1-good">✓ 達成</span>':status===false?'<span class="hl1-notyet">再確認</span>':'';
@@ -363,10 +364,14 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     $('#hl1Image').src=`assets/pdf-pages/html-level1-${pad(page)}.webp`;
     $('#hl1Image').alt=`HTML入門レベル1 PDFの${page}ページ目：${data.title}`;
     $('#hl1Current').textContent=`PDF ${page}ページ`;$('#hl1Title').textContent=data.title;
-    $('#hl1SectionHeading').textContent=page===11?'最終確認テスト':'このページの学習・進捗チェック';
+    const introduction=data.mode==='introduction';
+    $('.hl1-practice').setAttribute('aria-label',introduction?'教材の使い方とHTMLの基礎':'このページのミッション・確認問題');
+    $('#hl1SectionHeading').textContent=introduction?'はじめに：この教材の使い方':page===11?'最終確認テスト':'このページの学習・進捗チェック';
+    $('#hl1ExercisesHeading').textContent=introduction?'教材と画面の使い方':'✏️ このページのミッション・確認問題';
+    for(const selector of ['.hl1-progress','#hl1Progress','#hl1AnswerStatus','#hl1Result'])$(selector).hidden=introduction;
     $('#hl1Intro').textContent=data.intro;$('#hl1EditorHint').textContent=data.editorHint;
     $('#hl1SampleBox').hidden=!data.sample;
-    $('#hl1Check').textContent=page===11?'テストを提出する':'✅ 回答とコードをチェック';
+    $('#hl1Check').textContent=introduction?'使い方を確認して次へ':page===11?'テストを提出する':'✅ 回答とコードをチェック';
     $('#hl1Result').textContent='';$('#hl1Result').className='';
     renderTasks();
   }
@@ -383,13 +388,18 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     mobileShow('pdf');$('.hl1-grid').scrollIntoView({block:'start',behavior:'instant'});
   }
   $('#hl1Scale').addEventListener('change',()=>{$('#hl1Image').style.width=`${$('#hl1Scale').value}%`;});
+  function advanceIntroduction(){
+    getRecord().introRead=true;state.completed.p01=true;
+    changePage(2);
+  }
   $('#hl1Prev').addEventListener('click',()=>changePage(page-1));
-  $('#hl1Next').addEventListener('click',()=>changePage(page+1));
+  $('#hl1Next').addEventListener('click',()=>PAGES[page-1].mode==='introduction'?advanceIntroduction():changePage(page+1));
   $('#hl1PageSelect').addEventListener('change',ev=>changePage(ev.target.value));
   $('#hl1PageList').addEventListener('click',ev=>{const button=ev.target.closest('[data-page]');if(button)changePage(button.dataset.page);});
   $('#hl1Check').addEventListener('click',async()=>{
     if(!allowed(page))return;
     const record=getRecord(),data=PAGES[page-1];
+    if(data.mode==='introduction'){advanceIntroduction();return;}
     if(page===11&&!data.tasks.every((task,i)=>task.type==='choice'?
       record.answers[i]!==undefined&&record.answers[i]!==''&&Number.isInteger(Number(record.answers[i]))&&Number(record.answers[i])>=0&&Number(record.answers[i])<task.options.length:
       String(record.answers[i]||'').trim().length>=2)){

@@ -210,3 +210,10 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
  #hl1OverallProgress{display:block;height:6px}
  #hl1OverallStatus{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 }
+
+/* Page 1 is a reading introduction, without a quiz or mission counters. */
+.hl1-introduction section{padding:12px;margin:0 0 12px;border:1px solid #dce5f3;border-radius:10px;background:#f8fbff}
+.hl1-introduction h4{font-size:1rem;margin:0 0 8px;color:#234776}
+.hl1-introduction p,.hl1-introduction li{font-size:14px;line-height:1.8}
+.hl1-introduction p{margin:6px 0}.hl1-introduction ul{margin:6px 0;padding-left:22px}
+.hl1-progress[hidden],#hl1Progress[hidden],#hl1AnswerStatus[hidden],#hl1Result[hidden]{display:none!important}
