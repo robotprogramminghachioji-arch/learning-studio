@@ -749,5 +749,8 @@ test('A phone with cached unversioned modules updates the lesson after deploymen
  const appUrl=await page.locator('script[type=module]').getAttribute('src');assert.match(appUrl,/app\.js\?v=[a-f0-9]{12}$/);
  const resources=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));
  assert.ok(resources.some(url=>/html-level1-companion\.js\?v=[a-f0-9]{12}/.test(url)));
+ await page.locator('.hl1-grid').evaluate(el=>el.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.locator('.hl1-practice').evaluate(el=>{const card=el.querySelector('.hl1-introduction section');el.scrollTop+=card.getBoundingClientRect().top-el.getBoundingClientRect().top;});
+ await settleLayout(page);
  await page.screenshot({path:'/tmp/learning-studio-mobile-cache-update.png'});
 });
