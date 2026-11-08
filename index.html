@@ -11,6 +11,17 @@
   <header><div class="brand">💻 <strong>Learning Studio</strong><small>プログラミング学びの教室</small></div><div id="userbar"></div></header>
   <main id="app"><section class="panel">読み込み中…</section></main>
   <footer>© プログラミング学びの教室 Learning Studio</footer>
+  <button type="button" id="lsToTop" class="ls-top-floating" aria-label="ページ上部へ戻る" hidden>↑ 上へ</button>
+  <div id="lsBackDialog" class="ls-back-overlay" role="alertdialog" aria-modal="true" aria-labelledby="lsBackTitle" aria-describedby="lsBackDescription" hidden>
+    <div class="ls-back-card">
+      <h2 id="lsBackTitle">前の画面に戻りますか？</h2>
+      <p id="lsBackDescription">保存していない内容がある場合はご注意ください。</p>
+      <div class="ls-back-actions">
+        <button type="button" id="lsBackStay">この画面にとどまる</button>
+        <button type="button" id="lsBackProceed">前の画面へ戻る</button>
+      </div>
+    </div>
+  </div>
   <script src="config.js"></script>
   <script type="module" src="assets/app.js"></script>
 </body>
