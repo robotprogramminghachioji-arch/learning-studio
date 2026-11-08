@@ -161,3 +161,31 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
  .hl1-window-content button{min-height:44px}
  .hl1-window-content{padding:10px 10px 44px}
 }
+
+/* Twelve-page workbook overview and sequential learning gates. */
+.hl1-navigation-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px}
+.hl1-navigation-summary>strong{font-size:15px}
+#hl1Number{font-size:24px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
+.hl1-overall{display:flex;align-items:center;gap:10px;width:100%}
+#hl1OverallProgress{flex:1;min-width:40px;height:10px;accent-color:#16835d}
+#hl1OverallStatus{font-size:12px;white-space:nowrap}
+.hl1-directory,.hl1-teacher-panel{border:1px solid #c8d7ec;border-radius:10px;padding:10px;margin:10px 0}
+.hl1-directory>summary,.hl1-teacher-panel>summary{cursor:pointer;font-weight:700;min-height:28px}
+.hl1-page-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.hl1-page-item{display:flex;flex-direction:column;gap:5px;align-items:start;text-align:left;border:2px solid transparent;min-width:0;font-size:13px;overflow-wrap:anywhere}
+.hl1-page-item[aria-current=page]{border-color:#2a62b6}
+.hl1-page-item[data-state=学習済み]{background:#e5f6ed;color:#146444}
+.hl1-page-item[data-state=ロック中]{background:#e8ebef;color:#566075;opacity:1}
+.hl1-page-item>span{font-size:12px;font-weight:700}
+.hl1-theme{font-weight:650;color:#365c8e;margin:8px 0!important}
+.hl1-task-kind{display:inline-block;padding:2px 5px;border-radius:4px;background:#deecff;color:#234776;font-size:12px;white-space:nowrap}
+.hl1-task[data-required=false] .hl1-task-kind{background:#eee8fa;color:#63517d}
+.hl1-gate-status{padding:9px;border-left:3px solid #2a62b6;background:#eef5ff;font-size:13px;line-height:1.6}
+#hl1Image{margin-inline:auto}
+#lsFinalSubmission[hidden],#lsFinalSubmissionLock[hidden]{display:none!important}
+@media(max-width:900px){.hl1-page-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){
+ .hl1-page-navigation{grid-template-areas:'summary summary' 'select select' 'prev next'}
+ .hl1-navigation-summary{grid-area:summary}
+ .hl1-navigation-summary>strong{font-size:13px}
+}
