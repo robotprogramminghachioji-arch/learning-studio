@@ -276,3 +276,81 @@ test('Loading a sample requires confirmation and preserves CSS/JavaScript and mi
  assert.equal(await page.locator('#webCssEditor').inputValue(),'h1 { color: blue; }');assert.equal(await page.locator('#webJsEditor').inputValue(),'document.body.dataset.sample="kept";');
  await minimize(page);assert.equal(await page.locator('textarea[data-index="7"]').inputValue(),'titleはタブ、h1はページ内');
 });
+
+async function assertPageControlsUsable(page){
+ const nav=await page.locator('.hl1-page-navigation').boundingBox();
+ const viewport=page.viewportSize();
+ assert.ok(nav.y>=0&&nav.y+nav.height<=viewport.height,'Page controls remain within the visible viewport');
+ assert.ok(nav.x>=0&&nav.x+nav.width<=viewport.width,'Page controls fit the screen width');
+ for(const selector of ['#hl1Prev','#hl1PageSelect','#hl1Next']){
+  const control=page.locator(selector),rect=await control.boundingBox();
+  assert.ok(rect.y>=nav.y&&rect.y+rect.height<=nav.y+nav.height,'Control stays inside the navigation bar');
+  assert.ok(await control.evaluate(el=>{
+   const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+  }),'Control is not obscured by the PDF or floating editor');
+ }
+ return nav;
+}
+async function settleLayout(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
+
+test('Page controls stay usable during document, PDF and mission scrolling, including the lesson footer',async t=>{
+ const page=await openStudio(t);await minimize(page);
+ await page.evaluate(()=>window.scrollTo(0,document.querySelector('.hl1-grid').getBoundingClientRect().top+scrollY-150));
+ await settleLayout(page);
+ let nav=await assertPageControlsUsable(page);
+ for(const selector of ['.hl1-reader','.hl1-practice']){
+  assert.ok((await page.locator(selector).boundingBox()).y>=nav.y+nav.height,'Learning panes start below the reserved navigation band');
+ }
+ const pdf=page.locator('#hl1PageViewport');
+ await pdf.hover();await page.mouse.wheel(0,400);await page.waitForFunction(()=>document.querySelector('#hl1PageViewport').scrollTop>0);
+ await assertPageControlsUsable(page);
+ const practice=page.locator('.hl1-practice');
+ await practice.hover();await page.mouse.wheel(0,500);await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);
+ await assertPageControlsUsable(page);
+ await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);
+ nav=await assertPageControlsUsable(page);await closeTo(nav.y,0);
+ await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'1');
+ await page.screenshot({path:'/tmp/learning-studio-navigation-desktop.png'});
+});
+
+test('Mobile page controls remain visible in portrait, landscape and larger text without editor overlap',async t=>{
+ const page=await openStudio(t,{mobile:true});await minimize(page);
+ for(const size of [{width:375,height:812},{width:320,height:568},{width:844,height:390}]){
+  await page.setViewportSize(size);await settleLayout(page);
+  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);
+  await assertPageControlsUsable(page);
+  await selectPage(page,2);assert.equal(await page.locator('#hl1Current').textContent(),'PDF 2ページ');
+  await editor(page);await page.locator('[data-window-reset]').click();await settleLayout(page);
+  const nav=await assertPageControlsUsable(page),win=await page.locator('#hl1EditorWindow').boundingBox();
+  assert.ok(win.y>=nav.y+nav.height,'The editor stays below the navigation bar');
+  await minimize(page);
+ }
+ await page.setViewportSize({width:375,height:812});
+ await page.evaluate(()=>document.documentElement.style.fontSize='24px');await settleLayout(page);
+ const nav=await assertPageControlsUsable(page);
+ await editor(page);await settleLayout(page);
+ assert.ok((await page.locator('#hl1EditorWindow').boundingBox()).y>=nav.y+nav.height);
+ await page.screenshot({path:'/tmp/learning-studio-navigation-mobile.png'});
+});
+
+test('Editor drag/resize cannot cover navigation and reserved space is removed when leaving the lesson',async t=>{
+ const page=await openStudio(t);
+ const bar=await page.locator('[data-window-move]').boundingBox();
+ await page.mouse.move(bar.x+80,bar.y+20);await page.mouse.down();await page.mouse.move(100,0,{steps:5});await page.mouse.up();
+ let nav=await assertPageControlsUsable(page),win=await page.locator('#hl1EditorWindow').boundingBox();
+ assert.ok(win.y>=nav.y+nav.height,'Dragging cannot move the editor over page controls');
+ const handle=await page.locator('[data-window-resize]').boundingBox();
+ await page.mouse.move(handle.x+20,handle.y+18);await page.mouse.down();await page.mouse.move(1430,990,{steps:5});await page.mouse.up();
+ await assertPageControlsUsable(page);
+ await selectPage(page,4);assert.equal(await page.locator('#hl1Current').textContent(),'PDF 4ページ');
+ await minimize(page);await page.locator('#home').click();await settleLayout(page);
+ assert.equal(await page.locator('.hl1-page-navigation').count(),0);
+ assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).paddingTop),'0px');
+ assert.equal(await page.locator('.course').count(),7);
+ // Re-entering must register a single bar and re-establish the reserved band.
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
+ await page.waitForSelector('#webHtmlEditor');await settleLayout(page);
+ assert.equal(await page.locator('.hl1-page-navigation').count(),1);
+ await assertPageControlsUsable(page);
+});
