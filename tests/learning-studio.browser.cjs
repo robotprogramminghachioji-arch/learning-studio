@@ -51,10 +51,12 @@ export async function deleteDoc(ref){delete store.data[ref.collection][ref.id];}
 `;
 const auth=`
 export const getAuth=()=>({});
-export const onAuthStateChanged=(auth,callback)=>queueMicrotask(()=>callback({uid:window.__firebase.role==='teacher'?'teacher-uid':'student-uid'}));
-export const signInWithEmailAndPassword=async()=>{};
+let authCallback=null;
+const currentUser=()=>({uid:window.__firebase.role==='teacher'?'teacher-uid':'student-uid'});
+export const onAuthStateChanged=(auth,callback)=>{authCallback=callback;queueMicrotask(()=>callback(currentUser()));};
+export const signInWithEmailAndPassword=async()=>{window.__firebase.authEvents.push('login');await authCallback(currentUser());};
 export const createUserWithEmailAndPassword=async()=>({user:{uid:'test-created'}});
-export const signOut=async()=>{};
+export const signOut=async()=>{window.__firebase.authEvents.push('logout');await authCallback(null);};
 export const updatePassword=async()=>{};
 `;
 before(async()=>{
@@ -92,8 +94,9 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
    students:{student01:{displayName:'テスト生徒',enabled:true,activeUid:'student-uid'}},
    student_access:{'student-uid':{studentId:'student01',enabled:true,allowedCourses:['scratch','python','minecraft','roblox','robot','ai','web']}},
    lessons:Object.fromEntries([...lessons,...web].map(l=>[l.id,{...l,published:true}])),
+   login_lookup:{'6d35659c221c9e952e486089108f09bf3ce16989fac1a166a9deea99c4cd629d':{email:'student01@example.test'}},
    submissions:{},answer_keys:{},web_workspaces:remoteCode?{[workspaceId]:remoteCode}:{}};
-  window.__firebase={role,data,writes:[],holdReads,releaseReads:[],failReads,failWrites};
+  window.__firebase={role,data,writes:[],authEvents:[],holdReads,releaseReads:[],failReads,failWrites};
   localStorage.setItem('ls_student_id','student01');
   if(localProgress&&!sessionStorage.getItem('fixture-local')){
    localStorage.setItem('ls-html-level1-pages:student-uid:web-html-l1-lesson01',JSON.stringify(localProgress));
@@ -320,7 +323,8 @@ test('Page controls stay usable during document, PDF and mission scrolling, incl
  await assertPageControlsUsable(page);
  await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);
- nav=await assertPageControlsUsable(page);await closeTo(nav.y,0);
+ nav=await assertPageControlsUsable(page);await closeTo((await page.locator('#lsHeader').boundingBox()).y,0);
+ assert.ok(nav.y>=(await page.locator('.ls-header-top').boundingBox()).height);
  await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'1');
  await page.screenshot({path:'/tmp/learning-studio-navigation-desktop.png'});
 });
@@ -357,7 +361,7 @@ test('Editor drag/resize cannot cover navigation and reserved space is removed w
  await selectPage(page,4);assert.equal(await page.locator('#hl1Current').textContent(),'PDF 4ページ');
  await minimize(page);await page.locator('#home').click();await settleLayout(page);
  assert.equal(await page.locator('.hl1-page-navigation').count(),0);
- assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).paddingTop),'0px');
+ await closeTo(await page.locator('body').evaluate(el=>parseFloat(getComputedStyle(el).paddingTop)),(await page.locator('#lsHeader').boundingBox()).height);
  assert.equal(await page.locator('.course').count(),7);
  // Re-entering must register a single bar and re-establish the reserved band.
  await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
@@ -540,4 +544,105 @@ test('Fully checked legacy learning and final-test history retain all twelve com
  await selectPage(page,11);
  assert.equal(await page.locator('textarea[data-index="8"]').inputValue(),'以前に書いたheadとbodyの説明');
  assert.ok((await page.locator('#hl1AnswerStatus').textContent()).includes('テスト提出済み'));
+});
+
+async function assertUnifiedHeader(page,{workbook=true,compact=true}={}){
+ const header=page.locator('#lsHeader'),top=page.locator('.ls-header-top');
+ const rect=await header.boundingBox(),topRect=await top.boundingBox(),viewport=page.viewportSize();
+ assert.equal(await header.evaluate(el=>getComputedStyle(el).position),'fixed');
+ await closeTo(rect.y,0);
+ assert.ok(rect.x>=0&&rect.x+rect.width<=viewport.width);
+ assert.equal(await header.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(36, 59, 112)');
+ assert.ok(await page.locator('.ls-brand-title').isVisible());assert.ok(await page.locator('.brand small').isVisible());
+ assert.ok((await page.locator('.brand small').textContent()).includes('プログラミング学びの教室'));
+ const logout=await page.locator('#logout').boundingBox();
+ assert.ok(logout.width>=72&&logout.height>=44,'Logout is a distinct 44px touch target');
+ assert.ok(logout.y>=topRect.y&&logout.y+logout.height<=topRect.y+topRect.height);
+ assert.ok(logout.x+logout.width<=viewport.width);
+ if(workbook){
+  assert.ok(await page.locator('#lsHeader .hl1-page-navigation').isVisible());
+  assert.equal(await page.locator('#lsLessonNavigation').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(54, 92, 150)');
+  const nav=await assertPageControlsUsable(page);
+  await closeTo(nav.y,topRect.y+topRect.height);
+  assert.ok(await page.locator('#hl1OverallProgress').isVisible());
+  assert.ok(await page.locator('#hl1Number').isVisible());
+  if(compact)assert.ok(rect.height<=(viewport.width<=600?124:116),`Compact header height: ${rect.height}px`);
+ }else{
+  assert.equal(await page.locator('.hl1-page-navigation').count(),0);
+  assert.ok(await page.locator('#lsLessonNavigation').isHidden());
+  if(compact)assert.ok(rect.height<=60);
+ }
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Header causes no horizontal page scrolling');
+ await closeTo(await page.locator('body').evaluate(el=>parseFloat(getComputedStyle(el).paddingTop)),rect.height);
+ return rect;
+}
+
+test('Desktop unified header keeps account and workbook controls in two compact bands while scrolling',async t=>{
+ const page=await openStudio(t,{completedThrough:2});await minimize(page);await selectPage(page,3);await settleLayout(page);
+ const header=await assertUnifiedHeader(page);
+ assert.equal(await page.locator('.ls-session-name').textContent(),'テスト生徒');
+ for(const selector of ['.hl1-reader','.hl1-practice'])assert.ok((await page.locator(selector).boundingBox()).y>=header.y+header.height);
+ await page.locator('#hl1PageViewport').hover();await page.mouse.wheel(0,450);
+ await page.waitForFunction(()=>document.querySelector('#hl1PageViewport').scrollTop>0);await assertUnifiedHeader(page);
+ await page.locator('.hl1-practice').hover();await page.mouse.wheel(0,400);
+ await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);await assertUnifiedHeader(page);
+ await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);await assertUnifiedHeader(page);
+ await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 2ページ');
+ assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith('02.webp'));
+ await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 3ページ');
+ await page.locator('#hl1Scale').selectOption('75');await settleLayout(page);
+ await page.screenshot({path:'/tmp/learning-studio-unified-header-desktop.png'});
+ await editor(page);await page.locator('[data-window-move]').focus();
+ for(let i=0;i<20;i++)await page.keyboard.press('Shift+ArrowUp');
+ const win=await page.locator('#hl1EditorWindow').boundingBox();assert.ok(win.y>=header.y+header.height+7);
+ await assertUnifiedHeader(page);await page.screenshot({path:'/tmp/learning-studio-unified-header-editor.png'});
+});
+
+test('Mobile unified header fits narrow and landscape screens, long names and keyboard viewport changes',async t=>{
+ const page=await openStudio(t,{mobile:true,completedThrough:2});await minimize(page);
+ await page.locator('.ls-session-name').evaluate(el=>{el.textContent='とても長い名前のテスト生徒さん';el.title=el.textContent;});
+ for(const size of [{width:320,height:568},{width:375,height:812},{width:768,height:1024},{width:844,height:390}]){
+  await page.setViewportSize(size);await settleLayout(page);await assertUnifiedHeader(page);
+  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);await assertUnifiedHeader(page);
+  await selectPage(page,3);await editor(page);await page.locator('[data-window-reset]').click();
+  const rect=await assertUnifiedHeader(page),win=await page.locator('#hl1EditorWindow').boundingBox();
+  assert.ok(win.y>=rect.y+rect.height+7);await minimize(page);
+ }
+ // Emulate the reduced visible area when a phone keyboard is open.
+ await page.setViewportSize({width:375,height:360});await settleLayout(page);await editor(page);
+ const keyboardHeader=await assertUnifiedHeader(page),keyboardWindow=await page.locator('#hl1EditorWindow').boundingBox();
+ assert.ok(keyboardWindow.y>=keyboardHeader.y+keyboardHeader.height+7);
+ assert.ok(keyboardWindow.y+keyboardWindow.height<=360);
+ await minimize(page);await page.setViewportSize({width:375,height:812});
+ await page.locator('.ls-session-name').evaluate(el=>{el.textContent='テスト生徒';el.title=el.textContent;});
+ await selectPage(page,3);await settleLayout(page);
+ await page.screenshot({path:'/tmp/learning-studio-unified-header-mobile.png'});
+ await page.locator('[data-show=practice]').click();await page.locator('.hl1-grid').scrollIntoViewIfNeeded();
+ await assertUnifiedHeader(page);await page.screenshot({path:'/tmp/learning-studio-unified-header-mobile-practice.png'});
+});
+
+for(const role of ['student','teacher'])test(`Shared header survives logout/login and hides workbook controls on other screens (${role})`,async t=>{
+ const page=await openStudio(t,{role});await minimize(page);await assertUnifiedHeader(page);
+ if(role==='teacher')assert.equal(await page.locator('.ls-session-name').textContent(),'先生');
+ await page.locator('#logout').click();await page.waitForSelector('#login');await settleLayout(page);
+ assert.equal(await page.locator('.hl1-page-navigation').count(),0);
+ assert.ok(await page.locator('#lsLessonNavigation').isHidden());
+ assert.equal(await page.locator('#logout').count(),0);
+ await closeTo((await page.locator('#lsHeader').boundingBox()).y,0);
+ await page.locator('#login select[name=kind]').selectOption(role);
+ await page.locator('#login input[name=identifier]').fill(role==='student'?'student01':'teacher@example.test');
+ await page.locator('#login input[name=password]').fill('test-password-for-browser');
+ await page.locator('#login button').click();await page.waitForSelector('.course');await settleLayout(page);
+ assert.equal(await page.locator('.course').count(),7);await assertUnifiedHeader(page,{workbook:false});
+ assert.deepEqual(await page.evaluate(()=>window.__firebase.authEvents),['logout','login']);
+ if(role==='teacher'){
+  await page.locator('#manage').click();await page.locator('#tabStudents').click();await assertUnifiedHeader(page,{workbook:false});
+  await page.locator('#tabLessons').click();assert.ok((await page.locator('#teacherBody').textContent()).includes('教材'));
+  await page.locator('#home').click();
+ }
+ await page.locator('[data-course=python][data-level="1"]').click();await page.locator('.lesson-tile').first().click();
+ await assertUnifiedHeader(page,{workbook:false});
+ await page.locator('#home').click();await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
+ await page.waitForSelector('#webHtmlEditor');await settleLayout(page);await assertUnifiedHeader(page);
+ assert.equal(await page.locator('#lsHeader .hl1-page-navigation').count(),1);
 });

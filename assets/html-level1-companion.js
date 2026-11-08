@@ -231,7 +231,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     <details class="hl1-directory"><summary>ページ一覧（全12ページ）</summary><div id="hl1PageList" class="hl1-page-list"></div><p class="muted tiny">学習済み・学習中・未学習・ロック中を表示します。必須を完了してチェックすると次のページに進めます。</p></details>
     ${!isStudent?`<details class="hl1-teacher-panel"><summary>先生用：生徒の学習進度を調整</summary><p class="muted small">全ページをプレビューできます。生徒の回答・コードを残したまま、学習済み扱いの範囲を変更します。</p><label>生徒<select id="hl1TeacherStudent"><option value="">生徒を選択</option>${students.filter(s=>s.activeUid).map(s=>`<option value="${escapeHtml(s.id)}">${escapeHtml(s.id)}：${escapeHtml(s.displayName)}</option>`).join('')}</select></label><button type="button" id="hl1TeacherLoad" class="ghost">進度を読み込む</button><label>学習済み扱いの範囲<select id="hl1TeacherThrough">${Array.from({length:13},(_,n)=>`<option value="${n}">${n===0?'未完了（第1ページから）':`第1〜${n}ページ${n>=11?'（テスト提出済み扱い）':''}`}</option>`).join('')}</select></label><button type="button" id="hl1TeacherApply" disabled>進度調整を保存</button><p id="hl1TeacherStatus" aria-live="polite"></p></details>`:''}
     <div class="hl1-mobile-switch" role="group" aria-label="スマートフォン用表示切り替え"><button type="button" data-show="pdf" class="hl1-selected">📖 教材</button><button type="button" data-show="practice" class="ghost">💻 実習・問題</button></div>
-    <nav class="hl1-page-navigation" aria-label="HTML入門レベル1のページ送り"><div class="hl1-navigation-summary"><strong>HTML入門 レベル1｜全12ページ</strong><output id="hl1Number" aria-label="現在のページ" aria-live="polite">1 / 12</output><div class="hl1-overall"><progress id="hl1OverallProgress" max="12" value="0" aria-label="12ページ全体の学習進捗"></progress><span id="hl1OverallStatus"></span></div></div><button type="button" id="hl1Prev" class="ghost">← 前のページ</button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost">次へ →</button></nav>
+    <nav class="hl1-page-navigation" aria-label="HTML入門レベル1のページ送り"><div class="hl1-navigation-summary"><strong>HTML入門 レベル1｜全12ページ</strong><output id="hl1Number" aria-label="現在のページ" aria-live="polite">1 / 12</output></div><button type="button" id="hl1Prev" class="ghost" aria-label="前のページ"><span aria-hidden="true">←</span><span class="hl1-control-label"> 前のページ</span></button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost" aria-label="次のページ"><span class="hl1-control-label">次へ </span><span aria-hidden="true">→</span></button><div class="hl1-overall"><progress id="hl1OverallProgress" max="12" value="0" aria-label="12ページ全体の学習進捗"></progress><span id="hl1OverallStatus"></span></div></nav>
     <div class="hl1-grid">
       <aside class="hl1-reader" aria-label="教材のページ">
         <div class="hl1-reader-bar"><strong>📘 HTML入門 レベル1</strong><span class="pill">全12ページ</span></div>
@@ -257,11 +257,12 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
       <button type="button" class="hl1-window-resize" data-window-resize aria-label="エディターのサイズを変更（ドラッグまたは矢印キー）">↘</button>
     </section>`;
 
-  const $=selector=>container.querySelector(selector);
+  const navigation=container.querySelector('.hl1-page-navigation');
+  // Page controls now live in the shared header, while exercises remain in the lesson.
+  const $=selector=>container.querySelector(selector)||navigation.querySelector(selector);
   const setSaveStatus=text=>{$('#hl1SaveStatus').textContent=text;};
-  const navigation=$('.hl1-page-navigation');
-  mountPageNavigation({container,navigation});
-  const floatingEditor=mountFloatingEditor({container,windowEl:$('#hl1EditorWindow'),openButton:$('#hl1EditorOpen'),navigation});
+  const header=mountPageNavigation({container,navigation});
+  const floatingEditor=mountFloatingEditor({container,windowEl:$('#hl1EditorWindow'),openButton:$('#hl1EditorOpen'),header});
   const mobileShow=panel=>{
     container.classList.toggle('hl1-mobile-practice',panel==='practice');
     container.querySelectorAll('[data-show]').forEach(b=>{

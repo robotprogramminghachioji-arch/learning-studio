@@ -1,7 +1,15 @@
 :root{font-family:system-ui,-apple-system,'Noto Sans JP',sans-serif;color:#22314d;background:#f4f7fc}
-*{box-sizing:border-box}body{margin:0}
-header{background:#243b70;color:white;padding:14px max(18px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:9px}.brand small{font-size:11px;opacity:.8}
+*{box-sizing:border-box}body{margin:0;padding-top:var(--ls-header-height,56px)}
+html{scroll-padding-top:calc(var(--ls-header-bottom,56px) + 12px)}
+.ls-header{position:fixed;z-index:1000;top:0;left:0;right:0;background:#243B70;color:#fff;padding-top:env(safe-area-inset-top,0px);box-shadow:0 3px 12px #233c6d24}
+.ls-header-top{max-width:1600px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:12px;flex-shrink:0}.ls-brand-title{white-space:nowrap;font-size:16px}.brand small{font-size:12px;color:#e5edff}
+#userbar{min-width:0}#userbar .row{flex-wrap:nowrap;gap:12px}
+.ls-session-name{min-width:0;max-width:30ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+#logout{min-width:84px;min-height:44px;flex-shrink:0;padding:8px 12px;border:1px solid #d3e1ff;background:#f1f6ff;color:#173560;font-size:13px;font-weight:700}
+.ls-header button:focus-visible,.ls-header select:focus-visible{outline:3px solid #ffd16a;outline-offset:1px}
+.ls-lesson-navigation{background:#365C96;border-top:1px solid #ffffff24}
+.ls-lesson-navigation[hidden]{display:none!important}
 main{max-width:1100px;margin:25px auto;padding:0 16px;min-height:65vh}footer{text-align:center;color:#71809a;padding:25px}
 .panel{background:#fff;border:1px solid #e0e7f2;border-radius:16px;padding:22px;margin-bottom:17px;box-shadow:0 3px 12px #233c6d09}
 .auth{max-width:510px;margin:55px auto}h1{font-size:1.65rem;margin:0 0 12px}h2{font-size:1.25rem;margin:0 0 12px}h3{margin:5px 0 10px}
@@ -38,7 +46,7 @@ textarea.web-editor[hidden]{display:none!important}
 .web-help{margin-top:12px;padding:10px 12px;background:#f5f8fc;border-radius:8px}.web-help summary{cursor:pointer}.web-help p{line-height:1.8}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.web-workspace-grid{grid-template-columns:minmax(0,1fr)}#webPreview{height:290px}textarea.web-editor{min-height:280px}}
-@media(max-width:600px){.grid,.two{grid-template-columns:1fr}header{padding:14px}.panel{padding:16px}.level-grid{gap:4px}.level-grid button{font-size:11px;padding:9px 0}.web-workspace{padding:10px}.pdf-frame{min-height:400px}}
+@media(max-width:600px){.grid,.two{grid-template-columns:1fr}.panel{padding:16px}.level-grid{gap:4px}.level-grid button{font-size:11px;padding:9px 0}.web-workspace{padding:10px}.pdf-frame{min-height:400px}}
 
 /* Student-specific course permissions in the teacher console */
 .course-access-fieldset{border:1px solid #d8e2f0;border-radius:12px;margin:15px 0;padding:12px}
@@ -61,28 +69,25 @@ textarea.web-editor[hidden]{display:none!important}
 @media(max-width:600px){.ls-back-actions{flex-direction:column-reverse}.ls-back-actions button{width:100%}.ls-top-floating{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
 
 /* HTML Lv.1: synchronized 12-page PDF guide + in-app exercises */
-/* The page controls get their own viewport band, including on narrow screens. */
-html.hl1-navigation-active{scroll-padding-top:calc(var(--hl1-navigation-bottom,0px) + 12px)}
-html.hl1-navigation-active body{padding-top:var(--hl1-navigation-height,0px)}
 main:has(#htmlLevel1Studio){max-width:1600px}
 .hl1-outer{padding:18px}
 .hl1-heading h2{margin:0 0 8px}
 .hl1-heading p{margin:0 0 14px;line-height:1.7}
 .hl1-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:18px;align-items:start}
-.hl1-reader{min-width:0;position:sticky;top:calc(var(--hl1-navigation-bottom,0px) + 12px);border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;height:calc(100dvh - var(--hl1-navigation-bottom,0px) - 24px);display:flex;flex-direction:column}
+.hl1-reader{min-width:0;position:sticky;top:calc(var(--ls-header-bottom,56px) + 12px);border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;height:calc(100dvh - var(--ls-header-bottom,56px) - 24px);display:flex;flex-direction:column}
 .hl1-reader-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-#hl1Number{font-size:13px;color:#2a62b6;font-weight:750}
-/* Remains visible even after scrolling past the lesson panel. */
-.hl1-page-navigation{position:fixed;top:0;left:0;right:0;z-index:1000;max-width:1600px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin:0 auto;align-items:center;padding:calc(9px + env(safe-area-inset-top,0px)) max(9px,env(safe-area-inset-right,0px)) 9px max(9px,env(safe-area-inset-left,0px));background:#f8fbff;border:1px solid #d8e4f2;border-radius:12px;box-shadow:0 3px 12px #233c6d18}
-.hl1-page-navigation button{min-height:44px;padding:9px 12px;white-space:nowrap}
-.hl1-page-navigation select{padding:8px;min-height:44px;min-width:0}
+/* Workbook navigation participates in the fixed header's normal layout. */
+.hl1-page-navigation{max-width:1600px;margin:auto;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto minmax(110px,170px);align-items:center;gap:8px;padding:4px max(16px,env(safe-area-inset-right,0px)) 4px max(16px,env(safe-area-inset-left,0px));color:#fff}
+.hl1-page-navigation button{min-height:44px;padding:7px 10px;font-size:13px;white-space:nowrap;background:#edf3ff;color:#173560}
+.hl1-page-navigation button:disabled{opacity:1;background:#d5dfef;color:#5b6880}
+.hl1-page-navigation select{padding:7px 8px;min-height:40px;min-width:0;font-size:14px;color:#173560;border-color:#d5e3fb}
 .hl1-zoom-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .hl1-zoom-controls label{margin:0;font-size:14px}.hl1-zoom-controls select{width:auto;max-width:100%;min-height:44px}
 .hl1-page-viewport{overflow:auto;flex:1;min-height:0;background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
 #hl1Image{display:block;width:100%;max-width:none;height:auto;background:#fff}
 .hl1-pdf-actions{margin:9px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .hl1-reader .tiny{line-height:1.6;margin:7px 0 0}
-.hl1-practice{min-width:0;position:sticky;top:calc(var(--hl1-navigation-bottom,0px) + 12px);max-height:calc(100dvh - var(--hl1-navigation-bottom,0px) - 24px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.hl1-practice{min-width:0;position:sticky;top:calc(var(--ls-header-bottom,56px) + 12px);max-height:calc(100dvh - var(--ls-header-bottom,56px) - 24px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .hl1-page-info,.hl1-exercises,.hl1-editor-area{border:1px solid #dce5f3;border-radius:14px;padding:15px;margin-bottom:15px;background:#fff}
 .hl1-page-info{background:#eef5ff}
 .hl1-page-info h3{margin:11px 0 6px;font-size:1.15rem}
@@ -146,9 +151,6 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
  .hl1-mobile-practice .hl1-grid>.hl1-practice{display:block}
 }
 @media(max-width:500px){
- .hl1-page-navigation{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:'select select' 'prev next'}
- .hl1-page-navigation button{white-space:normal;overflow-wrap:anywhere;padding:9px 4px}
- .hl1-page-navigation select{grid-area:select}.hl1-page-navigation #hl1Prev{grid-area:prev}.hl1-page-navigation #hl1Next{grid-area:next}
  .hl1-page-info,.hl1-exercises,.hl1-editor-area{padding:12px}
  .hl1-reader{padding:9px}
  .hl1-task{padding:10px}
@@ -163,12 +165,15 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 }
 
 /* Twelve-page workbook overview and sequential learning gates. */
-.hl1-navigation-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px}
-.hl1-navigation-summary>strong{font-size:15px}
-#hl1Number{font-size:24px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
-.hl1-overall{display:flex;align-items:center;gap:10px;width:100%}
-#hl1OverallProgress{flex:1;min-width:40px;height:10px;accent-color:#16835d}
-#hl1OverallStatus{font-size:12px;white-space:nowrap}
+.hl1-navigation-summary{display:flex;align-items:center;gap:12px;min-width:0}
+.hl1-navigation-summary>strong{font-size:12px;white-space:nowrap}
+#hl1Number{font-size:20px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;color:#fff}
+.hl1-overall{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0}
+#hl1OverallProgress{display:block;width:100%;height:8px;appearance:none;border:0;border-radius:6px;background:#203f6c;overflow:hidden}
+#hl1OverallProgress::-webkit-progress-bar{background:#203f6c;border-radius:6px}
+#hl1OverallProgress::-webkit-progress-value{background:#9fe8d2;border-radius:6px}
+#hl1OverallProgress::-moz-progress-bar{background:#9fe8d2;border-radius:6px}
+#hl1OverallStatus{font-size:11px;white-space:nowrap;color:#fff}
 .hl1-directory,.hl1-teacher-panel{border:1px solid #c8d7ec;border-radius:10px;padding:10px;margin:10px 0}
 .hl1-directory>summary,.hl1-teacher-panel>summary{cursor:pointer;font-weight:700;min-height:28px}
 .hl1-page-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
@@ -184,8 +189,24 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 #hl1Image{margin-inline:auto}
 #lsFinalSubmission[hidden],#lsFinalSubmissionLock[hidden]{display:none!important}
 @media(max-width:900px){.hl1-page-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:500px){
- .hl1-page-navigation{grid-template-areas:'summary summary' 'select select' 'prev next'}
- .hl1-navigation-summary{grid-area:summary}
- .hl1-navigation-summary>strong{font-size:13px}
+
+@media(max-width:1100px){
+ .hl1-navigation-summary>strong{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .hl1-navigation-summary{display:contents}
+ .hl1-page-navigation{grid-template-columns:auto minmax(0,1fr) auto auto minmax(100px,140px)}
+ #hl1Prev{grid-column:1;grid-row:1}#hl1PageSelect{grid-column:2;grid-row:1}#hl1Next{grid-column:3;grid-row:1}#hl1Number{grid-column:4;grid-row:1}
+ .hl1-overall{grid-column:5;grid-row:1}
+}
+@media(max-width:600px){
+ .ls-header-top{gap:8px;min-height:56px;padding:6px max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px))}
+ .brand{flex-direction:column;align-items:flex-start;gap:2px}.ls-brand-title{font-size:14px}.brand small{font-size:10px}
+ #userbar{flex:1}#userbar .row{justify-content:flex-end;gap:8px}
+ .ls-session-name{font-size:12px;max-width:12ch}#logout{min-width:72px;padding:8px;font-size:12px}
+ .hl1-page-navigation{position:relative;grid-template-columns:44px minmax(0,1fr) 44px auto;gap:6px;padding:4px max(8px,env(safe-area-inset-right,0px)) 12px max(8px,env(safe-area-inset-left,0px))}
+ .hl1-control-label{display:none}.hl1-page-navigation button{width:44px;font-size:18px;padding:5px}
+ .hl1-page-navigation select{font-size:13px;min-height:44px;padding:7px 4px}
+ #hl1Number{font-size:18px}
+ .hl1-overall{position:absolute;grid-column:1/-1;grid-row:auto;left:8px;right:8px;bottom:3px;display:block}
+ #hl1OverallProgress{display:block;height:6px}
+ #hl1OverallStatus{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 }
