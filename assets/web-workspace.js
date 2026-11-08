@@ -30,10 +30,10 @@ function getFlags(html) {
     paragraphs.length>=2 && paragraphs[1].textContent.trim().length>0
   ];
 }
-export async function mountWebWorkspace({container, lesson, db, student, uid}) {
+export async function mountWebWorkspace({container, lesson, db, student, uid, linkedWorkbook=false}) {
   if(!container) return;
   const isStudent=!!student;
-  const introMissions=lesson.id==='web-html-l1-lesson01';
+  const introMissions=lesson.id==='web-html-l1-lesson01' && !linkedWorkbook;
   const draftKey=`learning-studio-web-draft:${uid}:${lesson.id}`;
   const starter={html:lesson.starterHtml||FALLBACK_HTML, css:lesson.starterCss||'', js:lesson.starterJs||''};
   let code={...starter};
@@ -110,13 +110,12 @@ export async function mountWebWorkspace({container, lesson, db, student, uid}) {
     const count=updateMissions();
     try{
       state.textContent='Firebaseに保存中…';
-      await setDoc(workspaceRef,{
-        ownerUid:uid,studentId:student.id,lessonId:lesson.id,
-        html:code.html,css:code.css,js:code.js,missions:count,
-        completed:count===3,updatedAt:serverTimestamp()
-      });
+      const payload={ownerUid:uid,studentId:student.id,lessonId:lesson.id,
+        html:code.html,css:code.css,js:code.js,updatedAt:serverTimestamp()};
+      if(!linkedWorkbook){payload.missions=count;payload.completed=count===3;}
+      await setDoc(workspaceRef,payload,{merge:true});
       state.textContent='Firebaseに保存済み';
-      if(showFeedback)feedback.textContent=`学習内容を保存しました（達成 ${count} / 3）。`;
+      if(showFeedback)feedback.textContent=linkedWorkbook?'HTMLコードをFirebaseに保存しました。ページごとの回答は教材ミッションの「このページを保存」で保存できます。':`学習内容を保存しました（達成 ${count} / 3）。`;
     }catch(error){
       state.textContent='Firebase保存エラー';
       if(showFeedback || active)feedback.textContent=`保存できませんでした：${error.code||error.message}`;
@@ -171,4 +170,15 @@ export async function mountWebWorkspace({container, lesson, db, student, uid}) {
     if(!container.isConnected){active=false;clearTimeout(saveTimer);observer.disconnect();}
   });
   observer.observe(document.getElementById('app'),{childList:true,subtree:true});
+  return {
+    getCode: () => collectCode(),
+    setHtml: nextHtml => {
+      if (!active || !container.isConnected) return false;
+      if (!confirm('このページの見本コードを読み込むと、現在のHTMLコードを上書きします。よろしいですか？\n必要な作品は先に「学習内容を保存」または「HTMLを保存」してください。')) return false;
+      fields.html.value=String(nextHtml);
+      preview();updateMissions();cache();
+      fields.html.focus();
+      return true;
+    }
+  };
 }
