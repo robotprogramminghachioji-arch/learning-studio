@@ -136,7 +136,7 @@ test('PDF uses the large left column, zooms to 125/150/200%, and all 12 pages ma
   const expectedTitle=(await page.locator(`#hl1PageSelect option[value="${n}"]`).textContent()).replace(/^\d+\. /,'').replace(/［.*］$/,'');
   assert.equal(await page.locator('#hl1Title').textContent(),expectedTitle);
   assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith(`${String(n).padStart(2,'0')}.webp`));
-  assert.ok(await page.locator('.hl1-task').count()>=7);
+  assert.ok(n===1?await page.locator('.hl1-task').count()===0:await page.locator('.hl1-task').count()>=7);
   await page.waitForFunction(()=>{const image=document.querySelector('#hl1Image');return image.complete&&image.naturalWidth>0;});
  }
  assert.ok(await page.locator('#hl1Next').isDisabled());await selectPage(page,1);
@@ -145,28 +145,23 @@ test('PDF uses the large left column, zooms to 125/150/200%, and all 12 pages ma
 });
 
 test('Page navigation, minimization and reload preserve HTML/CSS/JS and per-page answers',async t=>{
- const page=await openStudio(t,{completedThrough:1});
+ const page=await openStudio(t,{completedThrough:2});
  const code={html:'<h1>自分の作品</h1><p>保持するコード</p>',css:'h1 { color: rgb(255, 0, 0); }',js:'document.body.dataset.ran="yes";'};
  for(const [lang,text] of Object.entries(code)){
-  await page.locator(`[data-lang=${lang}]`).click();
-  await page.locator({html:'#webHtmlEditor',css:'#webCssEditor',js:'#webJsEditor'}[lang]).fill(text);
+  await page.locator(`[data-lang=${lang}]`).click();await page.locator({html:'#webHtmlEditor',css:'#webCssEditor',js:'#webJsEditor'}[lang]).fill(text);
  }
- await minimize(page);
- await page.locator('input[name=hl1q0][value="1"]').check();
- await page.locator('input[type=checkbox][data-index="3"]').check();
- await page.locator('textarea[data-index="5"]').fill('好きな動物を紹介します');
- await selectPage(page,2);await page.locator('textarea[data-index="6"]').fill('エディターで書き、ブラウザで表示');
- await selectPage(page,1);
- assert.ok(await page.locator('input[name=hl1q0][value="1"]').isChecked());
- assert.ok(await page.locator('input[type=checkbox][data-index="3"]').isChecked());
- assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'好きな動物を紹介します');
- await editor(page);
- for(const [lang,text] of Object.entries(code))assert.equal(await page.locator({html:'#webHtmlEditor',css:'#webCssEditor',js:'#webJsEditor'}[lang]).inputValue(),text);
- await page.reload();
- await page.waitForSelector('[data-course=web]');await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
- await page.waitForSelector('#webHtmlEditor');assert.equal(await page.locator('#webHtmlEditor').inputValue(),code.html);
- await minimize(page);assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'好きな動物を紹介します');
- await selectPage(page,2);assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'エディターで書き、ブラウザで表示');
+ await minimize(page);await selectPage(page,2);
+ await page.locator('input[name=hl1q0][value="1"]').check();await page.locator('input[type=checkbox][data-index="5"]').check();
+ await page.locator('textarea[data-index="6"]').fill('エディターとブラウザの役割の回答');
+ await selectPage(page,3);await page.locator('textarea[data-index="7"]').fill('クラウド保存とダウンロードの違い');await selectPage(page,2);
+ assert.ok(await page.locator('input[name=hl1q0][value="1"]').isChecked());assert.ok(await page.locator('input[type=checkbox][data-index="5"]').isChecked());
+ assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'エディターとブラウザの役割の回答');
+ await editor(page);for(const [lang,text] of Object.entries(code))assert.equal(await page.locator({html:'#webHtmlEditor',css:'#webCssEditor',js:'#webJsEditor'}[lang]).inputValue(),text);
+ await page.reload();await page.waitForSelector('[data-course=web]');await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
+ await page.waitForSelector('#webHtmlEditor');assert.equal(await page.locator('#webHtmlEditor').inputValue(),code.html);await minimize(page);
+ assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'エディターとブラウザの役割の回答');
+ await selectPage(page,3);assert.equal(await page.locator('textarea[data-index="7"]').inputValue(),'クラウド保存とダウンロードの違い');
 });
 
 test('Floating editor supports pointer and keyboard move/resize, minimize/restore and viewport changes',async t=>{
@@ -189,7 +184,7 @@ test('Floating editor supports pointer and keyboard move/resize, minimize/restor
 });
 
 test('Preview executes HTML/CSS/JavaScript in sandbox and saves code and page history with merge',async t=>{
- const page=await openStudio(t);
+ const page=await openStudio(t,{completedThrough:1});
  await page.locator('#webHtmlEditor').fill('<h1>プレビュー作品</h1>');
  await page.locator('[data-lang=css]').click();await page.locator('#webCssEditor').fill('h1 { color: rgb(255, 0, 0); }');
  await page.locator('[data-lang=js]').click();await page.locator('#webJsEditor').fill('document.querySelector("h1").dataset.ran="yes";');
@@ -199,22 +194,22 @@ test('Preview executes HTML/CSS/JavaScript in sandbox and saves code and page hi
  await preview.locator('h1[data-ran=yes]').waitFor();assert.equal(await preview.locator('h1').evaluate(el=>getComputedStyle(el).color),'rgb(255, 0, 0)');
  assert.equal(await page.locator('#webPreview').getAttribute('sandbox'),'allow-scripts');
  await page.locator('#webSave').click();await page.waitForFunction(()=>document.querySelector('#webSaveState').textContent==='Firebaseに保存済み');
- await minimize(page);await page.locator('textarea[data-index="5"]').fill('保存する回答');await page.locator('#hl1Save').click();
+ await minimize(page);await selectPage(page,2);await page.locator('textarea[data-index="6"]').fill('保存する回答');await page.locator('#hl1Save').click();
  await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('保存しました'));
  const state=await page.evaluate(id=>({doc:window.__firebase.data.web_workspaces[id],writes:window.__firebase.writes}),workspaceId);
  assert.equal(state.doc.html,'<h1>プレビュー作品</h1>');assert.ok(state.doc.css.includes('255'));assert.ok(state.doc.js.includes('dataset.ran'));
- assert.equal(state.doc.pageWork.p01.answers[5],'保存する回答');assert.equal(state.doc.ownerUid,'student-uid');
+ assert.equal(state.doc.pageWork.p02.answers[6],'保存する回答');assert.equal(state.doc.ownerUid,'student-uid');
  assert.ok(state.writes.every(w=>w.options.merge&&w.ref.collection==='web_workspaces'&&w.ref.id===workspaceId));
 });
 
 test('Mobile keeps PDF scrolling inside its panel and supports touch move/resize and panel switching',async t=>{
- const page=await openStudio(t,{completedThrough:1,mobile:true});await minimize(page);
+ const page=await openStudio(t,{completedThrough:2,mobile:true});await minimize(page);
  await page.locator('#hl1Scale').selectOption('200');
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
  assert.ok(await page.locator('#hl1PageViewport').evaluate(el=>el.scrollWidth>el.clientWidth));
- await page.locator('[data-show=practice]').click();await page.locator('textarea[data-index="5"]').fill('スマートフォンの回答');
- await selectPage(page,2);assert.ok(await page.locator('.hl1-reader').isVisible());
- await selectPage(page,1);await page.locator('[data-show=practice]').click();assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'スマートフォンの回答');
+ await selectPage(page,2);await page.locator('[data-show=practice]').click();await page.locator('textarea[data-index="6"]').fill('スマートフォンの回答');
+ await selectPage(page,3);assert.ok(await page.locator('.hl1-reader').isVisible());
+ await selectPage(page,2);await page.locator('[data-show=practice]').click();assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'スマートフォンの回答');
  await editor(page);
  const win=page.locator('#hl1EditorWindow'),start=await win.boundingBox(),bar=await page.locator('[data-window-move]').boundingBox();
  const cdp=await page.context().newCDPSession(page);
@@ -231,26 +226,26 @@ test('Mobile keeps PDF scrolling inside its panel and supports touch move/resize
 });
 
 test('Delayed or unavailable Firebase does not block code checks or overwrite local edits',async t=>{
- const page=await openStudio(t,{holdReads:true,localProgress:{_learning:{currentPage:1,completed:{p01:true,p02:true}}},remoteCode:{html:'<h1>クラウドの古い作品</h1>',pageWork:{p02:{answers:{6:'クラウド回答'},results:{}}}}});
- await page.locator('#webHtmlEditor').fill('<h1>入力中の新しい作品</h1>');await minimize(page);
- await page.locator('textarea[data-index="5"]').fill('読み込み中の新しい回答');
+ const page=await openStudio(t,{holdReads:true,localProgress:{_learning:{currentPage:1,completed:{p01:true,p02:true}}},remoteCode:{html:'<h1>クラウドの古い作品</h1>',pageWork:{p02:{answers:{7:'クラウド回答'},results:{}}}}});
+ await page.locator('#webHtmlEditor').fill('<h1>入力中の新しい作品</h1>');await minimize(page);await selectPage(page,2);
+ await page.locator('textarea[data-index="6"]').fill('読み込み中の新しい回答');
  await selectPage(page,3);await page.locator('#hl1Check').click();
  assert.ok((await page.locator('#hl1Status5').textContent()).includes('達成'));
  await page.evaluate(()=>{window.__firebase.holdReads=false;window.__firebase.releaseReads.forEach(resolve=>resolve());});
  await page.waitForFunction(()=>document.querySelector('#hl1Title').textContent.includes('エディター'));
- await selectPage(page,1);assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'読み込み中の新しい回答');
+ await selectPage(page,2);assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'読み込み中の新しい回答');
  assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>入力中の新しい作品</h1>');
- await selectPage(page,2);assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'クラウド回答');
+ await selectPage(page,2);assert.equal(await page.locator('textarea[data-index="7"]').inputValue(),'クラウド回答');
 });
 
 test('Failed Firebase saves retain local code and answers with visible errors',async t=>{
- const page=await openStudio(t,{failWrites:true});
+ const page=await openStudio(t,{failWrites:true,completedThrough:1});
  await page.locator('#webHtmlEditor').fill('<h1>オフライン作品</h1>');await page.locator('#webSave').click();
  await page.waitForFunction(()=>document.querySelector('#webSaveState').textContent==='Firebase保存エラー');
- await minimize(page);await page.locator('textarea[data-index="5"]').fill('オフライン回答');await page.locator('#hl1Save').click();
+ await minimize(page);await selectPage(page,2);await page.locator('textarea[data-index="6"]').fill('オフライン回答');await page.locator('#hl1Save').click();
  await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('端末には保存済み'));
  const local=await page.evaluate(id=>({code:JSON.parse(localStorage.getItem('learning-studio-web-draft:student-uid:'+id)),pages:JSON.parse(localStorage.getItem('ls-html-level1-pages:student-uid:'+id))}),lessonId);
- assert.equal(local.code.html,'<h1>オフライン作品</h1>');assert.equal(local.pages.p01.answers[5],'オフライン回答');
+ assert.equal(local.code.html,'<h1>オフライン作品</h1>');assert.equal(local.pages.p02.answers[6],'オフライン回答');
 });
 
 test('Teacher still has seven courses, student/lesson management and standalone web lessons',async t=>{
@@ -267,9 +262,9 @@ test('Teacher still has seven courses, student/lesson management and standalone 
 
 
 test('Cloud-only answers restore on the initial page and a local code draft wins over stale cloud code',async t=>{
- const page=await openStudio(t,{remoteCode:{html:'<h1>クラウドの作品</h1>',pageWork:{p01:{answers:{5:'クラウドから復元'},results:{5:true}}}}});
+ const page=await openStudio(t,{completedThrough:1,remoteCode:{html:'<h1>クラウドの作品</h1>',pageWork:{p02:{answers:{6:'クラウドから復元'},results:{6:true}}}}});
  await page.waitForFunction(()=>document.querySelector('#webHtmlEditor').value.includes('クラウドの作品'));
- await minimize(page);assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'クラウドから復元');
+ await minimize(page);await selectPage(page,2);assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'クラウドから復元');
  await editor(page);await page.locator('#webHtmlEditor').fill('<h1>端末に残る最新の作品</h1>');
  // Reload before the autosave, leaving the fixture's cloud HTML stale.
  await page.reload();await page.waitForSelector('[data-course=web]');await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
@@ -308,7 +303,7 @@ async function assertPageControlsUsable(page){
 async function settleLayout(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
 
 test('Page controls stay usable during document, PDF and mission scrolling, including the lesson footer',async t=>{
- const page=await openStudio(t,{completedThrough:1});await minimize(page);
+ const page=await openStudio(t,{completedThrough:2});await minimize(page);await selectPage(page,2);
  await page.evaluate(()=>window.scrollTo(0,document.querySelector('.hl1-grid').getBoundingClientRect().top+scrollY-150));
  await settleLayout(page);
  let nav=await assertPageControlsUsable(page);
@@ -321,11 +316,11 @@ test('Page controls stay usable during document, PDF and mission scrolling, incl
  const practice=page.locator('.hl1-practice');
  await practice.hover();await page.mouse.wheel(0,500);await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);
  await assertPageControlsUsable(page);
- await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'3');
  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);
  nav=await assertPageControlsUsable(page);await closeTo((await page.locator('#lsHeader').boundingBox()).y,0);
  assert.ok(nav.y>=(await page.locator('.ls-header-top').boundingBox()).height);
- await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'1');
+ await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
  await page.screenshot({path:'/tmp/learning-studio-navigation-desktop.png'});
 });
 
@@ -370,10 +365,11 @@ test('Editor drag/resize cannot cover navigation and reserved space is removed w
  await assertPageControlsUsable(page);
 });
 
-const correctByPage={1:{0:1,1:0,2:0},2:{0:1,1:0,2:1,3:1,4:0},3:{0:0,1:1,2:0,3:1,4:0},4:{0:0,1:1,2:0,3:0,4:1},5:{0:1,1:0,2:0,3:0,4:0},6:{0:1,1:1,2:0,3:1,4:1,5:0},7:{5:1},8:{5:1},9:{0:0,1:0,2:1,3:0,4:0},10:{3:0,4:0,5:0}};
+const correctByPage={2:{0:1,1:0,2:1,3:1,4:0},3:{0:0,1:1,2:0,3:1,4:0},4:{0:0,1:1,2:0,3:0,4:1},5:{0:1,1:0,2:0,3:0,4:0},6:{0:1,1:1,2:0,3:1,4:1,5:0},7:{5:1},8:{5:1},9:{0:0,1:0,2:1,3:0,4:0},10:{3:0,4:0,5:0}};
 const completeHtml='<!DOCTYPE html><html lang="ja"><head><title>自分の作品</title></head><body><h1>私の作品</h1><p>自分で書いた紹介文です</p><h2>好きなもの</h2><ul><li>ねこ</li><li>ゲーム</li><li>音楽</li></ul><a href="https://example.com/">リンク</a><img src="images/cat.svg" alt="ねこ"></body></html>';
 async function completeRequired(page,n,mobile=false){
  if(mobile)await page.locator('[data-show=practice]').click();
+ if(n===1){await page.locator('#hl1Check').click();assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');return;}
  for(const [i,value] of Object.entries(correctByPage[n]||{}))await page.locator(`input[name=hl1q${i}][value="${value}"]`).check();
  for(const checkbox of await page.locator('.hl1-task[data-required=true] input[type=checkbox]').all())await checkbox.check();
  await page.locator('#hl1Check').click();
@@ -386,10 +382,10 @@ test('Fresh learners start at page 1, see 12-page progress and cannot bypass pag
  assert.ok((await page.locator('.hl1-navigation-summary').textContent()).includes('HTML入門 レベル1｜全12ページ'));
  assert.equal(await page.locator('#hl1OverallProgress').getAttribute('max'),'12');
  assert.equal(await page.locator('#hl1OverallProgress').getAttribute('value'),'0');
- assert.ok(await page.locator('#hl1Next').isDisabled());
+ assert.ok(await page.locator('#hl1Next').isEnabled());
  assert.ok(await page.locator('#hl1PageSelect option[value="11"]').isDisabled());
  assert.ok(await page.locator('#hl1PageSelect option[value="12"]').isDisabled());
- assert.equal(await page.locator('#hl1SectionHeading').textContent(),'このページの学習・進捗チェック');
+ assert.equal(await page.locator('#hl1SectionHeading').textContent(),'はじめに：この教材の使い方');
  assert.ok(await page.locator('#lsFinalSubmission').isHidden());
  // Even a direct selection change (rather than clicking the disabled option) is rejected.
  await page.evaluate(()=>{const select=document.querySelector('#hl1PageSelect');select.options[10].disabled=false;select.value='11';select.dispatchEvent(new Event('change'));});
@@ -410,6 +406,7 @@ for(const mobile of [false,true])test(`Sequential required learning unlocks the 
   assert.equal(await page.locator('#hl1PageSelect').inputValue(),String(n));
   await completeRequired(page,n,mobile);
   assert.equal(await page.locator('#hl1OverallProgress').getAttribute('value'),String(n));
+  if(n===1)continue;
   assert.ok(await page.locator('#hl1PageSelect option[value="12"]').isDisabled());
   if(n<10){
    assert.ok(await page.locator('#hl1PageSelect option[value="11"]').isDisabled());
@@ -457,17 +454,18 @@ test('Legacy answers and checked progress migrate without deletion and restore p
  }};
  const page=await openStudio(t,{remoteCode,localProgress:{p01:{answers:{5:'端末に残っていた回答'},results:{5:true}}}});await minimize(page);
  assert.ok(await page.locator('#hl1Next').isEnabled());
- assert.equal(await page.locator('textarea[data-index="5"]').inputValue(),'端末に残っていた回答');
- assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'昔の回答');
+ assert.equal(await page.locator('.hl1-task').count(),0);
  await page.locator('#hl1Next').click();await page.locator('#hl1Save').click();
  await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('保存しました'));
  const saved=await page.evaluate(id=>window.__firebase.data.web_workspaces[id],workspaceId);
+ assert.equal(saved.pageWork.p01.answers[5],'端末に残っていた回答');assert.equal(saved.pageWork.p01.answers[6],'昔の回答');
  assert.equal(saved.legacyField,'keep');assert.equal(saved.pageWork.customRecord.note,'keep');
  assert.equal(saved.pageWork.p08.answers[7],'先に答えてあった内容');assert.equal(saved.pageWork._learning.currentPage,2);
  const relogin=await openStudio(t,{remoteCode:saved});
  await relogin.waitForFunction(()=>document.querySelector('#hl1PageSelect').value==='2');await minimize(relogin);
  assert.ok(await relogin.locator('#hl1PageSelect option[value="3"]').isDisabled());
- await selectPage(relogin,1);assert.equal(await relogin.locator('textarea[data-index="5"]').inputValue(),'端末に残っていた回答');
+ await selectPage(relogin,1);assert.equal(await relogin.locator('.hl1-task').count(),0);
+ assert.ok(!(await relogin.locator('#hl1Questions').textContent()).includes('端末に残っていた回答'));
 });
 
 test('Teacher previews all pages and adjusts a student without deleting answers; stale caches obey the adjustment',async t=>{
@@ -497,7 +495,7 @@ test('Teacher previews all pages and adjusts a student without deleting answers;
  await teacher.waitForFunction(()=>document.querySelector('#hl1TeacherStatus').textContent.includes('保存しました'));
  const reset=await teacher.evaluate(id=>window.__firebase.data.web_workspaces[id],workspaceId);
  const again=await openStudio(t,{remoteCode:reset});await minimize(again);
- assert.equal(await again.locator('#hl1PageSelect').inputValue(),'1');assert.ok(await again.locator('#hl1Next').isDisabled());
+ assert.equal(await again.locator('#hl1PageSelect').inputValue(),'1');assert.ok(await again.locator('#hl1PageSelect option[value="2"]').isDisabled());
  assert.equal(reset.pageWork.p11.answers[8],'過去のテスト回答');
 });
 
@@ -513,8 +511,8 @@ for(const mobile of [false,true])test(`PDF zoom supports 50/75/90% centered and 
 });
 
 test('Unloaded Firebase history is not overwritten by autosave and read failure keeps local work',async t=>{
- const page=await openStudio(t,{holdReads:true,remoteCode:{pageWork:{_learning:{version:1,currentPage:3,completed:{p01:true,p02:true}},p08:{answers:{7:'クラウドの既存回答'},results:{}}}}});await minimize(page);
- await page.locator('textarea[data-index="5"]').fill('履歴読み込み中の新しい回答');
+ const page=await openStudio(t,{holdReads:true,localProgress:{_learning:{currentPage:2,completed:{p01:true}}},remoteCode:{pageWork:{_learning:{version:1,currentPage:3,completed:{p01:true,p02:true}},p08:{answers:{7:'クラウドの既存回答'},results:{}}}}});await minimize(page);
+ await page.locator('textarea[data-index="6"]').fill('履歴読み込み中の新しい回答');
  await page.locator('#hl1Save').click();
  assert.equal(await page.evaluate(()=>window.__firebase.writes.length),0);
  assert.ok((await page.locator('#hl1SaveStatus').textContent()).includes('端末の回答を保持'));
@@ -522,11 +520,11 @@ test('Unloaded Firebase history is not overwritten by autosave and read failure 
  await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('復元'));
  await page.locator('#hl1Save').click();await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('保存しました'));
  const saved=await page.evaluate(id=>window.__firebase.data.web_workspaces[id],workspaceId);
- assert.equal(saved.pageWork.p08.answers[7],'クラウドの既存回答');assert.equal(saved.pageWork.p01.answers[5],'履歴読み込み中の新しい回答');
+ assert.equal(saved.pageWork.p08.answers[7],'クラウドの既存回答');assert.equal(saved.pageWork.p02.answers[6],'履歴読み込み中の新しい回答');
  assert.equal(saved.pageWork._learning.completed.p01,true);assert.equal(saved.pageWork._learning.completed.p02,true);
  assert.ok(await page.locator('#hl1PageSelect option[value="3"]').isEnabled());
- const offline=await openStudio(t,{failReads:true});await minimize(offline);
- await offline.locator('textarea[data-index="5"]').fill('通信エラーでも保持');await offline.locator('#hl1Save').click();
+ const offline=await openStudio(t,{failReads:true});await minimize(offline);await offline.locator('#hl1Next').click();
+ await offline.locator('textarea[data-index="6"]').fill('通信エラーでも保持');await offline.locator('#hl1Save').click();
  assert.equal(await offline.evaluate(()=>window.__firebase.writes.length),0);
  assert.ok((await offline.locator('#hl1SaveStatus').textContent()).includes('端末の回答を保持'));
 });
@@ -645,4 +643,46 @@ for(const role of ['student','teacher'])test(`Shared header survives logout/logi
  await page.locator('#home').click();await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
  await page.waitForSelector('#webHtmlEditor');await settleLayout(page);await assertUnifiedHeader(page);
  assert.equal(await page.locator('#lsHeader .hl1-page-navigation').count(),1);
+});
+
+
+for(const mobile of [false,true])test(`Page 1 is a reading introduction, advances without a quiz and preserves old answers (${mobile?'mobile':'desktop'})`,async t=>{
+ const oldAnswers={0:'1',1:'0',5:'以前の自己紹介についての回答'};
+ const oldResults={0:true,1:false,3:false};
+ const original={html:completeHtml,css:'h1{color:blue}',js:'document.body.dataset.saved="yes";',pageWork:{p01:{answers:oldAnswers,results:oldResults},p02:{answers:{6:'以前のブラウザの説明'},results:{6:true}}}};
+ const page=await openStudio(t,{mobile,remoteCode:original,localProgress:{p01:{answers:{6:'端末に残っていた旧回答'},results:{6:true}}}});
+ await page.waitForFunction(()=>document.querySelector('#webHtmlEditor').value.includes('私の作品'));await minimize(page);
+ if(mobile)await page.locator('[data-show=practice]').click();
+ assert.equal(await page.locator('#hl1PageSelect').inputValue(),'1');
+ assert.equal(await page.locator('#hl1OverallProgress').getAttribute('value'),'0');
+ assert.equal(await page.locator('.hl1-task').count(),0);
+ assert.equal(await page.locator('#hl1Questions input,#hl1Questions textarea').count(),0);
+ const introduction=await page.locator('#hl1Questions').textContent();
+ assert.ok(introduction.includes('知る → 読む → 作る → 試す'));
+ assert.ok(introduction.includes('分からない言葉は先生に聞こう'));
+ assert.ok(introduction.includes('HTMLは、Webページの内容や構造'));
+ for(const obsolete of ['今日の目標に入っているものは？','必要な組み合わせは？','「こんにちは！」は何の役割？','見出しと文章をそれぞれ見つけた','以前の自己紹介についての回答'])assert.ok(!introduction.includes(obsolete));
+ assert.ok(await page.locator('#hl1Progress').isHidden());assert.ok(await page.locator('#hl1AnswerStatus').isHidden());
+ assert.ok(await page.locator('#hl1Next').isEnabled());assert.ok(await page.locator('#hl1PageSelect option[value="11"]').isDisabled());
+ await page.locator('.hl1-grid').scrollIntoViewIfNeeded();
+ if(!mobile){await page.locator('#hl1Scale').selectOption('75');await page.locator('#hl1PageViewport').evaluate(el=>el.scrollTop=el.scrollHeight);}
+ await page.screenshot({path:`/tmp/learning-studio-page1-introduction-${mobile?'mobile':'desktop'}.png`});
+ if(mobile)await page.locator('#hl1Next').click();else await page.getByRole('button',{name:'使い方を確認して次へ',exact:true}).click();
+ assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ assert.equal(await page.locator('#hl1OverallProgress').getAttribute('value'),'1');
+ if(mobile)await page.locator('[data-show=practice]').click();
+ assert.equal(await page.locator('#hl1SectionHeading').textContent(),'このページの学習・進捗チェック');
+ assert.ok(await page.locator('#hl1Progress').isVisible());assert.ok(await page.locator('#hl1Next').isDisabled());
+ assert.equal(await page.locator('textarea[data-index="6"]').inputValue(),'以前のブラウザの説明');
+ await page.locator('#hl1Save').click();await page.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('保存しました'));
+ const saved=await page.evaluate(id=>window.__firebase.data.web_workspaces[id],workspaceId);
+ assert.equal(saved.pageWork.p01.introRead,true);
+ assert.deepEqual(saved.pageWork.p01.answers,{...oldAnswers,6:'端末に残っていた旧回答'});
+ assert.deepEqual(saved.pageWork.p01.results,{...oldResults,6:true});
+ assert.equal(saved.html,original.html);assert.equal(saved.css,original.css);assert.equal(saved.js,original.js);
+ const again=await openStudio(t,{mobile,remoteCode:saved});
+ await again.waitForFunction(()=>document.querySelector('#hl1PageSelect').value==='2');await minimize(again);await selectPage(again,1);
+ if(mobile)await again.locator('[data-show=practice]').click();
+ assert.equal(await again.locator('.hl1-task').count(),0);
+ assert.equal(await again.locator('#hl1OverallProgress').getAttribute('value'),'1');
 });

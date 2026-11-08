@@ -4,6 +4,10 @@ export function requiredTask(task,page,index){
   return page===11 || (page===12 ? task.type!=='text'||index===8 : task.type!=='text');
 }
 export function pageRequirementsMet(record,definition,page){
+  if(definition.mode==='introduction'){
+    // Old page-1 answers stay archived under their original numeric keys.
+    return record?.introRead===true||[0,1,2,3,4].every(index=>record?.results?.[index]===true);
+  }
   return definition.tasks.every((task,index)=>!requiredTask(task,page,index)||record?.results?.[index]===true);
 }
 export function learningState(work,definitions){

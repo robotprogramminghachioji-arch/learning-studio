@@ -1,0 +1,3 @@
+# Treat generated teaching documents and page previews as binary assets.
+assets/pdfs/*.pdf binary
+assets/pdf-pages/*.webp binary
