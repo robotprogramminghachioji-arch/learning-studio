@@ -1,3 +1,4 @@
+import {mountFloatingEditor} from './floating-editor.js';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 // Questions follow the actual twelve pages of HTML_Level1_Guide.pdf.
@@ -69,7 +70,7 @@ const PAGES=[
     t('エディターとブラウザの役割の違いを説明しよう'),
     t('URLとファイル名はどう違うと思う？','Web上の場所と、ファイルの名前を比べよう。')
   ]},
-  {title:'HTML・CSS・JavaScriptとエディター',intro:'3つの技術の役割を知り、Learning Studioのボタンを使ってみよう。',editorHint:'下のエディターで「HTML」を選び、コードを変更して「プレビューを更新」を押そう。',sample:`<h1>こんにちは！</h1>\n<p>HTMLの練習中です。</p>`,tasks:[
+  {title:'HTML・CSS・JavaScriptとエディター',intro:'3つの技術の役割を知り、Learning Studioのボタンを使ってみよう。',editorHint:'フローティングエディターで「HTML」を選び、コードを変更して「プレビューを更新」を押そう。',sample:`<h1>こんにちは！</h1>\n<p>HTMLの練習中です。</p>`,tasks:[
     q('HTMLが主に担当するものは？',['Webページの内容と構造','文字の色だけ','クリック後の動作だけ'],0,'HTMLは見出しや文章などの構造を表します。'),
     q('CSSが主に担当するものは？',['ページの保存先','色や文字サイズなど見た目','HTMLファイルの拡張子'],1,'CSSは見た目を整える技術です。'),
     q('JavaScriptが主に担当するものは？',['ページに動きを付ける','PDFを印刷する','HTMLの代わりに文字を入力する'],0,'ボタンなどに動作を加えられます。'),
@@ -119,7 +120,7 @@ const PAGES=[
     c('「プレビューを更新」を押し、見出しが表示された'),
     c('「学習内容を保存」を押して保存した')
   ]},
-  {title:'実習② 自己紹介ページに発展',intro:'見出し、文章、箇条書き、リンクをつないで自己紹介ページを作ろう。',editorHint:'下のHTMLエディターを使って自分の自己紹介を作ろう。3つの好きなものとリンクも入れます。',sample:PROFILE_HTML,tasks:[
+  {title:'実習② 自己紹介ページに発展',intro:'見出し、文章、箇条書き、リンクをつないで自己紹介ページを作ろう。',editorHint:'フローティングHTMLエディターを使って自分の自己紹介を作ろう。3つの好きなものとリンクも入れます。',sample:PROFILE_HTML,tasks:[
     e('<h1>で自己紹介のタイトルを表示しよう','heading','<h1>わたしの自己紹介</h1>'),
     e('<p>で自己紹介文を表示しよう','paragraph','<p>こんにちは！ わたしは○○です。</p>'),
     e('<h2>で「好きなもの」の見出しを作ろう','h2','<h2>好きなもの</h2>'),
@@ -226,28 +227,39 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     }
   }
   function scheduleSave(){persistLocal();setSaveStatus('変更があります（端末に保存済み）');if(isStudent){clearTimeout(saveTimer);saveTimer=setTimeout(()=>storeRemote(),1400);}}
-  container.innerHTML=`<div class="hl1-heading"><h2>📖 PDF教材を読みながら実習しよう</h2><p class="muted">左の教材ページを進めると、右の説明・問題が同じページに切り替わります。コードは下のHTMLエディターで実行できます。</p></div>
+  container.innerHTML=`<div class="hl1-heading"><h2>📖 PDF教材を読みながら実習しよう</h2><p class="muted">左の教材ページを進めると、右の説明・問題が同じページに切り替わります。コードはフローティングエディターで実行できます。ウィンドウの見出しをドラッグすると移動できます。</p></div>
     <div class="hl1-mobile-switch" role="group" aria-label="スマートフォン用表示切り替え"><button type="button" data-show="pdf" class="hl1-selected">📖 教材</button><button type="button" data-show="practice" class="ghost">💻 実習・問題</button></div>
+    <div class="hl1-page-navigation"><button type="button" id="hl1Prev" class="ghost">← 前のページ</button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost">次へ →</button></div>
     <div class="hl1-grid">
       <aside class="hl1-reader" aria-label="教材のページ">
         <div class="hl1-reader-bar"><strong>📘 HTML入門 レベル1</strong><span id="hl1Number">1 / 12</span></div>
-        <div class="hl1-page-navigation"><button type="button" id="hl1Prev" class="ghost">← 前のページ</button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost">次へ →</button></div>
-        <button type="button" id="hl1Zoom" class="hl1-page-image-button" aria-label="教材ページを拡大して表示"><img id="hl1Image" src="assets/pdf-pages/html-level1-01.webp" alt="HTML教材の1ページ目"></button>
-        <div class="hl1-pdf-actions"><button type="button" id="hl1ZoomButton" class="ghost small">🔎 拡大</button><a class="btn ghost small" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
-        <p class="muted tiny">表示しているのは、PDFの各ページを画像化したものです。印刷は右の「原本PDF」からできます。</p>
+        <div class="hl1-zoom-controls"><label for="hl1Scale">表示倍率</label><select id="hl1Scale"><option value="100">幅に合わせる（100%）</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select><span class="muted tiny">拡大後は教材内をスクロールできます</span></div>
+        <div id="hl1PageViewport" class="hl1-page-viewport" tabindex="0" role="region" aria-label="PDF教材（拡大時は縦横にスクロール）"><img id="hl1Image" src="assets/pdf-pages/html-level1-01.webp" alt="HTML教材の1ページ目"></div>
+        <div class="hl1-pdf-actions"><a class="btn ghost small" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
+        <p class="muted tiny">表示しているのは、PDFの各ページを画像化したものです。印刷は「原本PDF」からできます。</p>
       </aside>
       <div class="hl1-practice">
         <div class="hl1-page-info"><span class="pill" id="hl1Current">PDF 1ページ</span><h3 id="hl1Title"></h3><p id="hl1Intro"></p></div>
         <div class="hl1-exercises"><h3>✏️ このページのミッション・確認問題</h3><div id="hl1Questions"></div><div class="hl1-check-actions"><button type="button" id="hl1Check">✅ 回答とコードをチェック</button><button type="button" class="ghost" id="hl1Save">☁ このページを保存</button></div><div id="hl1Result" aria-live="polite"></div><div class="hl1-progress"><div id="hl1ProgressBar"></div></div><p class="muted small" id="hl1Progress"></p><p class="muted small" id="hl1SaveStatus" aria-live="polite"></p></div>
-        <div class="hl1-editor-area"><h3>💻 Learning Studio HTMLエディター</h3><p class="muted" id="hl1EditorHint"></p><div id="hl1SampleBox"><button type="button" id="hl1LoadSample" class="ghost">📋 このページの見本コードを読み込む</button><p class="muted tiny">入力済みのコードは上書きされます。必要な作品は先に保存してください。</p></div><div id="webWorkspace"></div></div>
       </div>
     </div>
-    <div class="hl1-overlay" id="hl1Overlay" hidden role="dialog" aria-modal="true" aria-label="教材ページの拡大表示"><div class="hl1-overlay-top"><span id="hl1OverlayTitle"></span><button type="button" id="hl1OverlayClose">✕ 閉じる</button></div><img id="hl1OverlayImage" alt="拡大表示した教材ページ"></div>`;
+    <button type="button" id="hl1EditorOpen" class="hl1-editor-open" aria-controls="hl1EditorWindow" aria-expanded="true">💻 エディターを表示</button>
+    <section id="hl1EditorWindow" class="hl1-editor-window" aria-labelledby="hl1WindowTitle">
+      <div class="hl1-window-bar" data-window-move tabindex="0" role="group" aria-label="エディターを移動（ドラッグまたは矢印キー）" aria-describedby="hl1WindowHelp">
+        <strong id="hl1WindowTitle">💻 HTMLエディター</strong><div class="hl1-window-actions"><button type="button" class="ghost small" data-window-reset>位置を戻す</button><button type="button" class="ghost small" data-window-minimize aria-label="エディターを最小化">− 最小化</button></div>
+      </div>
+      <div class="hl1-window-content hl1-editor-area">
+        <details class="muted tiny"><summary>ウィンドウの操作方法</summary><p id="hl1WindowHelp">見出しで移動、右下の ↘ でサイズ変更（矢印キーでも操作可）。Escで最小化。入力はそのまま残ります。</p></details>
+        <p class="muted" id="hl1EditorHint"></p><div id="hl1SampleBox"><button type="button" id="hl1LoadSample" class="ghost">📋 このページの見本コードを読み込む</button><p class="muted tiny">入力済みのHTMLは確認後に上書きします。CSS・JavaScriptは残ります。</p></div><div id="webWorkspace"></div>
+      </div>
+      <button type="button" class="hl1-window-resize" data-window-resize aria-label="エディターのサイズを変更（ドラッグまたは矢印キー）">↘</button>
+    </section>`;
 
   const $=selector=>container.querySelector(selector);
+  const floatingEditor=mountFloatingEditor({container,windowEl:$('#hl1EditorWindow'),openButton:$('#hl1EditorOpen')});
   const mobileShow=panel=>{
     container.classList.toggle('hl1-mobile-practice',panel==='practice');
-    container.querySelectorAll('[data-show]').forEach(b=>{b.classList.toggle('hl1-selected',b.dataset.show===panel);b.classList.toggle('ghost',b.dataset.show!==panel);});
+    container.querySelectorAll('[data-show]').forEach(b=>{b.classList.toggle('hl1-selected',b.dataset.show===panel);b.classList.toggle('ghost',b.dataset.show!==panel);b.setAttribute('aria-pressed',String(b.dataset.show===panel));});
   };
   container.querySelectorAll('[data-show]').forEach(b=>b.addEventListener('click',()=>mobileShow(b.dataset.show)));
   const newHtmlPage=i=>`assets/pdf-pages/html-level1-${pad(i)}.webp`;
@@ -262,7 +274,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
       if(task.type==='choice')field=`<div class="hl1-options">${task.options.map((opt,n)=>`<label><input type="radio" name="hl1q${i}" value="${n}" ${String(saved)===String(n)?'checked':''}>${escapeHtml(opt)}</label>`).join('')}</div>`;
       if(task.type==='check')field=`<label class="hl1-self"><input type="checkbox" data-index="${i}" ${saved===true?'checked':''}>できた！</label>`;
       if(task.type==='text')field=`<textarea data-index="${i}" rows="2" maxlength="220" placeholder="${escapeHtml(task.hint||'自分の言葉で答えよう')}">${escapeHtml(saved)}</textarea>`;
-      if(task.type==='code')field=`<p class="hl1-hint">コードのチェック項目：${escapeHtml(task.hint||'下のエディターで試そう')}</p>`;
+      if(task.type==='code')field=`<p class="hl1-hint">コードのチェック項目：${escapeHtml(task.hint||'フローティングエディターで試そう')}</p>`;
       return `<article class="hl1-task"><div class="hl1-task-header"><strong>${i+1}. ${escapeHtml(task.text)}</strong><span id="hl1Status${i}">${tag}</span></div>${field}<div class="hl1-why" id="hl1Why${i}" ${status!==true?'hidden':''}>${task.type==='choice'?escapeHtml(task.why):'確認しました。'}</div></article>`;
     }).join('');
     $('#hl1Questions').querySelectorAll('input[type=radio]').forEach(input=>input.addEventListener('change',()=>{
@@ -294,21 +306,19 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     $('#hl1Result').textContent='';$('#hl1Result').className='';
     renderTasks();
   }
+  $('#hl1Scale').addEventListener('change',()=>{
+    $('#hl1Image').style.width=`${$('#hl1Scale').value}%`;
+  });
   function changePage(newPage){
     const n=Number(newPage);if(!Number.isInteger(n)||n<1||n>maxPage)return;
-    page=n;renderPage();
+    persistLocal();page=n;renderPage();
+    $('#hl1PageViewport').scrollTo(0,0);
     // On phones show the matching PDF first. The student then taps "実習・問題".
     mobileShow('pdf');
   }
   $('#hl1Prev').addEventListener('click',()=>changePage(page-1));
   $('#hl1Next').addEventListener('click',()=>changePage(page+1));
   $('#hl1PageSelect').addEventListener('change',ev=>changePage(ev.target.value));
-  const overlay=$('#hl1Overlay');
-  function setOverlay(show){overlay.hidden=!show;if(show){$('#hl1OverlayImage').src=newHtmlPage(page);$('#hl1OverlayTitle').textContent=`PDF ${page} / ${maxPage}：${PAGES[page-1].title}`;$('#hl1OverlayClose').focus();}}
-  $('#hl1Zoom').addEventListener('click',()=>setOverlay(true));
-  $('#hl1ZoomButton').addEventListener('click',()=>setOverlay(true));
-  $('#hl1OverlayClose').addEventListener('click',()=>setOverlay(false));
-  overlay.addEventListener('click',ev=>{if(ev.target===overlay)setOverlay(false)});
 
   $('#hl1Check').addEventListener('click',()=>{
     const record=getRecord(),data=PAGES[page-1];let newly=0;
@@ -331,23 +341,34 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   $('#hl1LoadSample').addEventListener('click',()=>{
     const sample=PAGES[page-1].sample;
     if(!sample||!editorApi){alert('エディターの準備ができていません。');return;}
-    editorApi.setHtml(sample);
+    if(editorApi.setHtml(sample))floatingEditor.show();
   });
 
-  renderPage();
-  // Fetch mission history from the same protected document as the existing HTML editor.
+  mobileShow('pdf');renderPage();
+  const lifecycle=new MutationObserver(()=>{
+    if(!container.isConnected){clearTimeout(saveTimer);lifecycle.disconnect();}
+  });
+  lifecycle.observe(document.getElementById('app'),{childList:true,subtree:true});
+  // Start the editor immediately; its DOM survives every PDF page change.
+  const editorReady=mountWebWorkspace({container:$('#webWorkspace'),lesson,db,student,uid,linkedWorkbook:true})
+    .then(api=>{editorApi=api;})
+    .catch(err=>{$('#webWorkspace').innerHTML=`<p class="message error">HTMLエディターを読み込めません：${escapeHtml(err.message)}</p>`;});
+  // Fetch mission history independently from the editor's cloud read.
   if(workspaceRef){
     try{
       const snap=await getDoc(workspaceRef);
       if(!container.isConnected)return;
       const cloud=snap.exists()&&snap.data().pageWork;
       if(cloud&&typeof cloud==='object'){
-        // If a local draft exists, prefer local answers to avoid losing offline edits.
-        progress={...cloud,...progress};persistLocal();renderPage();
+        // An empty record created for rendering must not mask cloud history.
+        // Pages with local answers (including in-flight edits) keep local priority.
+        for(const [key,record] of Object.entries(cloud)){
+          const local=progress[key];
+          if(!local||(!Object.keys(local.answers||{}).length&&!Object.keys(local.results||{}).length))progress[key]=record;
+        }
+        persistLocal();renderPage();
       }
     }catch(err){console.warn('教材ミッションの読み込みを省略しました:',err);}
   }
-  try{
-    editorApi=await mountWebWorkspace({container:$('#webWorkspace'),lesson,db,student,uid,linkedWorkbook:true});
-  }catch(err){$('#webWorkspace').innerHTML=`<p class="message error">HTMLエディターを読み込めません：${escapeHtml(err.message)}</p>`;}
+  await editorReady;
 }

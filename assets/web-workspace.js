@@ -38,7 +38,8 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
   const starter={html:lesson.starterHtml||FALLBACK_HTML, css:lesson.starterCss||'', js:lesson.starterJs||''};
   let code={...starter};
   let touched=false, saveTimer=null, latestFlags=[false,false,false];
-  const savedLocal=localStorage.getItem(draftKey);
+  let savedLocal=null;
+  try{savedLocal=localStorage.getItem(draftKey);}catch{/* Storage may be unavailable in private browsing. */}
   if(savedLocal){try{const parsed=JSON.parse(savedLocal); if(typeof parsed.html==='string') code={html:parsed.html,css:parsed.css||'',js:parsed.js||''};}catch{/* ignore invalid local drafts */}}
   container.innerHTML=`
     <div class="web-workspace">
@@ -97,15 +98,20 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
     $('#webProgressText').textContent=`達成 ${n} / 3`;
     return n;
   }
+  function persistLocal(){
+    try{localStorage.setItem(draftKey,JSON.stringify(code));}catch{
+      feedback.textContent='端末に一時保存できません。学習内容をFirebaseへ保存してください。';
+    }
+  }
   function cache(){
     touched=true;code=collectCode();
-    localStorage.setItem(draftKey, JSON.stringify(code));
+    persistLocal();
     if(isStudent){state.textContent='未保存の変更';clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(false),3500);}
   }
   async function save(showFeedback){
     clearTimeout(saveTimer);
     code=collectCode();
-    localStorage.setItem(draftKey, JSON.stringify(code));
+    persistLocal();
     if(!isStudent){if(showFeedback)feedback.textContent='先生プレビューのため、クラウド保存はしません。';return;}
     const count=updateMissions();
     try{
@@ -115,7 +121,7 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
       if(!linkedWorkbook){payload.missions=count;payload.completed=count===3;}
       await setDoc(workspaceRef,payload,{merge:true});
       state.textContent='Firebaseに保存済み';
-      if(showFeedback)feedback.textContent=linkedWorkbook?'HTMLコードをFirebaseに保存しました。ページごとの回答は教材ミッションの「このページを保存」で保存できます。':`学習内容を保存しました（達成 ${count} / 3）。`;
+      if(showFeedback)feedback.textContent=linkedWorkbook?'HTML・CSS・JavaScriptをFirebaseに保存しました。ページごとの回答は教材ミッションの「このページを保存」で保存できます。':`学習内容を保存しました（達成 ${count} / 3）。`;
     }catch(error){
       state.textContent='Firebase保存エラー';
       if(showFeedback || active)feedback.textContent=`保存できませんでした：${error.code||error.message}`;
@@ -129,6 +135,7 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
     const lang=button.dataset.lang;
     container.querySelectorAll('[data-lang]').forEach(b=>{b.classList.toggle('active-tab',b.dataset.lang===lang);b.classList.toggle('ghost',b.dataset.lang!==lang);});
     Object.entries(fields).forEach(([k,el])=>el.hidden=k!==lang);
+    $('#webEditorLabel').htmlFor=fields[lang].id;
     $('#webEditorLabel').textContent=lang==='html'?'HTMLコード':lang==='css'?'CSSコード':'JavaScriptコード';
     fields[lang].focus();
   }));
@@ -149,22 +156,25 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
     const a=document.createElement('a');a.href=url;a.download='my-web-page.html';a.click();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
-  if(isStudent){
+  async function loadRemote(){
     try{
       const remote=await getDoc(workspaceRef);
       if(!container.isConnected)return;
-      if(remote.exists()&&!touched){
+      if(remote.exists()&&!touched&&!savedLocal){
         const data=remote.data();
         code={html:typeof data.html==='string'?data.html:starter.html,css:data.css||'',js:data.js||''};
         showCode();preview();updateMissions();
-        localStorage.setItem(draftKey, JSON.stringify(code));
+        persistLocal();
       }
-      state.textContent='学習記録を読み込みました';
+      if(!touched)state.textContent=savedLocal?'端末の入力を復元しました':'学習記録を読み込みました';
     }catch(error){
+      if(!container.isConnected||touched)return;
       state.textContent='読み込みに失敗';
       feedback.textContent=`保存済みデータを取得できません：${error.code||error.message}`;
     }
   }
+  // Return the editor API without waiting for Firebase, so page code checks work offline.
+  if(isStudent)loadRemote();
   // Avoid delayed autosaves from a lesson that is no longer visible.
   const observer=new MutationObserver(()=>{
     if(!container.isConnected){active=false;clearTimeout(saveTimer);observer.disconnect();}
@@ -177,7 +187,7 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
       if (!confirm('このページの見本コードを読み込むと、現在のHTMLコードを上書きします。よろしいですか？\n必要な作品は先に「学習内容を保存」または「HTMLを保存」してください。')) return false;
       fields.html.value=String(nextHtml);
       preview();updateMissions();cache();
-      fields.html.focus();
+      container.querySelector('[data-lang=html]').click();
       return true;
     }
   };

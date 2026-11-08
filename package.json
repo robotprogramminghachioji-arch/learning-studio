@@ -1,0 +1,10 @@
+{
+  "name": "learning-studio",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/learning-studio.browser.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
