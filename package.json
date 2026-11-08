@@ -2,7 +2,9 @@
   "name": "learning-studio",
   "private": true,
   "scripts": {
-    "test": "node --test tests/learning-studio.browser.cjs"
+    "test": "npm run check:assets && node --test tests/learning-studio.browser.cjs",
+    "version:assets": "node scripts/update-asset-versions.mjs",
+    "check:assets": "node scripts/update-asset-versions.mjs --check"
   },
   "devDependencies": {
     "playwright": "1.62.1"

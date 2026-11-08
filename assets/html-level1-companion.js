@@ -1,6 +1,7 @@
-import {pageKey,requiredTask,pageRequirementsMet,learningState,unlockedThrough,pageStatus,mergeHistory} from './html-level1-progress.js';
-import {mountFloatingEditor} from './floating-editor.js';
-import {mountPageNavigation} from './page-navigation.js';
+import {assetUrl} from './asset-versions.js?v=5dd458e949ab';
+import {pageKey,requiredTask,pageRequirementsMet,learningState,unlockedThrough,pageStatus,mergeHistory} from './html-level1-progress.js?v=025ff581bb88';
+import {mountFloatingEditor} from './floating-editor.js?v=273ce021826a';
+import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 // Questions follow the actual twelve pages of HTML_Level1_Guide.pdf.
@@ -228,8 +229,8 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
       <aside class="hl1-reader" aria-label="教材のページ">
         <div class="hl1-reader-bar"><strong>📘 HTML入門 レベル1</strong><span class="pill">全12ページ</span></div>
         <div class="hl1-zoom-controls"><label for="hl1Scale">表示倍率</label><select id="hl1Scale"><option value="50">50%</option><option value="75">75%</option><option value="90">90%</option><option value="100" selected>幅に合わせる（100%）</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select><span class="muted tiny">拡大後は教材内をスクロールできます</span></div>
-        <div id="hl1PageViewport" class="hl1-page-viewport" tabindex="0" role="region" aria-label="PDF教材（拡大時は縦横にスクロール）"><img id="hl1Image" src="assets/pdf-pages/html-level1-01.webp" alt="HTML教材の1ページ目"></div>
-        <div class="hl1-pdf-actions"><a class="btn ghost small" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
+        <div id="hl1PageViewport" class="hl1-page-viewport" tabindex="0" role="region" aria-label="PDF教材（拡大時は縦横にスクロール）"><img id="hl1Image" src="${escapeHtml(assetUrl('assets/pdf-pages/html-level1-01.webp'))}" alt="HTML教材の1ページ目"></div>
+        <div class="hl1-pdf-actions"><a class="btn ghost small" href="${escapeHtml(assetUrl(pdfUrl))}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
         <p class="muted tiny">表示しているのは、PDFの各ページを画像化したものです。印刷は「原本PDF」からできます。</p>
       </aside>
       <div class="hl1-practice" tabindex="0" role="region" aria-label="このページのミッション・確認問題">
@@ -361,7 +362,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   }
   function renderPage(){
     const data=PAGES[page-1];
-    $('#hl1Image').src=`assets/pdf-pages/html-level1-${pad(page)}.webp`;
+    $('#hl1Image').src=assetUrl(`assets/pdf-pages/html-level1-${pad(page)}.webp`);
     $('#hl1Image').alt=`HTML入門レベル1 PDFの${page}ページ目：${data.title}`;
     $('#hl1Current').textContent=`PDF ${page}ページ`;$('#hl1Title').textContent=data.title;
     const introduction=data.mode==='introduction';

@@ -28,3 +28,7 @@ Linuxでは `/usr/bin/chromium` があれば使用し、それ以外ではPlaywr
 完成画面は `/tmp/learning-studio-unified-header-{desktop,mobile,editor,mobile-practice}.png` に出力します。PC・スマートフォンのキャプチャはテスト用生徒名とテスト用進捗を使っています。
 
 1ページ目の導入テストでは、PC・スマートフォンの両方で、クイズとミッション数を表示しないこと、先生に聞く案内、「使い方を確認して次へ」と固定バーの「次へ」による読了・ページ移動、旧設問の回答・判定とコードの保持、再ログインでの読了復元を確認します。2ページ目以降の設問を使って従来の回答保持・保存テストを継続しています。導入ページの画面は `/tmp/learning-studio-page1-introduction-{desktop,mobile}.png` に出力します。
+
+キャッシュ更新テストは、通常の通信代替テストとは別に、Playwrightのリクエストルーティングを無効にしてChromiumのHTTPキャッシュを有効にします。テスト用サーバーで旧表記と未バージョン化のモジュールを1年間キャッシュ可能として読み込み、配信内容を新しいリリースへ切り替えます。同じブラウザで再読み込みし、新しい4段階が表示され、旧モジュールのレスポンス自体はキャッシュに残っていることを確認します。コード・CSS・学習位置・localStorage/sessionStorageの保持、PDFと画像の更新URLも検証します。認証・Firestoreの境界だけをローカルのテスト用SDKへ置き換え、本番Firebaseへは接続しません。
+
+キャッシュ更新後のスマートフォン画面は `/tmp/learning-studio-mobile-cache-update.png` に出力します。

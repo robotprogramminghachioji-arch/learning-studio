@@ -6,6 +6,7 @@ const path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 let server,browser,base;
+let cacheScenario=false,serveOldRelease=false,bareCompanionRequests=0;
 const lessonId='web-html-l1-lesson01';
 const workspaceId=`student-uid__${lessonId}`;
 
@@ -62,12 +63,29 @@ export const updatePassword=async()=>{};
 before(async()=>{
  server=http.createServer(async(req,res)=>{
   try{
-   const pathname=decodeURIComponent(new URL(req.url,'http://test').pathname);
+   const requestUrl=new URL(req.url,'http://test'),pathname=decodeURIComponent(requestUrl.pathname);
+   if(cacheScenario&&pathname.startsWith('/__firebase__/')){
+    const name=pathname.split('/').pop();
+    const body=name==='firebase-firestore.js'?firestore:name==='firebase-auth.js'?auth:'export const initializeApp=()=>({}); export const deleteApp=async()=>{};';
+    res.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'public, max-age=31536000, immutable'}).end(body);return;
+   }
    const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
    if(!file.startsWith(root+path.sep))throw Error('outside root');
-   const content=await fs.readFile(file);
+   let content=await fs.readFile(file);
+   if(cacheScenario){
+    if(pathname.endsWith('html-level1-companion.js')&&!requestUrl.searchParams.has('v'))bareCompanionRequests++;
+    if(path.extname(file)==='.js'){
+     let source=content.toString().replaceAll('https://www.gstatic.com/firebasejs/11.10.0/','/__firebase__/');
+     if(serveOldRelease){
+      source=source.replace(/(from\s*['"])(\.[^'"?]+)\?v=[a-f0-9]+(['"])/g,'$1$2$3');
+      if(pathname.endsWith('asset-versions.js'))source='export function assetUrl(value){return value;}';
+      if(pathname.endsWith('html-level1-companion.js'))source=source.replace(/<ol class="hl1-learning-flow">.*?<\/ol>/,'<p>「知る → 読む → 作る → 試す」の順に学習します。</p>');
+     }
+     content=Buffer.from(source);
+    }else if(path.extname(file)==='.html'&&serveOldRelease)content=Buffer.from(content.toString().replace(/\?v=[a-f0-9]{12}/g,''));
+   }
    const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.webp':'image/webp','.pdf':'application/pdf'}[path.extname(file)];
-   res.writeHead(200,{'Content-Type':type||'application/octet-stream'}).end(content);
+   res.writeHead(200,{'Content-Type':type||'application/octet-stream','Cache-Control':cacheScenario&&path.extname(file)!=='.html'?'public, max-age=31536000, immutable':'no-store'}).end(content);
   }catch{res.writeHead(404).end();}
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -75,7 +93,7 @@ before(async()=>{
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(require('node:fs').existsSync('/usr/bin/chromium')?'/usr/bin/chromium':chromium.executablePath()),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 });
 after(async()=>{await browser?.close();await new Promise(resolve=>server?.close(resolve));});
-async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress}={}){
+async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress,cachedAssets=false}={}){
  if(completedThrough){
   remoteCode={...remoteCode,pageWork:{...remoteCode?.pageWork,_learning:{version:1,currentPage:1,testSubmitted:completedThrough>=11,completed:Object.fromEntries(Array.from({length:12},(_,i)=>['p'+String(i+1).padStart(2,'0'),i<completedThrough]))}}};
  }
@@ -103,12 +121,14 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
    sessionStorage.setItem('fixture-local','yes');
   }
  },{role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress});
+ if(!cachedAssets){
  await page.route('https://www.gstatic.com/firebasejs/**',route=>{
   const name=new URL(route.request().url()).pathname.split('/').pop();
   const body=name==='firebase-firestore.js'?firestore:name==='firebase-auth.js'?auth:'export const initializeApp=()=>({}); export const deleteApp=async()=>{};';
   return route.fulfill({contentType:'text/javascript',body});
  });
  await page.route(url=>!url.href.startsWith(base)&&url.hostname!=='www.gstatic.com',route=>route.abort());
+ }
  await page.goto(base);
  await page.waitForSelector('[data-course=web]');
  await page.locator('[data-course=web][data-level="1"]').click();
@@ -135,7 +155,7 @@ test('PDF uses the large left column, zooms to 125/150/200%, and all 12 pages ma
   assert.equal(await page.locator('#hl1Current').textContent(),`PDF ${n}ページ`);
   const expectedTitle=(await page.locator(`#hl1PageSelect option[value="${n}"]`).textContent()).replace(/^\d+\. /,'').replace(/［.*］$/,'');
   assert.equal(await page.locator('#hl1Title').textContent(),expectedTitle);
-  assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith(`${String(n).padStart(2,'0')}.webp`));
+  assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith(`${String(n).padStart(2,'0')}.webp`));
   assert.ok(n===1?await page.locator('.hl1-task').count()===0:await page.locator('.hl1-task').count()>=7);
   await page.waitForFunction(()=>{const image=document.querySelector('#hl1Image');return image.complete&&image.naturalWidth>0;});
  }
@@ -586,7 +606,7 @@ test('Desktop unified header keeps account and workbook controls in two compact 
  await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);await assertUnifiedHeader(page);
  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);await assertUnifiedHeader(page);
  await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 2ページ');
- assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith('02.webp'));
+ assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith('02.webp'));
  await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 3ページ');
  await page.locator('#hl1Scale').selectOption('75');await settleLayout(page);
  await page.screenshot({path:'/tmp/learning-studio-unified-header-desktop.png'});
@@ -689,4 +709,45 @@ for(const mobile of [false,true])test(`Page 1 is a reading introduction, advance
  if(mobile)await again.locator('[data-show=practice]').click();
  assert.equal(await again.locator('.hl1-task').count(),0);
  assert.equal(await again.locator('#hl1OverallProgress').getAttribute('value'),'1');
+});
+
+
+// Use Chromium's real HTTP cache. Playwright request routing is deliberately off:
+// routing disables the HTTP cache and cannot reproduce this production failure.
+test('A phone with cached unversioned modules updates the lesson after deployment without losing local work',async t=>{
+ cacheScenario=true;serveOldRelease=true;bareCompanionRequests=0;
+ t.after(()=>{cacheScenario=false;serveOldRelease=false;});
+ const page=await openStudio(t,{role:'teacher',mobile:true,cachedAssets:true});
+ await page.locator('#webHtmlEditor').fill('<h1>消してはいけない作品</h1>');
+ await page.locator('[data-lang=css]').click();await page.locator('#webCssEditor').fill('h1{color:blue}');
+ await minimize(page);await page.locator('[data-show=practice]').click();
+ assert.ok((await page.locator('#hl1Questions').textContent()).includes('知る → 読む → 作る → 試す'));
+ await page.locator('#hl1Next').click();
+ await page.evaluate(()=>{localStorage.setItem('cache-test-keep','keep');sessionStorage.setItem('cache-test-session','keep');});
+ const cachedRequests=bareCompanionRequests;assert.ok(cachedRequests>0);
+ serveOldRelease=false;
+ await page.reload();await page.waitForSelector('[data-course=web]');
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
+ await page.waitForSelector('#webHtmlEditor');await minimize(page);
+ assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>消してはいけない作品</h1>');
+ assert.equal(await page.locator('#webCssEditor').inputValue(),'h1{color:blue}');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('cache-test-keep')),'keep');
+ assert.equal(await page.evaluate(()=>sessionStorage.getItem('cache-test-session')),'keep');
+ await selectPage(page,1);await page.locator('[data-show=practice]').click();
+ assert.deepEqual(await page.locator('.hl1-learning-flow strong').allTextContents(),['Input（インプット）','Output（アウトプット）','Check（確認）','Reflect（振り返り）']);
+ assert.ok(!(await page.locator('#hl1Questions').textContent()).includes('知る → 読む → 作る → 試す'));
+ // The old response is demonstrably still in the browser cache. New asset URLs
+ // bypassed it; neither a cache purge nor clearing localStorage was necessary.
+ const stale=await page.evaluate(()=>fetch('assets/html-level1-companion.js',{cache:'force-cache'}).then(r=>r.text()));
+ assert.ok(stale.includes('「知る → 読む → 作る → 試す」の順に学習します。'));
+ assert.equal(bareCompanionRequests,cachedRequests,'The stale fetch was served from HTTP cache, not the updated server');
+ for(const selector of ['#hl1Image','.hl1-pdf-actions a']){
+  const url=new URL(await page.locator(selector).getAttribute(selector==='#hl1Image'?'src':'href'),base);
+  assert.match(url.searchParams.get('v'),/^[a-f0-9]{12}$/);
+ }
+ const appUrl=await page.locator('script[type=module]').getAttribute('src');assert.match(appUrl,/app\.js\?v=[a-f0-9]{12}$/);
+ const resources=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));
+ assert.ok(resources.some(url=>/html-level1-companion\.js\?v=[a-f0-9]{12}/.test(url)));
+ await page.screenshot({path:'/tmp/learning-studio-mobile-cache-update.png'});
 });
