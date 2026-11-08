@@ -47,3 +47,15 @@ textarea.web-editor[hidden]{display:none!important}
 .course-choice{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #e2e7f1;border-radius:9px;margin:0;font-weight:500}
 .course-choice input{width:auto;flex:0 0 auto}
 @media(max-width:600px){.course-choice-grid{grid-template-columns:1fr}}
+
+/* In-app back / mobile-browser back confirmation / top-of-page */
+.ls-page-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.ls-page-controls button{border:1px solid #c8d7ec}
+.ls-page-controls button[hidden],#lsToTop[hidden],#lsBackDialog[hidden]{display:none!important}
+.ls-back-overlay{position:fixed;inset:0;z-index:9999;background:rgba(17,30,52,.58);display:flex;align-items:center;justify-content:center;padding:18px}
+.ls-back-card{width:min(100%,440px);background:#fff;color:#22314d;border-radius:16px;padding:22px;box-shadow:0 15px 45px rgba(0,0,0,.18)}
+.ls-back-card h2{margin:0 0 12px}.ls-back-card p{line-height:1.7;color:#46566c;margin:0 0 20px}
+.ls-back-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+.ls-back-actions button{min-height:44px}.ls-back-actions button:first-child{background:#eaf0fb;color:#234776}
+.ls-top-floating{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:900;min-height:48px;min-width:48px;border-radius:24px;box-shadow:0 5px 18px #213b6a40;font-size:14px}
+@media(max-width:600px){.ls-back-actions{flex-direction:column-reverse}.ls-back-actions button{width:100%}.ls-top-floating{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}

@@ -16,9 +16,114 @@ const safeImage=s=>{try{let u=new URL(s,location.href);return u.protocol==='http
 const safePdf=s=>{try{if(!s||!/^assets\/pdfs\/[a-zA-Z0-9_./-]+\.pdf$/.test(s)||s.includes('..'))return '';let u=new URL(s,location.href);return u.origin===location.origin?u.href:''}catch{return ''}};
 const videoId=s=>{try{let u=new URL(s);if(u.hostname==='youtu.be')return /^[\w-]{11}$/.test(u.pathname.slice(1))?u.pathname.slice(1):'';if(['www.youtube.com','youtube.com','www.youtube-nocookie.com'].includes(u.hostname)){let v=u.searchParams.get('v')||u.pathname.match(/^\/embed\/([\w-]{11})$/)?.[1];return /^[\w-]{11}$/.test(v||'')?v:''}}catch{}return ''};
 let db,auth,me=null,teacher=false,student=null,lessons=[],submissions=[],students=[],keys={},autoKeys={},view='home',selected=null,tab='lessons';
+
+// Learning Studio: in-app navigation and a confirmation before mobile browser Back.
+const screenHistory=[];
+let currentScreen={kind:'home'};
+let browserExitApproved=false;
+const browserGuard={learningStudioBackGuard:1};
+
+function unsavedWork(){
+  const form=appEl.querySelector('form[data-ls-dirty="true"]');
+  const saveState=appEl.querySelector('#webSaveState')?.textContent||'';
+  return !!form || saveState.includes('未保存') || saveState.includes('保存中');
+}
+
+function showScreen(screen){
+  currentScreen={...screen};
+  if(screen.kind==='level'){
+    view='level';
+    levelScreen(screen.course,screen.level);
+  }else if(screen.kind==='lesson'){
+    const lesson=lessons.find(item=>item.id===screen.lessonId);
+    if(!lesson){view='home';currentScreen={kind:'home'};render();}
+    else{selected=lesson;view='lesson';render();}
+  }else if(screen.kind==='password'){
+    view='password';passwordScreen();
+  }else{
+    view=screen.kind==='manage'?'manage':'home';
+    if(view==='manage')tab=screen.tab||'lessons';
+    render();
+  }
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function sameScreen(a,b){
+  return a.kind===b.kind && a.course===b.course && a.level===b.level &&
+    a.lessonId===b.lessonId && a.tab===b.tab;
+}
+function moveTo(screen){
+  if(!me)return;
+  if(sameScreen(currentScreen,screen))return; // Keep unsaved forms visible when the same tab is tapped.
+  if(unsavedWork()&&!window.confirm('まだ保存していない入力内容があります。保存せずに画面を移動しますか？'))return;
+  screenHistory.push({...currentScreen});
+  showScreen(screen);
+}
+function backWithinStudio(){
+  if(screenHistory.length){showScreen(screenHistory.pop());return;}
+  if(currentScreen.kind!=='home'){showScreen({kind:'home'});return;}
+  openBrowserBackDialog();
+}
+function openBrowserBackDialog(){
+  const dialog=document.getElementById('lsBackDialog');
+  if(!dialog || !dialog.hidden)return;
+  const leaving=screenHistory.length===0 && currentScreen.kind==='home';
+  document.getElementById('lsBackTitle').textContent=leaving?'Learning Studioを終了しますか？':'前の画面に戻りますか？';
+  document.getElementById('lsBackDescription').textContent=unsavedWork()
+    ?'入力途中の内容があります。保存していない内容は消えることがあります。続ける場合は、まず保存してください。'
+    :leaving?'このページから移動します。学習を続ける場合は「この画面にとどまる」を選んでください。'
+      :'前の画面に移動します。学習中の場合は保存したことを確認してください。';
+  document.getElementById('lsBackProceed').textContent=leaving?'サイトを離れる':'前の画面へ戻る';
+  dialog.hidden=false;
+  document.getElementById('lsBackStay').focus();
+}
+function closeBrowserBackDialog(){
+  const dialog=document.getElementById('lsBackDialog');
+  if(dialog)dialog.hidden=true;
+}
+function initializeNavigation(){
+  // This history entry gives popstate a chance to show a confirmation on mobile.
+  // Browser/OS gestures still have the final say; they cannot be blocked in every environment.
+  history.pushState(browserGuard,'',location.href);
+  window.addEventListener('popstate',()=>{
+    if(browserExitApproved)return;
+    history.pushState(browserGuard,'',location.href);
+    openBrowserBackDialog();
+  });
+  document.getElementById('lsBackStay')?.addEventListener('click',closeBrowserBackDialog);
+  document.getElementById('lsBackProceed')?.addEventListener('click',()=>{
+    const leaving=screenHistory.length===0 && currentScreen.kind==='home';
+    closeBrowserBackDialog();
+    if(leaving){browserExitApproved=true;history.go(-2);}
+    else backWithinStudio();
+  });
+  document.getElementById('lsBackDialog')?.addEventListener('click',event=>{
+    if(event.target.id==='lsBackDialog')closeBrowserBackDialog();
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape' && document.getElementById('lsBackDialog')?.hidden===false){
+      event.preventDefault();closeBrowserBackDialog();
+    }
+  });
+  appEl.addEventListener('input',event=>{
+    const form=event.target.closest('#editorForm,#addStudent,#courseForm,#gradeForm,#submitTest,#pw');
+    if(form)form.dataset.lsDirty='true';
+  });
+  appEl.addEventListener('change',event=>{
+    const form=event.target.closest('#editorForm,#addStudent,#courseForm,#gradeForm,#submitTest,#pw');
+    if(form)form.dataset.lsDirty='true';
+  });
+  const up=document.getElementById('lsToTop');
+  if(up){
+    up.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+    const toggle=()=>{up.hidden=window.scrollY<260;};
+    window.addEventListener('scroll',toggle,{passive:true});toggle();
+  }
+}
+initializeNavigation();
+
 const configured=cfg.apiKey&&!cfg.apiKey.startsWith('YOUR_')&&cfg.projectId&&!cfg.projectId.startsWith('YOUR_');
 if(!configured){appEl.innerHTML='<section class="panel"><h1>Firebase設定が必要です</h1><p>config.js を設定してください。README.md に手順があります。</p></section>'}else{let a=initializeApp(cfg);auth=getAuth(a);db=getFirestore(a);onAuthStateChanged(auth,async u=>{me=u;try{await refresh()}catch(e){console.error(e);appEl.innerHTML=msg('読み込みに失敗しました：'+e.message,true)}})}
-async function refresh(){teacher=false;student=null;lessons=[];submissions=[];students=[];keys={};autoKeys={};if(!me){userbar.innerHTML='';return login()};const t=await getDoc(doc(db,'teachers',me.uid));teacher=t.exists()&&t.data().enabled===true;
+async function refresh(){screenHistory.length=0;currentScreen={kind:'home'};view='home';selected=null;closeBrowserBackDialog();teacher=false;student=null;lessons=[];submissions=[];students=[];keys={};autoKeys={};if(!me){userbar.innerHTML='';return login()};const t=await getDoc(doc(db,'teachers',me.uid));teacher=t.exists()&&t.data().enabled===true;
  if(teacher){students=await list('students');lessons=await list('lessons');submissions=await list('submissions');let k=await list('answer_keys');keys=Object.fromEntries(k.map(x=>[x.id,x]));}
  else{const sid=localStorage.getItem('ls_student_id');if(!sid){return noProfile()};const p=await getDoc(doc(db,'students',sid));if(!p.exists()||p.data().activeUid!==me.uid||p.data().enabled!==true)return noProfile();const accessSnap=await getDoc(doc(db,'student_access',me.uid));
   if(!accessSnap.exists() || accessSnap.data().studentId!==sid || accessSnap.data().enabled!==true)return noProfile();
@@ -30,14 +135,23 @@ async function refresh(){teacher=false;student=null;lessons=[];submissions=[];st
  userbar.innerHTML=`<div class="row"><span>${esc(teacher?'先生':student.displayName)}</span><button id="logout" class="ghost small">ログアウト</button></div>`;document.getElementById('logout').onclick=()=>signOut(auth);render();}
 function noProfile(){userbar.innerHTML='<button id="logout" class="ghost small">ログアウト</button>';document.getElementById('logout').onclick=()=>signOut(auth);appEl.innerHTML='<section class="panel"><h2>有効な生徒情報がありません</h2><p>先生に生徒IDとアカウントの状態を確認してください。</p></section>'}
 function login(){appEl.innerHTML=`<section class="panel auth"><h1>Learning Studioにログイン</h1><form id="login"><label>区分<select name="kind"><option value="student">生徒</option><option value="teacher">先生</option></select></label><label>生徒ID（先生はメールアドレス）<input name="identifier" required autocomplete="username"></label><label>パスワード<input type="password" name="password" required autocomplete="current-password"></label><button>ログイン</button></form><div id="notice"></div></section>`;document.getElementById('login').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target),id=String(f.get('identifier')).trim().toLowerCase(),email=id,out=document.getElementById('notice');out.textContent='確認中…';try{if(f.get('kind')==='student'){if(!sidOK(id))throw Error('ID形式が違います');let lookup=await getDoc(doc(db,'login_lookup',await hashId(id)));if(!lookup.exists())throw Error('認証できません');email=lookup.data().email;localStorage.setItem('ls_student_id',id)}else localStorage.removeItem('ls_student_id');await signInWithEmailAndPassword(auth,email,String(f.get('password')))}catch(err){out.innerHTML=msg('ログインエラー: '+(err.code || 'unknown'),true)}}}
-function nav(){return `<div class="tabs"><button class="ghost" id="home">🏠 ホーム</button>${teacher?'<button class="ghost" id="manage">🧑‍🏫 先生用管理</button>':''}<button class="ghost" id="password">🔐 パスワード変更</button></div>`}
-function wireNav(){document.getElementById('home').onclick=()=>{view='home';render()};if(teacher)document.getElementById('manage').onclick=()=>{view='manage';render()};document.getElementById('password').onclick=passwordScreen}
+function nav(){return `<div class="tabs ls-main-nav"><button class="ghost" id="home">🏠 ホーム</button>${teacher?'<button class="ghost" id="manage">🧑‍🏫 先生用管理</button>':''}<button class="ghost" id="password">🔐 パスワード変更</button></div><div class="ls-page-controls"><button class="ghost" type="button" id="lsPageBack" ${currentScreen.kind==='home'&&screenHistory.length===0?'hidden':''}>← 前の画面に戻る</button><button class="ghost" type="button" id="lsPageTop">↑ ページ上部へ</button></div>`}
+function wireNav(){
+ document.getElementById('home').onclick=()=>moveTo({kind:'home'});
+ if(teacher)document.getElementById('manage').onclick=()=>moveTo({kind:'manage',tab:'lessons'});
+ document.getElementById('password').onclick=()=>moveTo({kind:'password'});
+ document.getElementById('lsPageBack').onclick=()=>{
+   if(unsavedWork()){openBrowserBackDialog();return;}
+   backWithinStudio();
+ };
+ document.getElementById('lsPageTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+}
 function render(){if(view==='manage'&&!teacher)view='home';if(view==='manage')return manage();if(view==='lesson'&&selected)return lessonScreen(selected);home()}
-function home(){let h=`${nav()}<section class="panel"><h1>${teacher?'教材プレビュー':'こんにちは、'+esc(student.displayName)+'さん！'}</h1><p class="muted">教材を読む → 実際に練習する → テストを提出する</p></section><div class="grid">`;for(let [key,name] of Object.entries(courses)){if(!teacher&&!student.allowedCourses.includes(key))continue;h+=`<article class="course"><div class="icon">${icons[key]}</div><h3>${name}</h3><p class="muted tiny">レベル1〜5</p><div class="level-grid">`;for(let lv=1;lv<=5;lv++){let count=lessons.filter(l=>l.course===key&&Number(l.level)===lv).length;h+=`<button data-course="${key}" data-level="${lv}" ${count?'':'disabled'}>Lv.${lv}</button>`}h+='</div></article>'}h+='</div>';appEl.innerHTML=h;wireNav();appEl.querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>levelScreen(b.dataset.course,Number(b.dataset.level)))}
-function levelScreen(course,level){let arr=lessons.filter(x=>x.course===course&&Number(x.level)===level).sort((a,b)=>(a.order||0)-(b.order||0));appEl.innerHTML=`${nav()}<section class="panel"><h1>${esc(courses[course])} / レベル${level}</h1><p>学習する教材を選んでください。</p><div class="lesson-list">${arr.map(x=>`<button class="ghost lesson-tile" data-id="${esc(x.id)}">${esc(x.title)} <span class="meta">${x.published?'公開中':'先生プレビュー'}</span></button>`).join('')}</div></section>`;wireNav();appEl.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{selected=lessons.find(x=>x.id===b.dataset.id);view='lesson';render()})}
+function home(){let h=`${nav()}<section class="panel"><h1>${teacher?'教材プレビュー':'こんにちは、'+esc(student.displayName)+'さん！'}</h1><p class="muted">教材を読む → 実際に練習する → テストを提出する</p></section><div class="grid">`;for(let [key,name] of Object.entries(courses)){if(!teacher&&!student.allowedCourses.includes(key))continue;h+=`<article class="course"><div class="icon">${icons[key]}</div><h3>${name}</h3><p class="muted tiny">レベル1〜5</p><div class="level-grid">`;for(let lv=1;lv<=5;lv++){let count=lessons.filter(l=>l.course===key&&Number(l.level)===lv).length;h+=`<button data-course="${key}" data-level="${lv}" ${count?'':'disabled'}>Lv.${lv}</button>`}h+='</div></article>'}h+='</div>';appEl.innerHTML=h;wireNav();appEl.querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>moveTo({kind:'level',course:b.dataset.course,level:Number(b.dataset.level)}))}
+function levelScreen(course,level){let arr=lessons.filter(x=>x.course===course&&Number(x.level)===level).sort((a,b)=>(a.order||0)-(b.order||0));appEl.innerHTML=`${nav()}<section class="panel"><h1>${esc(courses[course])} / レベル${level}</h1><p>学習する教材を選んでください。</p><div class="lesson-list">${arr.map(x=>`<button class="ghost lesson-tile" data-id="${esc(x.id)}">${esc(x.title)} <span class="meta">${x.published?'公開中':'先生プレビュー'}</span></button>`).join('')}</div></section>`;wireNav();appEl.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>moveTo({kind:'lesson',lessonId:b.dataset.id}))}
 function lessonScreen(l){let img=safeImage(l.imageUrl),vid=videoId(l.videoUrl),pdf=safePdf(l.pdfUrl),mine=submissions.filter(s=>s.lessonId===l.id&&(!student||s.studentId===student.id));appEl.innerHTML=`${nav()}<section class="panel"><span class="pill">${esc(courses[l.course])} / レベル${l.level}</span><h1>${esc(l.title)}</h1><p>${esc(l.goal)}</p></section><section class="panel"><h2>STEP 1｜解説を読もう</h2><div class="lesson-text">${esc(l.explanation)}</div>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'操作画面')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:'<div class="notice">実際の操作画面画像はまだ登録されていません。</div>'}${vid?`<iframe class="media-frame" loading="lazy" title="動画教材" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</section><section class="panel"><h2>STEP 2｜練習してみよう</h2><div class="lesson-text">${esc(l.practice)}</div><p><a class="btn ghost" href="${tools[l.course]}" target="_blank" rel="noopener noreferrer">公式ツールを開く</a></p></section>${pdf?`<section class="panel"><h2>📄 印刷用PDF教材</h2><p>授業で使うテキストを閲覧・印刷できます。</p><div class="actions"><a class="btn ghost" href="${esc(pdf)}" target="_blank" rel="noopener noreferrer">PDFを別タブで開く・印刷する</a></div><details><summary>この画面でPDFを表示</summary><iframe class="pdf-frame" src="${esc(pdf)}" title="印刷用PDF教材" loading="lazy"></iframe></details><p class="muted tiny">印刷はPDFを別タブで開き、印刷アイコンまたはCtrl＋Pを使用してください。</p></section>`:''}${l.course==='web'?`<section class="panel"><h2>🧑‍💻 Web開発エディターとプレビュー</h2><p class="muted">HTML・CSS・JavaScriptを入力し、結果を確かめましょう。生徒のコードとミッション達成状況をFirebaseへ保存できます。</p><div id="webWorkspace"></div></section>`:''}<section class="panel"><h2>STEP 3｜確認問題</h2><p>${esc(l.question||'学習したことを説明してください。')}</p>${(l.options||[]).length?`<form id="submitTest"><div class="question">${l.options.map((o,i)=>`<label><input type="radio" name="answer" value="${i}" required>${esc(o)}</label>`).join('')}</div><button>回答を提出する</button></form>`:`<form id="submitTest"><label>回答<textarea name="answer" maxlength="4000" required></textarea></label><button>回答を提出する</button></form>`}<div id="submitMsg"></div><p class="muted tiny">4択問題はその場で自動採点します。正解情報はブラウザに送られるため、教室内の練習・確認用です。記述式・制作課題は先生が採点します。</p></section><section class="panel"><h2>提出履歴</h2>${mine.length?mine.map(s=>`<p>${s.kind==='test'?'テスト':'練習'}：${['graded','self_graded'].includes(s.status)?`${Number(s.score)}点 ／ ${esc(s.feedback||'')}${s.status==='self_graded'?'（自己採点）':''}`:'採点待ち'}</p>`).join(''):'<p>まだ提出はありません。</p>'}</section>`;wireNav();if(l.course==='web')mountWebWorkspace({container:document.getElementById('webWorkspace'),lesson:l,db,student,uid:me.uid}).catch(err=>{document.getElementById('webWorkspace').innerHTML=msg('Webエディターを読み込めません: '+err.message,true)});let form=document.getElementById('submitTest');form.onsubmit=async e=>{e.preventDefault();if(!student){document.getElementById('submitMsg').innerHTML=msg('先生プレビューでは提出できません。');return}let f=new FormData(form),response=String(f.get('answer')??'');try{let payload={studentId:student.id,lessonId:l.id,response,kind:'test',status:'pending',createdAt:serverTimestamp()};let feedback='回答を保存しました。先生の採点をお待ちください。';if((l.options||[]).length===4){const k=await getDoc(doc(db,'auto_keys',l.id));if(k.exists()&&Number.isInteger(k.data().correct)){let ok=Number(response)===k.data().correct;payload.status='self_graded';payload.score=ok?100:0;payload.feedback=ok?'正解です！ '+String(k.data().explanation||''):'不正解です。教材を復習して再挑戦しましょう。 '+String(k.data().explanation||'');feedback=`${ok?'正解！':'不正解'} ${payload.score}点。${payload.feedback}（自己採点・参考記録）`;}}await addDoc(collection(db,'submissions'),payload);document.getElementById('submitMsg').innerHTML=msg(feedback);form.reset();submissions= (await getDocs(query(collection(db,'submissions'),where('studentId','==',student.id)))).docs.map(x=>({id:x.id,...x.data()}))}catch(err){document.getElementById('submitMsg').innerHTML=msg(err.message,true)}}}
 function passwordScreen(){appEl.innerHTML=`${nav()}<section class="panel auth"><h2>パスワード変更</h2><form id="pw"><label>新しいパスワード（12文字以上）<input name="pw" type="password" minlength="12" required></label><button>変更</button></form><div id="out"></div></section>`;wireNav();document.getElementById('pw').onsubmit=async e=>{e.preventDefault();try{await updatePassword(auth,new FormData(e.target).get('pw'));document.getElementById('out').innerHTML=msg('変更しました')}catch(err){document.getElementById('out').innerHTML=msg(err.message,true)}}}
-function manage(){appEl.innerHTML=`${nav()}<section class="panel"><h1>先生用管理画面</h1><div class="tabs"><button id="tabLessons" class="ghost">教材・問題管理</button><button id="tabStudents" class="ghost">生徒管理</button><button id="tabGrades" class="ghost">提出・採点・CSV</button></div><div id="teacherBody"></div></section>`;wireNav();document.getElementById('tabLessons').onclick=()=>{if(tab!=='lessons'){tab='lessons';teacherBody()}};document.getElementById('tabStudents').onclick=()=>{tab='students';teacherBody()};document.getElementById('tabGrades').onclick=()=>{tab='grades';teacherBody()};teacherBody()}
+function manage(){appEl.innerHTML=`${nav()}<section class="panel"><h1>先生用管理画面</h1><div class="tabs"><button id="tabLessons" class="ghost">教材・問題管理</button><button id="tabStudents" class="ghost">生徒管理</button><button id="tabGrades" class="ghost">提出・採点・CSV</button></div><div id="teacherBody"></div></section>`;wireNav();document.getElementById('tabLessons').onclick=()=>moveTo({kind:'manage',tab:'lessons'});document.getElementById('tabStudents').onclick=()=>moveTo({kind:'manage',tab:'students'});document.getElementById('tabGrades').onclick=()=>moveTo({kind:'manage',tab:'grades'});teacherBody()}
 function teacherBody(){
  const tabs={lessons:'tabLessons',students:'tabStudents',grades:'tabGrades'};
  for(const [name,id] of Object.entries(tabs))document.getElementById(id)?.classList.toggle('active-tab',tab===name);
