@@ -66,15 +66,16 @@ main:has(#htmlLevel1Studio){max-width:1600px}
 .hl1-heading h2{margin:0 0 8px}
 .hl1-heading p{margin:0 0 14px;line-height:1.7}
 .hl1-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:18px;align-items:start}
-.hl1-reader{min-width:0;position:sticky;top:12px;border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column}
+.hl1-reader{min-width:0;position:sticky;top:82px;border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;max-height:calc(100dvh - 94px);display:flex;flex-direction:column}
 .hl1-reader-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 #hl1Number{font-size:13px;color:#2a62b6;font-weight:750}
-.hl1-page-navigation{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin-bottom:9px;align-items:center}
+/* Keep the PDF page controls visible while scrolling through exercises. */
+.hl1-page-navigation{position:sticky;top:0;z-index:100;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin:0 0 12px;align-items:center;padding:9px;background:#f8fbff;border:1px solid #d8e4f2;border-radius:12px;box-shadow:0 3px 12px #233c6d18}
 .hl1-page-navigation button{min-height:44px;padding:9px 12px;white-space:nowrap}
 .hl1-page-navigation select{padding:8px;min-height:44px;min-width:0}
 .hl1-zoom-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .hl1-zoom-controls label{margin:0;font-size:14px}.hl1-zoom-controls select{width:auto;max-width:100%;min-height:44px}
-.hl1-page-viewport{overflow:auto;min-height:180px;max-height:calc(100dvh - 270px);background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
+.hl1-page-viewport{overflow:auto;min-height:180px;max-height:calc(100dvh - 340px);background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
 #hl1Image{display:block;width:100%;max-width:none;height:auto;background:#fff}
 .hl1-pdf-actions{margin:9px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .hl1-reader .tiny{line-height:1.6;margin:7px 0 0}
