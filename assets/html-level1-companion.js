@@ -1,4 +1,5 @@
 import {mountFloatingEditor} from './floating-editor.js';
+import {mountPageNavigation} from './page-navigation.js';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 // Questions follow the actual twelve pages of HTML_Level1_Guide.pdf.
@@ -229,7 +230,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   function scheduleSave(){persistLocal();setSaveStatus('変更があります（端末に保存済み）');if(isStudent){clearTimeout(saveTimer);saveTimer=setTimeout(()=>storeRemote(),1400);}}
   container.innerHTML=`<div class="hl1-heading"><h2>📖 PDF教材を読みながら実習しよう</h2><p class="muted">左の教材ページを進めると、右の説明・問題が同じページに切り替わります。コードはフローティングエディターで実行できます。ウィンドウの見出しをドラッグすると移動できます。</p></div>
     <div class="hl1-mobile-switch" role="group" aria-label="スマートフォン用表示切り替え"><button type="button" data-show="pdf" class="hl1-selected">📖 教材</button><button type="button" data-show="practice" class="ghost">💻 実習・問題</button></div>
-    <div class="hl1-page-navigation"><button type="button" id="hl1Prev" class="ghost">← 前のページ</button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost">次へ →</button></div>
+    <nav class="hl1-page-navigation" aria-label="HTML入門レベル1のページ送り"><button type="button" id="hl1Prev" class="ghost">← 前のページ</button><select id="hl1PageSelect" aria-label="教材ページを選択">${PAGES.map((p,i)=>`<option value="${i+1}">${i+1}. ${escapeHtml(p.title)}</option>`).join('')}</select><button type="button" id="hl1Next" class="ghost">次へ →</button></nav>
     <div class="hl1-grid">
       <aside class="hl1-reader" aria-label="教材のページ">
         <div class="hl1-reader-bar"><strong>📘 HTML入門 レベル1</strong><span id="hl1Number">1 / 12</span></div>
@@ -238,7 +239,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
         <div class="hl1-pdf-actions"><a class="btn ghost small" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
         <p class="muted tiny">表示しているのは、PDFの各ページを画像化したものです。印刷は「原本PDF」からできます。</p>
       </aside>
-      <div class="hl1-practice">
+      <div class="hl1-practice" tabindex="0" role="region" aria-label="このページのミッション・確認問題">
         <div class="hl1-page-info"><span class="pill" id="hl1Current">PDF 1ページ</span><h3 id="hl1Title"></h3><p id="hl1Intro"></p></div>
         <div class="hl1-exercises"><h3>✏️ このページのミッション・確認問題</h3><div id="hl1Questions"></div><div class="hl1-check-actions"><button type="button" id="hl1Check">✅ 回答とコードをチェック</button><button type="button" class="ghost" id="hl1Save">☁ このページを保存</button></div><div id="hl1Result" aria-live="polite"></div><div class="hl1-progress"><div id="hl1ProgressBar"></div></div><p class="muted small" id="hl1Progress"></p><p class="muted small" id="hl1SaveStatus" aria-live="polite"></p></div>
       </div>
@@ -256,7 +257,9 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     </section>`;
 
   const $=selector=>container.querySelector(selector);
-  const floatingEditor=mountFloatingEditor({container,windowEl:$('#hl1EditorWindow'),openButton:$('#hl1EditorOpen')});
+  const navigation=$('.hl1-page-navigation');
+  mountPageNavigation({container,navigation});
+  const floatingEditor=mountFloatingEditor({container,windowEl:$('#hl1EditorWindow'),openButton:$('#hl1EditorOpen'),navigation});
   const mobileShow=panel=>{
     container.classList.toggle('hl1-mobile-practice',panel==='practice');
     container.querySelectorAll('[data-show]').forEach(b=>{b.classList.toggle('hl1-selected',b.dataset.show===panel);b.classList.toggle('ghost',b.dataset.show!==panel);b.setAttribute('aria-pressed',String(b.dataset.show===panel));});
@@ -313,8 +316,11 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     const n=Number(newPage);if(!Number.isInteger(n)||n<1||n>maxPage)return;
     persistLocal();page=n;renderPage();
     $('#hl1PageViewport').scrollTo(0,0);
+    $('.hl1-practice').scrollTo(0,0);
     // On phones show the matching PDF first. The student then taps "実習・問題".
     mobileShow('pdf');
+    // The fixed controls also work from the final submission/footer area.
+    $('.hl1-grid').scrollIntoView({block:'start',behavior:'instant'});
   }
   $('#hl1Prev').addEventListener('click',()=>changePage(page-1));
   $('#hl1Next').addEventListener('click',()=>changePage(page+1));

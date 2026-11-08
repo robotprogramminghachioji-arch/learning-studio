@@ -1,5 +1,5 @@
 // Keep the editor mounted while moving, resizing or hiding its window.
-export function mountFloatingEditor({container, windowEl, openButton}) {
+export function mountFloatingEditor({container, windowEl, openButton, navigation=null}) {
   const titlebar=windowEl.querySelector('[data-window-move]');
   const resizeHandle=windowEl.querySelector('[data-window-resize]');
   const minimize=windowEl.querySelector('[data-window-minimize]');
@@ -7,12 +7,14 @@ export function mountFloatingEditor({container, windowEl, openButton}) {
   const events=new AbortController();
   const on=(el,type,handler)=>el.addEventListener(type,handler,{signal:events.signal});
   let bounds=null, gesture=null;
-  const viewport=()=>({
-    left:window.visualViewport?.offsetLeft||0,
-    top:window.visualViewport?.offsetTop||0,
-    width:window.visualViewport?.width||window.innerWidth,
-    height:window.visualViewport?.height||window.innerHeight
-  });
+  const viewport=()=>{
+    const left=window.visualViewport?.offsetLeft||0;
+    const viewportTop=window.visualViewport?.offsetTop||0;
+    const width=window.visualViewport?.width||window.innerWidth;
+    const viewportHeight=window.visualViewport?.height||window.innerHeight;
+    const top=Math.max(viewportTop,navigation?.getBoundingClientRect().bottom||0);
+    return {left,top,width,height:Math.max(0,viewportHeight-(top-viewportTop))};
+  };
   function place(next=bounds) {
     const v=viewport(), margin=8;
     const maxWidth=Math.max(0,v.width-margin*2), maxHeight=Math.max(0,v.height-margin*2);
@@ -77,9 +79,11 @@ export function mountFloatingEditor({container, windowEl, openButton}) {
     on(window.visualViewport,'scroll',()=>place());
   }
   resetPosition();openButton.setAttribute('aria-expanded','true');
+  const navigationObserver=new ResizeObserver(()=>place());
+  if(navigation)navigationObserver.observe(navigation);
   // In-app navigation may remove the entire lesson panel.
   const appObserver=new MutationObserver(()=>{
-    if(!container.isConnected){finishGesture();events.abort();appObserver.disconnect();}
+    if(!container.isConnected){finishGesture();events.abort();navigationObserver.disconnect();appObserver.disconnect();}
   });
   appObserver.observe(document.getElementById('app'),{childList:true,subtree:true});
   return {show};

@@ -61,24 +61,28 @@ textarea.web-editor[hidden]{display:none!important}
 @media(max-width:600px){.ls-back-actions{flex-direction:column-reverse}.ls-back-actions button{width:100%}.ls-top-floating{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
 
 /* HTML Lv.1: synchronized 12-page PDF guide + in-app exercises */
+/* The page controls get their own viewport band, including on narrow screens. */
+html.hl1-navigation-active{scroll-padding-top:calc(var(--hl1-navigation-bottom,0px) + 12px)}
+html.hl1-navigation-active body{padding-top:var(--hl1-navigation-height,0px)}
 main:has(#htmlLevel1Studio){max-width:1600px}
 .hl1-outer{padding:18px}
 .hl1-heading h2{margin:0 0 8px}
 .hl1-heading p{margin:0 0 14px;line-height:1.7}
 .hl1-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:18px;align-items:start}
-.hl1-reader{min-width:0;position:sticky;top:12px;border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column}
+.hl1-reader{min-width:0;position:sticky;top:calc(var(--hl1-navigation-bottom,0px) + 12px);border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;height:calc(100dvh - var(--hl1-navigation-bottom,0px) - 24px);display:flex;flex-direction:column}
 .hl1-reader-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 #hl1Number{font-size:13px;color:#2a62b6;font-weight:750}
-.hl1-page-navigation{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin-bottom:9px;align-items:center}
+/* Remains visible even after scrolling past the lesson panel. */
+.hl1-page-navigation{position:fixed;top:0;left:0;right:0;z-index:1000;max-width:1600px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin:0 auto;align-items:center;padding:calc(9px + env(safe-area-inset-top,0px)) max(9px,env(safe-area-inset-right,0px)) 9px max(9px,env(safe-area-inset-left,0px));background:#f8fbff;border:1px solid #d8e4f2;border-radius:12px;box-shadow:0 3px 12px #233c6d18}
 .hl1-page-navigation button{min-height:44px;padding:9px 12px;white-space:nowrap}
 .hl1-page-navigation select{padding:8px;min-height:44px;min-width:0}
 .hl1-zoom-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .hl1-zoom-controls label{margin:0;font-size:14px}.hl1-zoom-controls select{width:auto;max-width:100%;min-height:44px}
-.hl1-page-viewport{overflow:auto;min-height:180px;max-height:calc(100dvh - 270px);background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
+.hl1-page-viewport{overflow:auto;flex:1;min-height:0;background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
 #hl1Image{display:block;width:100%;max-width:none;height:auto;background:#fff}
 .hl1-pdf-actions{margin:9px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .hl1-reader .tiny{line-height:1.6;margin:7px 0 0}
-.hl1-practice{min-width:0}
+.hl1-practice{min-width:0;position:sticky;top:calc(var(--hl1-navigation-bottom,0px) + 12px);max-height:calc(100dvh - var(--hl1-navigation-bottom,0px) - 24px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .hl1-page-info,.hl1-exercises,.hl1-editor-area{border:1px solid #dce5f3;border-radius:14px;padding:15px;margin-bottom:15px;background:#fff}
 .hl1-page-info{background:#eef5ff}
 .hl1-page-info h3{margin:11px 0 6px;font-size:1.15rem}
@@ -125,7 +129,7 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 .hl1-window-resize{position:absolute;right:0;bottom:0;min-width:44px;min-height:36px;padding:4px 12px;border-radius:10px 0 0 0;cursor:nwse-resize;touch-action:none;background:#dce9fa;color:#234776;border:1px solid #527cb1}
 .hl1-window-moving iframe{pointer-events:none}
 .hl1-window-moving{user-select:none}
-.hl1-window-bar:focus-visible,.hl1-window-resize:focus-visible,.hl1-page-viewport:focus-visible{outline:3px solid #e6ac26;outline-offset:-3px}
+.hl1-window-bar:focus-visible,.hl1-window-resize:focus-visible,.hl1-page-viewport:focus-visible,.hl1-practice:focus-visible{outline:3px solid #e6ac26;outline-offset:-3px}
 .hl1-mobile-switch{display:none}
 @container (max-width:560px){
  .hl1-window-content .web-workspace-grid{grid-template-columns:minmax(0,1fr)}
@@ -133,8 +137,7 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 .hl1-editor-window{container-type:inline-size}
 @media(max-width:900px){
  .hl1-outer{padding:10px}.hl1-grid{grid-template-columns:minmax(0,1fr);gap:10px}
- .hl1-reader{position:static;max-height:none}
- .hl1-page-viewport{max-height:65dvh}
+ .hl1-reader,.hl1-practice{position:static}
  .hl1-mobile-switch{display:flex;gap:8px;margin:0 0 12px}
  .hl1-mobile-switch button{flex:1;min-height:44px}
  .hl1-mobile-switch .hl1-selected{background:#2a62b6;color:#fff}
@@ -143,7 +146,8 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
  .hl1-mobile-practice .hl1-grid>.hl1-practice{display:block}
 }
 @media(max-width:500px){
- .hl1-page-navigation{grid-template-columns:auto auto;grid-template-areas:'select select' 'prev next'}
+ .hl1-page-navigation{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:'select select' 'prev next'}
+ .hl1-page-navigation button{white-space:normal;overflow-wrap:anywhere;padding:9px 4px}
  .hl1-page-navigation select{grid-area:select}.hl1-page-navigation #hl1Prev{grid-area:prev}.hl1-page-navigation #hl1Next{grid-area:next}
  .hl1-page-info,.hl1-exercises,.hl1-editor-area{padding:12px}
  .hl1-reader{padding:9px}
