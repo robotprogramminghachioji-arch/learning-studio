@@ -61,18 +61,21 @@ textarea.web-editor[hidden]{display:none!important}
 @media(max-width:600px){.ls-back-actions{flex-direction:column-reverse}.ls-back-actions button{width:100%}.ls-top-floating{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
 
 /* HTML Lv.1: synchronized 12-page PDF guide + in-app exercises */
+main:has(#htmlLevel1Studio){max-width:1600px}
 .hl1-outer{padding:18px}
 .hl1-heading h2{margin:0 0 8px}
 .hl1-heading p{margin:0 0 14px;line-height:1.7}
-.hl1-grid{display:grid;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);gap:18px;align-items:start}
-.hl1-reader{min-width:0;position:sticky;top:12px;border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;max-height:calc(100dvh - 24px);overflow-y:auto}
+.hl1-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:18px;align-items:start}
+.hl1-reader{min-width:0;position:sticky;top:12px;border:1px solid #d8e4f2;background:#f8fbff;border-radius:14px;padding:12px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column}
 .hl1-reader-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 #hl1Number{font-size:13px;color:#2a62b6;font-weight:750}
 .hl1-page-navigation{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin-bottom:9px;align-items:center}
-.hl1-page-navigation button{padding:9px 8px;font-size:12px;white-space:nowrap}
-.hl1-page-navigation select{padding:8px 5px;font-size:12px;min-width:0}
-.hl1-page-image-button{width:100%;margin:0;padding:0;background:#fff;border:1px solid #ccd9eb;box-shadow:0 3px 12px #15325b15;border-radius:7px;display:block;overflow:hidden;cursor:zoom-in}
-.hl1-page-image-button img{display:block;width:100%;height:auto;max-height:calc(100dvh - 205px);object-fit:contain}
+.hl1-page-navigation button{min-height:44px;padding:9px 12px;white-space:nowrap}
+.hl1-page-navigation select{padding:8px;min-height:44px;min-width:0}
+.hl1-zoom-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.hl1-zoom-controls label{margin:0;font-size:14px}.hl1-zoom-controls select{width:auto;max-width:100%;min-height:44px}
+.hl1-page-viewport{overflow:auto;min-height:180px;max-height:calc(100dvh - 270px);background:#dce5ef;border:1px solid #ccd9eb;border-radius:7px;overscroll-behavior:contain}
+#hl1Image{display:block;width:100%;max-width:none;height:auto;background:#fff}
 .hl1-pdf-actions{margin:9px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .hl1-reader .tiny{line-height:1.6;margin:7px 0 0}
 .hl1-practice{min-width:0}
@@ -106,21 +109,32 @@ textarea.web-editor[hidden]{display:none!important}
 #hl1ProgressBar{width:0;height:100%;background:#2e9e74;transition:width .2s}
 #hl1Progress{font-size:12px;line-height:1.6;margin:0}
 #hl1SaveStatus{min-height:19px;line-height:1.6;margin:4px 0}
-/* Keep the existing editor usable in the right column: code and preview stack vertically. */
-.hl1-editor-area .web-workspace-grid{grid-template-columns:minmax(0,1fr)}
-.hl1-editor-area .web-workspace{padding:10px}
-.hl1-editor-area textarea.web-editor{min-height:270px}
-.hl1-editor-area #webPreview{height:275px}
+/* The floating window is a sibling of the reader/practice panels, never remounted. */
+.hl1-editor-window{position:fixed;z-index:950;display:flex;flex-direction:column;background:#fff;border:2px solid #527cb1;border-radius:14px;box-shadow:0 12px 45px #142e6050;overflow:hidden}
+.hl1-editor-window[hidden]{display:none!important}
+.hl1-window-bar{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px;background:#243b70;color:#fff;cursor:move;touch-action:none;user-select:none;flex-shrink:0}
+.hl1-window-bar strong{font-size:14px}.hl1-window-actions{display:flex;gap:5px;flex-shrink:0}
+.hl1-window-actions button{min-height:44px;padding:8px;font-size:12px}
+.hl1-window-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;margin:0;border:0;border-radius:0;padding:12px 12px 44px}
+.hl1-window-content .web-workspace-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hl1-window-content .web-workspace{padding:8px}
+.hl1-window-content textarea.web-editor{min-height:220px;resize:vertical}
+.hl1-window-content #webPreview{height:260px}
+.hl1-editor-open{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:940;min-height:48px;box-shadow:0 4px 18px #233c6d40}
+body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.hl1-window-resize{position:absolute;right:0;bottom:0;min-width:44px;min-height:36px;padding:4px 12px;border-radius:10px 0 0 0;cursor:nwse-resize;touch-action:none;background:#dce9fa;color:#234776;border:1px solid #527cb1}
+.hl1-window-moving iframe{pointer-events:none}
+.hl1-window-moving{user-select:none}
+.hl1-window-bar:focus-visible,.hl1-window-resize:focus-visible,.hl1-page-viewport:focus-visible{outline:3px solid #e6ac26;outline-offset:-3px}
 .hl1-mobile-switch{display:none}
-.hl1-overlay[hidden]{display:none!important}
-.hl1-overlay{position:fixed;z-index:1500;inset:0;background:rgba(13,29,53,.96);overflow:auto;padding:60px 20px 20px;text-align:center}
-.hl1-overlay-top{position:fixed;left:0;right:0;top:0;z-index:1501;min-height:53px;background:#102641;color:#fff;display:flex;gap:15px;justify-content:space-between;align-items:center;padding:8px 15px}
-.hl1-overlay-top button{background:#fff;color:#173c67}
-.hl1-overlay img{display:block;width:min(100%,800px);height:auto;margin:0 auto;border-radius:7px;background:#fff}
+@container (max-width:560px){
+ .hl1-window-content .web-workspace-grid{grid-template-columns:minmax(0,1fr)}
+}
+.hl1-editor-window{container-type:inline-size}
 @media(max-width:900px){
  .hl1-outer{padding:10px}.hl1-grid{grid-template-columns:minmax(0,1fr);gap:10px}
- .hl1-reader{position:static;max-height:none;overflow:visible}
- .hl1-page-image-button img{max-height:none}
+ .hl1-reader{position:static;max-height:none}
+ .hl1-page-viewport{max-height:65dvh}
  .hl1-mobile-switch{display:flex;gap:8px;margin:0 0 12px}
  .hl1-mobile-switch button{flex:1;min-height:44px}
  .hl1-mobile-switch .hl1-selected{background:#2a62b6;color:#fff}
@@ -135,4 +149,11 @@ textarea.web-editor[hidden]{display:none!important}
  .hl1-reader{padding:9px}
  .hl1-task{padding:10px}
  .hl1-pdf-actions a{width:100%;text-align:center}
+}
+
+@media(max-width:600px){
+ .hl1-task textarea,.hl1-window-content textarea.web-editor{font-size:16px}
+ .hl1-window-content .web-workspace-grid{grid-template-columns:minmax(0,1fr)}
+ .hl1-window-content button{min-height:44px}
+ .hl1-window-content{padding:10px 10px 44px}
 }
