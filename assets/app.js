@@ -1,3 +1,4 @@
+import {initializeHeader} from './page-navigation.js';
 import {mountWebWorkspace} from './web-workspace.js';
 import {mountHtmlLevel1Companion} from './html-level1-companion.js';
 import {initializeApp,deleteApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
@@ -120,6 +121,7 @@ function initializeNavigation(){
     window.addEventListener('scroll',toggle,{passive:true});toggle();
   }
 }
+initializeHeader();
 initializeNavigation();
 
 const configured=cfg.apiKey&&!cfg.apiKey.startsWith('YOUR_')&&cfg.projectId&&!cfg.projectId.startsWith('YOUR_');
@@ -133,7 +135,7 @@ async function refresh(){screenHistory.length=0;currentScreen={kind:'home'};view
   const lessonQueries=await Promise.all(allowedCourses.map(course=>getDocs(query(collection(db,'lessons'),where('published','==',true),where('course','==',course)))));
   lessons=lessonQueries.flatMap(snap=>snap.docs.map(x=>({id:x.id,...x.data()})));
   submissions=(await getDocs(query(collection(db,'submissions'),where('studentId','==',sid)))).docs.map(x=>({id:x.id,...x.data()}));}
- userbar.innerHTML=`<div class="row"><span>${esc(teacher?'先生':student.displayName)}</span><button id="logout" class="ghost small">ログアウト</button></div>`;document.getElementById('logout').onclick=()=>signOut(auth);render();}
+ userbar.innerHTML=`<div class="row"><span class="ls-session-name" title="${esc(teacher?'先生':student.displayName)}">${esc(teacher?'先生':student.displayName)}</span><button id="logout" class="ghost small">ログアウト</button></div>`;document.getElementById('logout').onclick=()=>signOut(auth);render();}
 function noProfile(){userbar.innerHTML='<button id="logout" class="ghost small">ログアウト</button>';document.getElementById('logout').onclick=()=>signOut(auth);appEl.innerHTML='<section class="panel"><h2>有効な生徒情報がありません</h2><p>先生に生徒IDとアカウントの状態を確認してください。</p></section>'}
 function login(){appEl.innerHTML=`<section class="panel auth"><h1>Learning Studioにログイン</h1><form id="login"><label>区分<select name="kind"><option value="student">生徒</option><option value="teacher">先生</option></select></label><label>生徒ID（先生はメールアドレス）<input name="identifier" required autocomplete="username"></label><label>パスワード<input type="password" name="password" required autocomplete="current-password"></label><button>ログイン</button></form><div id="notice"></div></section>`;document.getElementById('login').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target),id=String(f.get('identifier')).trim().toLowerCase(),email=id,out=document.getElementById('notice');out.textContent='確認中…';try{if(f.get('kind')==='student'){if(!sidOK(id))throw Error('ID形式が違います');let lookup=await getDoc(doc(db,'login_lookup',await hashId(id)));if(!lookup.exists())throw Error('認証できません');email=lookup.data().email;localStorage.setItem('ls_student_id',id)}else localStorage.removeItem('ls_student_id');await signInWithEmailAndPassword(auth,email,String(f.get('password')))}catch(err){out.innerHTML=msg('ログインエラー: '+(err.code || 'unknown'),true)}}}
 function nav(){return `<div class="tabs ls-main-nav"><button class="ghost" id="home">🏠 ホーム</button>${teacher?'<button class="ghost" id="manage">🧑‍🏫 先生用管理</button>':''}<button class="ghost" id="password">🔐 パスワード変更</button></div><div class="ls-page-controls"><button class="ghost" type="button" id="lsPageBack" ${currentScreen.kind==='home'&&screenHistory.length===0?'hidden':''}>← 前の画面に戻る</button><button class="ghost" type="button" id="lsPageTop">↑ ページ上部へ</button></div>`}

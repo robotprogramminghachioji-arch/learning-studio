@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <header><div class="brand">💻 <strong>Learning Studio</strong><small>プログラミング学びの教室</small></div><div id="userbar"></div></header>
+  <header id="lsHeader" class="ls-header">
+    <div class="ls-header-top"><div class="brand"><span class="ls-brand-title">💻 <strong>Learning Studio</strong></span><small>プログラミング学びの教室</small></div><div id="userbar"></div></div>
+    <div id="lsLessonNavigation" class="ls-lesson-navigation" hidden></div>
+  </header>
   <main id="app"><section class="panel">読み込み中…</section></main>
   <footer>© プログラミング学びの教室 Learning Studio</footer>
   <button type="button" id="lsToTop" class="ls-top-floating" aria-label="ページ上部へ戻る" hidden>↑ 上へ</button>
