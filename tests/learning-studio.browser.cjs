@@ -658,7 +658,11 @@ for(const mobile of [false,true])test(`Page 1 is a reading introduction, advance
  assert.equal(await page.locator('.hl1-task').count(),0);
  assert.equal(await page.locator('#hl1Questions input,#hl1Questions textarea').count(),0);
  const introduction=await page.locator('#hl1Questions').textContent();
- assert.ok(introduction.includes('知る → 読む → 作る → 試す'));
+ assert.deepEqual(await page.locator('.hl1-learning-flow strong').allTextContents(),['Input（インプット）','Output（アウトプット）','Check（確認）','Reflect（振り返り）']);
+ assert.ok(introduction.includes('見本や自分のねらいに合っているか'));
+ assert.ok(introduction.includes('できたこと・できなかったことを振り返り、次の学習につなげる'));
+ assert.ok(introduction.includes('コードを直してもう一度確認'));
+ assert.ok(!introduction.includes('知る → 読む'));
  assert.ok(introduction.includes('分からない言葉は先生に聞こう'));
  assert.ok(introduction.includes('HTMLは、Webページの内容や構造'));
  for(const obsolete of ['今日の目標に入っているものは？','必要な組み合わせは？','「こんにちは！」は何の役割？','見出しと文章をそれぞれ見つけた','以前の自己紹介についての回答'])assert.ok(!introduction.includes(obsolete));

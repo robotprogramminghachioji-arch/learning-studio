@@ -334,7 +334,7 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
   function renderTasks(){
     const entry=getRecord(),data=PAGES[page-1];
     if(data.mode==='introduction'){
-      $('#hl1Questions').innerHTML=`<div class="hl1-introduction"><section><h4>この教材の進め方</h4><p>「知る → 読む → 作る → 試す」の順に学習します。</p><p>左の説明や図を読みながら、分からない言葉は先生に聞こう。</p></section><section><h4>HTMLのはじめの一歩</h4><p>HTMLは、Webページの内容や構造を表すために使う言葉です。この教材で、コードが画面に表示されるしくみを学びます。</p></section><section><h4>画面の使い方</h4><ul><li>上の「前のページ」「次へ」で教材を進めます。</li><li>教材の「表示倍率」で文字や図を読みやすい大きさにします。</li><li>実習では「エディターを開く」からコードを入力し、表示を確認します。</li></ul></section></div>`;
+      $('#hl1Questions').innerHTML=`<div class="hl1-introduction"><section><h4>この教材の進め方</h4><ol class="hl1-learning-flow"><li><strong>Input（インプット）</strong>：教材を読んだり先生の説明を聞いたりして、知識を取り入れる。</li><li><strong>Output（アウトプット）</strong>：学んだことを使ってコードを書き、実際に動かしてみる。</li><li><strong>Check（確認）</strong>：表示が教材の見本や自分のねらいに合っているかを確かめる。</li><li><strong>Reflect（振り返り）</strong>：できたこと・できなかったことを振り返り、次の学習につなげる。</li></ol><p>必要に応じて教材に戻り、コードを直してもう一度確認しましょう。</p><p>左の説明や図を読みながら、分からない言葉は先生に聞こう。</p></section><section><h4>HTMLのはじめの一歩</h4><p>HTMLは、Webページの内容や構造を表すために使う言葉です。この教材で、コードが画面に表示されるしくみを学びます。</p></section><section><h4>画面の使い方</h4><ul><li>上の「前のページ」「次へ」で教材を進めます。</li><li>教材の「表示倍率」で文字や図を読みやすい大きさにします。</li><li>実習では「エディターを開く」からコードを入力し、表示を確認します。</li></ul></section></div>`;
       updateProgress();return;
     }
     $('#hl1Questions').innerHTML=data.tasks.map((task,i)=>{
