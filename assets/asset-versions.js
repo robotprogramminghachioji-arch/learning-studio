@@ -13,7 +13,10 @@ const versions={
   "assets/pdf-pages/html-level1-11.webp": "71be527cb43e",
   "assets/pdf-pages/html-level1-12.webp": "e8c7dfc9498f",
   "assets/pdfs/HTML_Level1_Guide.pdf": "f538ed5ac7bf",
-  "assets/pdfs/html_lesson01.pdf": "ca2302c9b3ff"
+  "assets/pdfs/html_lesson01.pdf": "ca2302c9b3ff",
+  "assets/vendor/fontkit.umd.min.js": "d8df561b9fba",
+  "assets/vendor/pdf-lib.min.js": "0f9a5cad0794",
+  "assets/fonts/NotoSansJP-Regular.otf": "dff723ba59d5"
 };
 
 export function assetUrl(value){

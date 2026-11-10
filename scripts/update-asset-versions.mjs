@@ -8,9 +8,20 @@ const check=process.argv.includes('--check');
 const hash=content=>createHash('sha256').update(content).digest('hex').slice(0,12);
 const outputs=new Map(),completed=new Map();
 const versions={};
-for(const dir of ['assets/pdf-pages','assets/pdfs']){
+const modelSource=await readFile(path.join(root,'assets/workbook-model.js'),'utf8');
+const {validateWorkbook,prepareRevision}=await import('data:text/javascript;base64,'+Buffer.from(modelSource).toString('base64'));
+const workbookSource=await readFile(path.join(root,'assets/html-level1-workbook.json'),'utf8');
+let workbook=validateWorkbook(JSON.parse(workbookSource));
+try{
+  const oldSource=await readFile(path.join(root,'assets/workbook-defaults.js'),'utf8');
+  const previous=validateWorkbook(JSON.parse(oldSource.slice(oldSource.indexOf('export const DEFAULT_WORKBOOK=')+'export const DEFAULT_WORKBOOK='.length).trim().replace(/;$/,'')));
+  if(JSON.stringify(workbook)!==JSON.stringify(previous))workbook=prepareRevision(workbook,previous);
+}catch(err){if(err.code!=='ENOENT')throw err;}
+outputs.set('assets/html-level1-workbook.json',JSON.stringify(workbook,null,2)+'\n');
+outputs.set('assets/workbook-defaults.js','// Generated from html-level1-workbook.json. Edit the JSON source.\nexport const DEFAULT_WORKBOOK='+JSON.stringify(workbook,null,2)+';\n');
+for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts']){
   for(const name of (await readdir(path.join(root,dir))).sort()){
-    if(!/\.(pdf|webp)$/.test(name))continue;
+    if(!/\.(pdf|webp|js|ttf|otf)$/.test(name))continue;
     const file=`${dir}/${name}`;versions[file]=hash(await readFile(path.join(root,file)));
   }
 }

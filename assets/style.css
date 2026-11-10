@@ -217,3 +217,22 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 .hl1-introduction p,.hl1-introduction li{font-size:14px;line-height:1.8}
 .hl1-introduction p{margin:6px 0}.hl1-introduction ul{margin:6px 0;padding-left:22px}
 .hl1-progress[hidden],#hl1Progress[hidden],#hl1AnswerStatus[hidden],#hl1Result[hidden]{display:none!important}
+
+.workbook-text{white-space:pre-wrap}
+.workbook-author{margin-bottom:12px}
+#wbDialog{width:min(1100px,96vw);max-height:92dvh;border:1px solid #a8bdd8;border-radius:14px;padding:18px;overflow:auto;color:#22314d;background:white}
+#wbDialog::backdrop{background:#14284499}
+.wb-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-18px;background:white;padding:12px 0;z-index:2}
+.wb-dialog-head h2{margin:0}
+#wbDialog fieldset{min-width:0;border:1px solid #cbd9ed;border-radius:10px;margin:12px 0;padding:12px}
+#wbDialog legend{font-weight:700}
+#wbDialog details{border:1px solid #dce5f3;padding:12px;border-radius:10px;margin:12px 0}
+#wbDialog summary{cursor:pointer;font-weight:700}
+#wbDialog textarea[name=pdfBody]{min-height:320px;line-height:1.7}
+#wbDialog textarea[name=sample],.final-code{font-family:Consolas,monospace}
+#wbPreviewArea img{display:block;width:min(100%,595px);height:auto;border:1px solid #cbd9ed}
+.wb-file{margin:0;font-size:13px}.wb-file input{padding:6px}
+.wb-save-actions{margin-top:18px}#wbAuthorStatus{white-space:pre-wrap;font-weight:650}
+.final-question{padding:12px;border:1px solid #dce5f3;border-radius:10px;margin:14px 0}
+.final-question textarea{margin-top:8px;font-weight:400;line-height:1.6}
+@media(max-width:600px){#wbDialog{padding:10px}.wb-dialog-head{top:-10px}#wbDialog input,#wbDialog textarea,#wbDialog select,.final-question textarea{font-size:16px}#wbDialog button{min-height:44px}}

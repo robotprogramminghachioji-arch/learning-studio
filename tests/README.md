@@ -32,3 +32,7 @@ Linuxでは `/usr/bin/chromium` があれば使用し、それ以外ではPlaywr
 キャッシュ更新テストは、通常の通信代替テストとは別に、Playwrightのリクエストルーティングを無効にしてChromiumのHTTPキャッシュを有効にします。テスト用サーバーで旧表記と未バージョン化のモジュールを1年間キャッシュ可能として読み込み、配信内容を新しいリリースへ切り替えます。同じブラウザで再読み込みし、新しい4段階が表示され、旧モジュールのレスポンス自体はキャッシュに残っていることを確認します。コード・CSS・学習位置・localStorage/sessionStorageの保持、PDFと画像の更新URLも検証します。認証・Firestoreの境界だけをローカルのテスト用SDKへ置き換え、本番Firebaseへは接続しません。
 
 キャッシュ更新後のスマートフォン画面は `/tmp/learning-studio-mobile-cache-update.png` に出力します。
+
+先生の教材編集では、PC・スマートフォンの両方でPDF本文・右側問題の変更、Firestoreへの保存、生徒側への反映、旧回答の保持、問題変更時の回答キー分離を検証します。JSON読み込み・書き出し、10問未満の拒否、同時編集の上書き防止、保存失敗時の下書き保持、最終提出12問の再読込復元・提出も検証します。
+
+編集画面は `/tmp/learning-studio-author-dialog-{desktop,mobile}.png`、編集PDFは `/tmp/learning-studio-teacher-edited-{desktop,mobile}.pdf` に出力します。PDFの変更ページは画像として格納し、日本語の描画を維持します。原本PDFは変更しません。本番Firestoreへの書き込み・権限はネットワーク制限のため未検証です。
