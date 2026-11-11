@@ -36,3 +36,5 @@ Linuxでは `/usr/bin/chromium` があれば使用し、それ以外ではPlaywr
 先生の教材編集では、PC・スマートフォンの両方でPDF本文・右側問題の変更、Firestoreへの保存、生徒側への反映、旧回答の保持、問題変更時の回答キー分離を検証します。JSON読み込み・書き出し、10問未満の拒否、同時編集の上書き防止、保存失敗時の下書き保持、最終提出12問の再読込復元・提出も検証します。
 
 編集画面は `/tmp/learning-studio-author-dialog-{desktop,mobile}.png`、編集PDFは `/tmp/learning-studio-teacher-edited-{desktop,mobile}.pdf` に出力します。PDFの変更ページは画像として格納し、日本語の描画を維持します。原本PDFは変更しません。本番Firestoreへの書き込み・権限はネットワーク制限のため未検証です。
+
+先生向けヘルプは、PCとスマートフォン（320px・375px・横向き幅）で右上ボタンの操作領域、ログアウトとの重なり・横はみ出し、別タブ表示、目次の移動、元の編集中コード保持、ログアウト後の表示を確認します。手順書の画面は `/tmp/learning-studio-help-{desktop,mobile}.png` に出力します。

@@ -40,13 +40,15 @@ async function moduleVersion(file,stack=[]){
   }
   outputs.set(file,source);const version=hash(source);completed.set(file,version);return version;
 }
-let html=await readFile(path.join(root,'index.html'),'utf8');
+for(const htmlFile of ['index.html','help.html']){
+let html=await readFile(path.join(root,htmlFile),'utf8');
 for(const match of [...html.matchAll(/(src|href)="(assets\/[^"?]+)(?:\?[^"\s]*)?"/g)]){
   const file=match[2];
   const version=file.endsWith('.js')?await moduleVersion(file):hash(await readFile(path.join(root,file)));
   html=html.replace(match[0],`${match[1]}="${file}?v=${version}"`);
 }
-outputs.set('index.html',html);
+outputs.set(htmlFile,html);
+}
 const changed=[];
 for(const [file,content] of outputs){
   let current;try{current=await readFile(path.join(root,file),'utf8');}catch(err){if(err.code!=='ENOENT')throw err;}
