@@ -65,3 +65,7 @@ npm test
 `version:assets` はPDF・画像の対応表（`assets/asset-versions.js`）、ローカルモジュールのimport、`index.html`の参照を更新します。`npm run check:assets` は参照と内容の整合を確認し、`npm test`でも最初に実行します。生成結果もコミットするので、GitHub Pagesで公開するときの追加ビルドは不要です。`config.js`、Firebase SDKのURL、Firestoreルールは変更しません。
 
 公開反映には変更ブランチのマージとGitHub Pagesの公開処理が必要です。公開後はブラウザで再読み込みしてください。教材画面を開いたままのページ送りだけでは、読み込み済みのJavaScriptは入れ替わりません。公開処理が完了する前のHTMLを取得した場合は、まだ旧表示になることがあります。
+
+## 先生向けヘルプ
+
+右上の「ヘルプ」から [教材・問題編集手順書](help.html) を別タブで開けます。通常教材の作成・公開とHTML入門レベル1専用の本文・問題編集、JSONバックアップ、保存時のエラー対応を案内しています。ログイン前も参照できます。

@@ -820,3 +820,38 @@ test('Workbook JSON exchange validates data and failed cloud save keeps the teac
  await page.locator('#wbImport').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(original))});
  await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('10〜30問'));
 });
+
+for(const mobile of [false,true])test(`Help opens teacher instructions without losing edits (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile});
+ await page.locator('#webHtmlEditor').fill('<h1>保存前の原稿</h1>');
+ const widths=mobile?[320,375,844]:[1440];
+ for(const width of widths){
+  await page.setViewportSize({width,height:mobile?812:1000});await settleLayout(page);
+  const help=await page.locator('#lsHelp').boundingBox(),logout=await page.locator('#logout').boundingBox();
+  assert.ok(help.width>=44&&help.height>=44&&help.x+help.width<=width);
+  assert.ok(logout.x+logout.width<=help.x);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ }
+ await page.setViewportSize({width:mobile?375:1440,height:mobile?812:1000});
+ const popupPromise=page.waitForEvent('popup');await page.locator('#lsHelp').click();const helpPage=await popupPromise;
+ await helpPage.waitForLoadState();
+ assert.equal(await helpPage.locator('h1').textContent(),'先生向け 教材・問題編集手順書');
+ assert.equal(await helpPage.evaluate(()=>window.opener===null),true);
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>保存前の原稿</h1>');
+ for(const width of mobile?[320,375,844]:[1440]){
+  await helpPage.setViewportSize({width,height:mobile?812:1000});
+  assert.equal(await helpPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  for(const id of ['start','lessons','workbook','backup','trouble']){
+   await helpPage.locator(`nav a[href="#${id}"]`).click();
+   assert.equal(new URL(helpPage.url()).hash,`#${id}`);
+   const rect=await helpPage.locator(`#${id}`).boundingBox();assert.ok(rect.y>=0&&rect.y<812);
+  }
+ }
+ await helpPage.setViewportSize({width:mobile?375:1440,height:mobile?812:1000});
+ await page.screenshot({path:`/tmp/learning-studio-help-header-${mobile?'mobile':'desktop'}.png`});
+ await helpPage.locator('nav').scrollIntoViewIfNeeded();
+ await helpPage.screenshot({path:`/tmp/learning-studio-help-${mobile?'mobile':'desktop'}.png`,fullPage:true});
+ await helpPage.close();
+ await page.locator('#logout').click();await page.waitForSelector('#login');
+ assert.equal(await page.locator('#lsHelp').isVisible(),true);
+});
