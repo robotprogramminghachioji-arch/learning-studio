@@ -2,9 +2,13 @@
   "name": "learning-studio",
   "private": true,
   "scripts": {
-    "test": "node --test tests/learning-studio.browser.cjs"
+    "test": "npm run check:assets && node --test tests/learning-studio.browser.cjs",
+    "version:assets": "node scripts/update-asset-versions.mjs",
+    "check:assets": "node scripts/update-asset-versions.mjs --check"
   },
   "devDependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "pdf-lib": "^1.17.1",
     "playwright": "1.62.1"
   }
 }

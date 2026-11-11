@@ -1,6 +1,8 @@
+import {questionKey} from './workbook-model.js?v=1fbf7052033a';
 // Page gates are a classroom workflow; Firestore rules remain the access boundary.
 export const pageKey=n=>`p${String(n).padStart(2,'0')}`;
 export function requiredTask(task,page,index){
+  if(typeof task.required==='boolean')return page===11||task.required;
   return page===11 || (page===12 ? task.type!=='text'||index===8 : task.type!=='text');
 }
 export function pageRequirementsMet(record,definition,page){
@@ -8,7 +10,7 @@ export function pageRequirementsMet(record,definition,page){
     // Old page-1 answers stay archived under their original numeric keys.
     return record?.introRead===true||[0,1,2,3,4].every(index=>record?.results?.[index]===true);
   }
-  return definition.tasks.every((task,index)=>!requiredTask(task,page,index)||record?.results?.[index]===true);
+  return definition.tasks.every((task,index)=>!requiredTask(task,page,index)||record?.results?.[questionKey(task,index)]===true);
 }
 export function learningState(work,definitions){
   let stored=work?._learning||{};
@@ -28,10 +30,10 @@ export function learningState(work,definitions){
   // Preserve a fully answered, checked legacy test once its prerequisites are met.
   const legacyTest=work?.p11;
   const legacySubmitted=!stored.version&&Array.from({length:10},(_,i)=>completed[pageKey(i+1)]).every(Boolean)&&
-    definitions[10].tasks.every((task,i)=>typeof legacyTest?.results?.[i]==='boolean'&&
-      (task.type==='choice'?legacyTest.answers?.[i]!==undefined&&legacyTest.answers[i]!==''&&
-        Number.isInteger(Number(legacyTest.answers[i]))&&Number(legacyTest.answers[i])>=0&&Number(legacyTest.answers[i])<task.options.length:
-        String(legacyTest.answers?.[i]||'').trim().length>=2));
+    definitions[10].tasks.every((task,i)=>{const key=questionKey(task,i);return typeof legacyTest?.results?.[key]==='boolean'&&
+      (task.type==='choice'?legacyTest.answers?.[key]!==undefined&&legacyTest.answers[key]!==''&&
+        Number.isInteger(Number(legacyTest.answers[key]))&&Number(legacyTest.answers[key])>=0&&Number(legacyTest.answers[key])<task.options.length:
+        String(legacyTest.answers?.[key]||'').trim().length>=2);});
   const state={...stored,version:1,completed,visited,testSubmitted:stored.testSubmitted===true||legacySubmitted};
   state.completed.p11=state.testSubmitted;
   state.currentPage=Math.max(1,Math.min(Number.isInteger(stored.currentPage)?stored.currentPage:1,unlockedThrough(state)));

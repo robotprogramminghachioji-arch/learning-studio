@@ -6,6 +6,7 @@ const path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 let server,browser,base;
+let cacheScenario=false,serveOldRelease=false,bareCompanionRequests=0;
 const lessonId='web-html-l1-lesson01';
 const workspaceId=`student-uid__${lessonId}`;
 
@@ -45,6 +46,7 @@ export async function setDoc(ref,data,options){
  }
  store.data[ref.collection][ref.id]=merge(previous,data);
 }
+export const runTransaction=async(db,fn)=>{const writes=[];const result=await fn({get:getDoc,set:(...args)=>writes.push(args)});for(const args of writes)await setDoc(...args);return result;};
 export const updateDoc=(ref,data)=>setDoc(ref,data,{merge:true});
 export async function addDoc(ref,data){await setDoc({...ref,id:'test-created'},data);}
 export async function deleteDoc(ref){delete store.data[ref.collection][ref.id];}
@@ -62,12 +64,29 @@ export const updatePassword=async()=>{};
 before(async()=>{
  server=http.createServer(async(req,res)=>{
   try{
-   const pathname=decodeURIComponent(new URL(req.url,'http://test').pathname);
+   const requestUrl=new URL(req.url,'http://test'),pathname=decodeURIComponent(requestUrl.pathname);
+   if(cacheScenario&&pathname.startsWith('/__firebase__/')){
+    const name=pathname.split('/').pop();
+    const body=name==='firebase-firestore.js'?firestore:name==='firebase-auth.js'?auth:'export const initializeApp=()=>({}); export const deleteApp=async()=>{};';
+    res.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'public, max-age=31536000, immutable'}).end(body);return;
+   }
    const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
    if(!file.startsWith(root+path.sep))throw Error('outside root');
-   const content=await fs.readFile(file);
+   let content=await fs.readFile(file);
+   if(cacheScenario){
+    if(pathname.endsWith('html-level1-companion.js')&&!requestUrl.searchParams.has('v'))bareCompanionRequests++;
+    if(path.extname(file)==='.js'){
+     let source=content.toString().replaceAll('https://www.gstatic.com/firebasejs/11.10.0/','/__firebase__/');
+     if(serveOldRelease){
+      source=source.replace(/(from\s*['"])(\.[^'"?]+)\?v=[a-f0-9]+(['"])/g,'$1$2$3');
+      if(pathname.endsWith('asset-versions.js'))source='export function assetUrl(value){return value;}';
+      if(pathname.endsWith('html-level1-companion.js'))source=source.replace(/<ol class="hl1-learning-flow">.*?<\/ol>/,'<p>「知る → 読む → 作る → 試す」の順に学習します。</p>');
+     }
+     content=Buffer.from(source);
+    }else if(path.extname(file)==='.html'&&serveOldRelease)content=Buffer.from(content.toString().replace(/\?v=[a-f0-9]{12}/g,''));
+   }
    const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.webp':'image/webp','.pdf':'application/pdf'}[path.extname(file)];
-   res.writeHead(200,{'Content-Type':type||'application/octet-stream'}).end(content);
+   res.writeHead(200,{'Content-Type':type||'application/octet-stream','Cache-Control':cacheScenario&&path.extname(file)!=='.html'?'public, max-age=31536000, immutable':'no-store'}).end(content);
   }catch{res.writeHead(404).end();}
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -75,7 +94,7 @@ before(async()=>{
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(require('node:fs').existsSync('/usr/bin/chromium')?'/usr/bin/chromium':chromium.executablePath()),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 });
 after(async()=>{await browser?.close();await new Promise(resolve=>server?.close(resolve));});
-async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress}={}){
+async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress,cachedAssets=false,workbook}={}){
  if(completedThrough){
   remoteCode={...remoteCode,pageWork:{...remoteCode?.pageWork,_learning:{version:1,currentPage:1,testSubmitted:completedThrough>=11,completed:Object.fromEntries(Array.from({length:12},(_,i)=>['p'+String(i+1).padStart(2,'0'),i<completedThrough]))}}};
  }
@@ -88,7 +107,7 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
  const web=JSON.parse(await fs.readFile(path.join(root,'assets/web-lesson01.json'),'utf8'));
  // A representative higher-level lesson exercises the existing standalone path.
  web.push({id:'test-web-level2',course:'web',level:2,title:'テスト用CSS教材',goal:'CSSを編集する',question:'学習したことを書こう'});
- await page.addInitScript(({role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress})=>{
+ await page.addInitScript(({role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook})=>{
   if(window.top!==window)return;
   const data={teachers:role==='teacher'?{'teacher-uid':{enabled:true}}:{},
    students:{student01:{displayName:'テスト生徒',enabled:true,activeUid:'student-uid'}},
@@ -96,19 +115,22 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
    lessons:Object.fromEntries([...lessons,...web].map(l=>[l.id,{...l,published:true}])),
    login_lookup:{'6d35659c221c9e952e486089108f09bf3ce16989fac1a166a9deea99c4cd629d':{email:'student01@example.test'}},
    submissions:{},answer_keys:{},web_workspaces:remoteCode?{[workspaceId]:remoteCode}:{}};
+  if(workbook)data.lessons['web-html-l1-lesson01'].workbook=workbook;
   window.__firebase={role,data,writes:[],authEvents:[],holdReads,releaseReads:[],failReads,failWrites};
   localStorage.setItem('ls_student_id','student01');
   if(localProgress&&!sessionStorage.getItem('fixture-local')){
    localStorage.setItem('ls-html-level1-pages:student-uid:web-html-l1-lesson01',JSON.stringify(localProgress));
    sessionStorage.setItem('fixture-local','yes');
   }
- },{role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress});
+ },{role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook});
+ if(!cachedAssets){
  await page.route('https://www.gstatic.com/firebasejs/**',route=>{
   const name=new URL(route.request().url()).pathname.split('/').pop();
   const body=name==='firebase-firestore.js'?firestore:name==='firebase-auth.js'?auth:'export const initializeApp=()=>({}); export const deleteApp=async()=>{};';
   return route.fulfill({contentType:'text/javascript',body});
  });
  await page.route(url=>!url.href.startsWith(base)&&url.hostname!=='www.gstatic.com',route=>route.abort());
+ }
  await page.goto(base);
  await page.waitForSelector('[data-course=web]');
  await page.locator('[data-course=web][data-level="1"]').click();
@@ -135,7 +157,7 @@ test('PDF uses the large left column, zooms to 125/150/200%, and all 12 pages ma
   assert.equal(await page.locator('#hl1Current').textContent(),`PDF ${n}ページ`);
   const expectedTitle=(await page.locator(`#hl1PageSelect option[value="${n}"]`).textContent()).replace(/^\d+\. /,'').replace(/［.*］$/,'');
   assert.equal(await page.locator('#hl1Title').textContent(),expectedTitle);
-  assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith(`${String(n).padStart(2,'0')}.webp`));
+  assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith(`${String(n).padStart(2,'0')}.webp`));
   assert.ok(n===1?await page.locator('.hl1-task').count()===0:await page.locator('.hl1-task').count()>=7);
   await page.waitForFunction(()=>{const image=document.querySelector('#hl1Image');return image.complete&&image.naturalWidth>0;});
  }
@@ -586,7 +608,7 @@ test('Desktop unified header keeps account and workbook controls in two compact 
  await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);await assertUnifiedHeader(page);
  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);await assertUnifiedHeader(page);
  await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 2ページ');
- assert.ok((await page.locator('#hl1Image').getAttribute('src')).endsWith('02.webp'));
+ assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith('02.webp'));
  await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 3ページ');
  await page.locator('#hl1Scale').selectOption('75');await settleLayout(page);
  await page.screenshot({path:'/tmp/learning-studio-unified-header-desktop.png'});
@@ -689,4 +711,112 @@ for(const mobile of [false,true])test(`Page 1 is a reading introduction, advance
  if(mobile)await again.locator('[data-show=practice]').click();
  assert.equal(await again.locator('.hl1-task').count(),0);
  assert.equal(await again.locator('#hl1OverallProgress').getAttribute('value'),'1');
+});
+
+
+// Use Chromium's real HTTP cache. Playwright request routing is deliberately off:
+// routing disables the HTTP cache and cannot reproduce this production failure.
+test('A phone with cached unversioned modules updates the lesson after deployment without losing local work',async t=>{
+ cacheScenario=true;serveOldRelease=true;bareCompanionRequests=0;
+ t.after(()=>{cacheScenario=false;serveOldRelease=false;});
+ const page=await openStudio(t,{role:'teacher',mobile:true,cachedAssets:true});
+ await page.locator('#webHtmlEditor').fill('<h1>消してはいけない作品</h1>');
+ await page.locator('[data-lang=css]').click();await page.locator('#webCssEditor').fill('h1{color:blue}');
+ await minimize(page);await page.locator('[data-show=practice]').click();
+ assert.ok((await page.locator('#hl1Questions').textContent()).includes('知る → 読む → 作る → 試す'));
+ await page.locator('#hl1Next').click();
+ await page.evaluate(()=>{localStorage.setItem('cache-test-keep','keep');sessionStorage.setItem('cache-test-session','keep');});
+ const cachedRequests=bareCompanionRequests;assert.ok(cachedRequests>0);
+ serveOldRelease=false;
+ await page.reload();await page.waitForSelector('[data-course=web]');
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();
+ await page.waitForSelector('#webHtmlEditor');await minimize(page);
+ assert.equal(await page.locator('#hl1PageSelect').inputValue(),'2');
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>消してはいけない作品</h1>');
+ assert.equal(await page.locator('#webCssEditor').inputValue(),'h1{color:blue}');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('cache-test-keep')),'keep');
+ assert.equal(await page.evaluate(()=>sessionStorage.getItem('cache-test-session')),'keep');
+ await selectPage(page,1);await page.locator('[data-show=practice]').click();
+ assert.deepEqual(await page.locator('.hl1-learning-flow strong').allTextContents(),['Input（インプット）','Output（アウトプット）','Check（確認）','Reflect（振り返り）']);
+ assert.ok(!(await page.locator('#hl1Questions').textContent()).includes('知る → 読む → 作る → 試す'));
+ // The old response is demonstrably still in the browser cache. New asset URLs
+ // bypassed it; neither a cache purge nor clearing localStorage was necessary.
+ const stale=await page.evaluate(()=>fetch('assets/html-level1-companion.js',{cache:'force-cache'}).then(r=>r.text()));
+ assert.ok(stale.includes('「知る → 読む → 作る → 試す」の順に学習します。'));
+ assert.equal(bareCompanionRequests,cachedRequests,'The stale fetch was served from HTTP cache, not the updated server');
+ for(const selector of ['#hl1Image','.hl1-pdf-actions a']){
+  const url=new URL(await page.locator(selector).getAttribute(selector==='#hl1Image'?'src':'href'),base);
+  assert.match(url.searchParams.get('v'),/^[a-f0-9]{12}$/);
+ }
+ const appUrl=await page.locator('script[type=module]').getAttribute('src');assert.match(appUrl,/app\.js\?v=[a-f0-9]{12}$/);
+ const resources=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));
+ assert.ok(resources.some(url=>/html-level1-companion\.js\?v=[a-f0-9]{12}/.test(url)));
+ await page.locator('.hl1-grid').evaluate(el=>el.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.locator('.hl1-practice').evaluate(el=>{const card=el.querySelector('.hl1-introduction section');el.scrollTop+=card.getBoundingClientRect().top-el.getBoundingClientRect().top;});
+ await settleLayout(page);
+ await page.screenshot({path:'/tmp/learning-studio-mobile-cache-update.png'});
+});
+
+for(const mobile of [false,true])test(`Teacher edits PDF and questions, exports a real Japanese PDF (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile});await minimize(page);
+ await page.locator('#wbEdit').click();await page.locator('#wbPage').selectOption('1');
+ await page.locator('#wbFields [name=pdfBody]').fill('先生が編集した教材本文です。\nHTMLのタグを確認しよう。');
+ await page.locator('#wbFields [name=title]').fill('先生の新しい学習テーマ');
+ const task=page.locator('#wbFields [data-task]').first();const taskId=await task.getAttribute('data-task');
+ await task.locator('[name=text]').fill('変更した確認問題です');
+ await page.screenshot({path:`/tmp/learning-studio-author-dialog-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('#wbSave').click();await page.waitForFunction(()=>!document.querySelector('#wbAuthorStatus').textContent.includes('内容を確認中'),null,{timeout:30000});assert.ok((await page.locator('#wbAuthorStatus').textContent()).includes('保存しました'),await page.locator('#wbAuthorStatus').textContent());
+ const book=await page.evaluate(id=>window.__firebase.data.lessons[id].workbook,lessonId);
+ assert.equal(book.pages[1].document.edited,true);assert.equal(book.pages[1].tasks[0].storageKey,`${taskId}@2`);
+ const downloadPromise=page.waitForEvent('download',{timeout:30000});downloadPromise.catch(()=>{});await page.locator('#wbPdf').click();await page.waitForFunction(()=>!document.querySelector('#wbAuthorStatus').textContent.includes('内容を確認中'),null,{timeout:30000});assert.ok((await page.locator('#wbAuthorStatus').textContent()).includes('PDFを作成しました'),await page.locator('#wbAuthorStatus').textContent());const download=await downloadPromise;
+ await download.saveAs(`/tmp/learning-studio-teacher-edited-${mobile?'mobile':'desktop'}.pdf`);
+ await page.locator('#wbClose').click();await selectPage(page,2);
+ await page.waitForFunction(()=>document.querySelector('#hl1PageImage')?.src.startsWith('data:')||[...document.images].some(i=>i.src.startsWith('data:image/webp')));
+ await page.screenshot({path:`/tmp/learning-studio-teacher-editor-${mobile?'mobile':'desktop'}.png`});
+ const studentPage=await openStudio(t,{mobile,workbook:book,completedThrough:1,remoteCode:{pageWork:{p02:{answers:{0:'0'},results:{0:true}}}}});await minimize(studentPage);await selectPage(studentPage,2);
+ if(mobile)await studentPage.locator('[data-show=practice]').click();
+ assert.equal(await studentPage.locator('#wbEdit').count(),0);
+ assert.ok((await studentPage.locator('#hl1Questions').textContent()).includes('変更した確認問題です'));
+ assert.equal(await studentPage.locator('input[name="hl1q0"]:checked').count(),0);
+ await studentPage.locator('input[name=hl1q0]').last().check();
+ await studentPage.locator('#hl1Save').click();await studentPage.waitForFunction(()=>document.querySelector('#hl1SaveStatus').textContent.includes('保存しました'));
+ assert.equal(await studentPage.evaluate(id=>window.__firebase.data.web_workspaces[id].pageWork.p02.answers[0],workspaceId),'0');
+ assert.equal(await studentPage.evaluate(({id,key})=>window.__firebase.data.web_workspaces[id].pageWork.p02.answers[key],{id:workspaceId,key:book.pages[1].tasks[0].storageKey}),String(book.pages[1].tasks[0].options.length-1));
+});
+
+test('Final assessment has twelve required questions, preserves drafts and submits prompt snapshots',async t=>{
+ const page=await openStudio(t,{completedThrough:11});await minimize(page);
+ assert.equal(await page.locator('#submitTest textarea').count(),12);
+ for(const field of await page.locator('#submitTest textarea').all())await field.fill('学習した内容を説明する回答です');
+ await page.reload();await page.waitForSelector('[data-course=web]');await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lessonId}"]`).click();await page.waitForSelector('#webHtmlEditor');await minimize(page);
+ assert.equal(await page.locator('#submitTest textarea').first().inputValue(),'学習した内容を説明する回答です');
+ await page.locator('#submitTest button').click();await page.waitForFunction(()=>document.querySelector('#submitMsg').textContent.includes('全12問の回答を保存'));
+ const saved=await page.evaluate(()=>window.__firebase.data.submissions['test-created']);assert.equal(saved.status,'pending');assert.ok(saved.response.includes('12.'));assert.ok(saved.response.includes('回答：学習した内容'));
+});
+
+test('Teacher rejects fewer than ten final questions and concurrent overwrite without deleting the draft',async t=>{
+ const page=await openStudio(t,{role:'teacher'});await minimize(page);await page.locator('#wbEdit').click();
+ await page.locator('#wbFinals').evaluate(el=>el.closest('details').open=true);
+ for(let i=0;i<3;i++)await page.locator('[data-remove-final]').last().click();
+ await page.locator('#wbSave').click();await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('10〜30問'));
+ for(let i=0;i<3;i++)await page.locator('#wbAddFinal').click();
+ await page.evaluate(id=>window.__firebase.data.lessons[id].workbook={revision:'another-teacher'},lessonId);
+ await page.locator('#wbSave').click();await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('別の編集'));
+ assert.equal(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.startsWith('ls-workbook-author:'))),true);
+});
+
+test('Workbook JSON exchange validates data and failed cloud save keeps the teacher draft',async t=>{
+ const page=await openStudio(t,{role:'teacher',failWrites:true});await minimize(page);await page.locator('#wbEdit').click();
+ const original=JSON.parse(await fs.readFile(path.join(root,'assets/html-level1-workbook.json'),'utf8'));
+ original.pages[0].title='Codexから読み込んだ教材';
+ await page.locator('#wbImport').setInputFiles({name:'workbook.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(original))});
+ await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('JSONを読み込みました'));
+ assert.equal(await page.locator('#wbFields [name=title]').inputValue(),'Codexから読み込んだ教材');
+ const pending=page.waitForEvent('download');await page.locator('#wbExport').click();const download=await pending;const jsonPath=await download.path();assert.equal(JSON.parse(await fs.readFile(jsonPath,'utf8')).pages[0].title,original.pages[0].title);
+ await page.locator('#wbSave').click();await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('Test offline'));
+ assert.equal(await page.locator('#wbFields [name=title]').inputValue(),original.pages[0].title);
+ assert.equal(await page.evaluate(id=>window.__firebase.data.lessons[id].workbook,lessonId),undefined);
+ original.finalQuestions=original.finalQuestions.slice(0,9);
+ await page.locator('#wbImport').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(original))});
+ await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('10〜30問'));
 });
