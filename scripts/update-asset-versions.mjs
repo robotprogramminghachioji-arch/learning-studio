@@ -19,6 +19,17 @@ try{
 }catch(err){if(err.code!=='ENOENT')throw err;}
 outputs.set('assets/html-level1-workbook.json',JSON.stringify(workbook,null,2)+'\n');
 outputs.set('assets/workbook-defaults.js','// Generated from html-level1-workbook.json. Edit the JSON source.\nexport const DEFAULT_WORKBOOK='+JSON.stringify(workbook,null,2)+';\n');
+// Course source is editable JSON; the generated module participates in import hashing.
+const course=JSON.parse(await readFile(path.join(root,'assets/web-course.json'),'utf8'));
+const courseIds=new Set();
+if(course.levels.length!==5||course.roadmap.length!==3)throw Error('Web course needs five levels and three roadmap courses');
+for(const lesson of course.lessons){
+  if(courseIds.has(lesson.id)||lesson.course!=='web'||!Number.isInteger(lesson.level)||lesson.level<1||lesson.level>5)throw Error('Invalid Web course lesson: '+lesson.id);
+  courseIds.add(lesson.id);
+  for(const field of ['title','goal','explanation','practice','question','starterHtml','starterCss','starterJs','teacherGuide'])if(typeof lesson[field]!=='string'||!lesson[field].trim())throw Error('Missing '+field+': '+lesson.id);
+  if(lesson.published!==false||lesson.options.length)throw Error('Course templates must be draft, teacher-graded lessons');
+}
+outputs.set('assets/web-course-data.js','// Generated from web-course.json. Edit the JSON source.\nexport const WEB_COURSE='+JSON.stringify(course,null,2)+';\n');
 for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts']){
   for(const name of (await readdir(path.join(root,dir))).sort()){
     if(!/\.(pdf|webp|js|ttf|otf)$/.test(name))continue;
