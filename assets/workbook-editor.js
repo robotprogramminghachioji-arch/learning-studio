@@ -1,6 +1,6 @@
 import {doc,runTransaction,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 import {validateWorkbook,prepareRevision} from './workbook-model.js?v=1fbf7052033a';
-import {renderDocumentPage,validatePdfPages,downloadWorkbookPdf} from './workbook-pdf.js?v=08a6bf7ca8ef';
+import {renderDocumentPage,validatePdfPages,downloadWorkbookPdf} from './workbook-pdf.js?v=3c3cf77964e3';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const copy=value=>JSON.parse(JSON.stringify(value));
 const codeTests=['doctype','html','head','body','title','heading','paragraph','h2','list3','link','image','customHeading','customParagraph'];

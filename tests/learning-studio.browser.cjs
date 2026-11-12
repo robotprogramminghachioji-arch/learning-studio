@@ -85,7 +85,7 @@ before(async()=>{
      content=Buffer.from(source);
     }else if(path.extname(file)==='.html'&&serveOldRelease)content=Buffer.from(content.toString().replace(/\?v=[a-f0-9]{12}/g,''));
    }
-   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.webp':'image/webp','.svg':'image/svg+xml','.pdf':'application/pdf'}[path.extname(file)];
+   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.pdf':'application/pdf'}[path.extname(file)];
    res.writeHead(200,{'Content-Type':type||'application/octet-stream','Cache-Control':cacheScenario&&path.extname(file)!=='.html'?'public, max-age=31536000, immutable':'no-store'}).end(content);
   }catch{res.writeHead(404).end();}
  });
@@ -1200,7 +1200,7 @@ async function assertCourseNavigationSync(page,lesson,n,{visible=true}={}){
  await page.waitForFunction(()=>document.querySelector('#courseVisualPage')?.getAttribute('aria-busy')==='false');
  if(n!==4){
   await page.waitForFunction(()=>[...document.querySelectorAll('#courseVisualPage img')].every(i=>i.complete&&i.naturalWidth>0));
-  const suffix={1:'preview.webp',2:'diagram.svg',3:'code.svg',5:'preview.webp'}[n];
+  const suffix={1:'preview.png',2:'diagram.svg',3:'code.svg',5:'preview.png'}[n];
   assert.ok((await page.locator('#courseVisualPage img').first().getAttribute('src')).includes(lesson.id+'-'+suffix));
  }
  assert.equal(await page.locator('.lesson-text').first().textContent(),lesson.explanation);
@@ -1268,4 +1268,49 @@ test('Page changes keep an unfinished answer, and cancelling a lesson change kee
  page.once('dialog',d=>d.dismiss());await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertCourseNavigationSync(page,a,5,{visible:false});
  assert.equal(await page.locator('#submitTest textarea').inputValue(),'まだ提出していない振り返り');
  page.once('dialog',d=>d.accept());await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertCourseNavigationSync(page,b,1);
+});
+
+test('All thirty completion previews have lossless high-resolution pixels for enlarged reading',async()=>{
+ const course=await courseData(),manifest=JSON.parse(await fs.readFile(path.join(root,'assets/web-visual-manifest.json'),'utf8'));
+ for(const lesson of course.lessons){
+  const bytes=await fs.readFile(path.join(root,'assets/web-course-visuals',lesson.id+'-preview.png'));
+  assert.deepEqual(bytes.subarray(0,8),Buffer.from([137,80,78,71,13,10,26,10]),lesson.id+' is a real PNG');
+  const width=bytes.readUInt32BE(16),height=bytes.readUInt32BE(20),meta=manifest[lesson.id];
+  assert.ok(width>=2400,lesson.id+' has enough source pixels for desktop and 200% zoom');
+  assert.equal(width,meta.pixelWidth);assert.equal(height,meta.pixelHeight);
+  assert.ok(Math.abs(width-meta.width*4)<=4&&Math.abs(height-meta.height*4)<=4,lesson.id+' is captured at four device pixels per CSS pixel');
+ }
+});
+
+for(const mobile of [false,true])test(`Explicit previous and next page labels fit and work at narrow and wide sizes (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await courseData(),lesson=course.lessons[0],page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${lesson.id}"]`).click();
+ const sizes=mobile?[{width:375,height:812},{width:320,height:812},{width:812,height:375}]:[{width:1440,height:1000},{width:768,height:1000}];
+ for(const size of sizes){
+  await page.setViewportSize(size);await page.locator('#coursePageSelect').selectOption('1');
+  await page.waitForFunction(()=>document.querySelector('#courseVisualPage')?.getAttribute('aria-busy')==='false');
+  for(const [id,label] of [['coursePagePrev','前のページ'],['coursePageNext','次のページ'],['courseBottomPrev','前のページ'],['courseBottomNext','次のページ']]){
+   const button=page.locator('#'+id),direction=button.locator('.course-page-direction');
+   assert.ok((await direction.textContent()).includes(label));assert.equal(await direction.isVisible(),true);
+   const bounds=await button.boundingBox();assert.ok(bounds.height>=44,id+' is a touch-sized button');
+   assert.equal(await direction.evaluate(el=>el.scrollWidth<=el.clientWidth),true,id+' label fits without clipping');
+   if(id.startsWith('coursePage'))assert.ok(bounds.x>=0&&bounds.x+bounds.width<=size.width,id+' is inside the screen');
+  }
+  assert.equal(await page.locator('#coursePagePrev').isDisabled(),true);
+  if(mobile)await page.locator('#coursePageNext').tap();else{await page.locator('#coursePageNext').focus();await page.keyboard.press('Enter');}
+  await assertCourseNavigationSync(page,lesson,2);
+  await page.locator('#courseBottomPrev').click();await assertCourseNavigationSync(page,lesson,1);
+  await page.locator('#courseBottomNext').click();await assertCourseNavigationSync(page,lesson,2);
+  assert.ok((await page.locator('#courseBottomNext small').textContent()).includes('3. この部分を変えてみよう'));
+  await page.locator('#coursePagePrev').click();await assertCourseNavigationSync(page,lesson,1);
+  const image=page.locator('#courseVisualPage img');
+  assert.ok(await image.evaluate(img=>img.naturalWidth>=2400));
+  await page.locator('#courseImageZoom').selectOption('200');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'200% enlargement stays in the image scroll area');
+  await page.locator('#courseImageZoom').selectOption('100');
+  await page.screenshot({path:`/tmp/web-page-controls-${mobile?'mobile':'desktop'}-${size.width}.png`});
+  await page.locator('#coursePageSelect').selectOption('5');
+  assert.equal(await page.locator('#coursePageNext').isDisabled(),true);assert.equal(await page.locator('#courseBottomNext').isDisabled(),true);
+  assert.ok((await page.locator('#courseBottomNext').textContent()).includes('次のページ'));
+ }
 });

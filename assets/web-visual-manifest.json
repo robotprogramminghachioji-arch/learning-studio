@@ -2,151 +2,271 @@
   "web1-l1-lesson01": {
     "sourceHash": "86e15f283a10",
     "width": 608,
-    "height": 309
+    "height": 308,
+    "pixelWidth": 2432,
+    "pixelHeight": 1236,
+    "density": 4,
+    "format": "png"
   },
   "web1-l1-lesson02": {
     "sourceHash": "455d9cad292d",
     "width": 608,
-    "height": 595
+    "height": 596,
+    "pixelWidth": 2432,
+    "pixelHeight": 2384,
+    "density": 4,
+    "format": "png"
   },
   "web1-l1-lesson03": {
     "sourceHash": "1a3e2ccceabd",
     "width": 608,
-    "height": 309
+    "height": 308,
+    "pixelWidth": 2432,
+    "pixelHeight": 1236,
+    "density": 4,
+    "format": "png"
   },
   "web1-l1-lesson04": {
     "sourceHash": "f7f96871187d",
     "width": 608,
-    "height": 353
+    "height": 352,
+    "pixelWidth": 2432,
+    "pixelHeight": 1412,
+    "density": 4,
+    "format": "png"
   },
   "web1-l1-lesson05": {
     "sourceHash": "86d2e11ec9b9",
     "width": 608,
-    "height": 430
+    "height": 429,
+    "pixelWidth": 2432,
+    "pixelHeight": 1720,
+    "density": 4,
+    "format": "png"
   },
   "web1-l1-lesson06": {
     "sourceHash": "a9cf8cfb2dc6",
     "width": 608,
-    "height": 661
+    "height": 661,
+    "pixelWidth": 2432,
+    "pixelHeight": 2648,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson01": {
     "sourceHash": "a660154129de",
     "width": 608,
-    "height": 309
+    "height": 308,
+    "pixelWidth": 2432,
+    "pixelHeight": 1236,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson02": {
     "sourceHash": "a728993c1405",
     "width": 608,
-    "height": 296
+    "height": 295,
+    "pixelWidth": 2432,
+    "pixelHeight": 1184,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson03": {
     "sourceHash": "271cd09396ba",
     "width": 608,
-    "height": 340
+    "height": 339,
+    "pixelWidth": 2432,
+    "pixelHeight": 1360,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson04": {
     "sourceHash": "8c309a153f61",
     "width": 608,
-    "height": 432
+    "height": 431,
+    "pixelWidth": 2432,
+    "pixelHeight": 1728,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson05": {
     "sourceHash": "453f45bf9ac5",
     "width": 608,
-    "height": 436
+    "height": 435,
+    "pixelWidth": 2432,
+    "pixelHeight": 1744,
+    "density": 4,
+    "format": "png"
   },
   "web1-l2-lesson06": {
     "sourceHash": "bee72b66fcc5",
     "width": 608,
-    "height": 340
+    "height": 339,
+    "pixelWidth": 2432,
+    "pixelHeight": 1360,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson01": {
     "sourceHash": "194691bf506e",
     "width": 608,
-    "height": 353
+    "height": 352,
+    "pixelWidth": 2432,
+    "pixelHeight": 1412,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson02": {
     "sourceHash": "3802a5a7f7f3",
     "width": 608,
-    "height": 260
+    "height": 259,
+    "pixelWidth": 2432,
+    "pixelHeight": 1040,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson03": {
     "sourceHash": "d7221328d177",
     "width": 608,
-    "height": 353
+    "height": 352,
+    "pixelWidth": 2432,
+    "pixelHeight": 1412,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson04": {
     "sourceHash": "9e38a342adc7",
     "width": 608,
-    "height": 353
+    "height": 352,
+    "pixelWidth": 2432,
+    "pixelHeight": 1412,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson05": {
     "sourceHash": "5c5355aeea4c",
     "width": 608,
-    "height": 353
+    "height": 352,
+    "pixelWidth": 2432,
+    "pixelHeight": 1412,
+    "density": 4,
+    "format": "png"
   },
   "web1-l3-lesson06": {
     "sourceHash": "1229408be6ca",
     "width": 608,
-    "height": 428
+    "height": 428,
+    "pixelWidth": 2432,
+    "pixelHeight": 1716,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson01": {
     "sourceHash": "3c70d8b64c4a",
     "width": 608,
-    "height": 269
+    "height": 268,
+    "pixelWidth": 2432,
+    "pixelHeight": 1076,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson02": {
     "sourceHash": "992db6b4e529",
     "width": 608,
-    "height": 493
+    "height": 492,
+    "pixelWidth": 2432,
+    "pixelHeight": 1972,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson03": {
     "sourceHash": "112b8e5b4739",
     "width": 608,
-    "height": 621
+    "height": 620,
+    "pixelWidth": 2432,
+    "pixelHeight": 2484,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson04": {
     "sourceHash": "fa9f494e883b",
     "width": 608,
-    "height": 551
+    "height": 550,
+    "pixelWidth": 2432,
+    "pixelHeight": 2204,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson05": {
     "sourceHash": "deb34912575b",
     "width": 608,
-    "height": 621
+    "height": 620,
+    "pixelWidth": 2432,
+    "pixelHeight": 2484,
+    "density": 4,
+    "format": "png"
   },
   "web1-l4-lesson06": {
     "sourceHash": "932330eb7448",
     "width": 608,
-    "height": 730
+    "height": 729,
+    "pixelWidth": 2432,
+    "pixelHeight": 2920,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson01": {
     "sourceHash": "afc15ea26231",
     "width": 608,
-    "height": 376
+    "height": 375,
+    "pixelWidth": 2432,
+    "pixelHeight": 1504,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson02": {
     "sourceHash": "496a4529d5ba",
     "width": 608,
-    "height": 465
+    "height": 464,
+    "pixelWidth": 2432,
+    "pixelHeight": 1860,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson03": {
     "sourceHash": "00ac0962949f",
     "width": 608,
-    "height": 465
+    "height": 464,
+    "pixelWidth": 2432,
+    "pixelHeight": 1860,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson04": {
     "sourceHash": "51cc9a84a569",
     "width": 608,
-    "height": 703
+    "height": 704,
+    "pixelWidth": 2432,
+    "pixelHeight": 2816,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson05": {
     "sourceHash": "91979d83c74f",
     "width": 608,
-    "height": 523
+    "height": 522,
+    "pixelWidth": 2432,
+    "pixelHeight": 2092,
+    "density": 4,
+    "format": "png"
   },
   "web1-l5-lesson06": {
     "sourceHash": "e5ec7412f455",
     "width": 608,
-    "height": 604
+    "height": 604,
+    "pixelWidth": 2432,
+    "pixelHeight": 2420,
+    "density": 4,
+    "format": "png"
   }
 }
