@@ -1,4 +1,4 @@
-import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=1ce6369abf3d';
+import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=75e1a0573313';
 import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=8f1b29569cd0';
 import {mountFinalAssessment} from './final-assessment.js?v=7265478edfa1';
 import {initializeHeader} from './page-navigation.js?v=067885ce2b97';
@@ -153,7 +153,7 @@ function wireNav(){
  appEl.querySelector('[data-course-check]')?.addEventListener('click',()=>{const book=document.getElementById('webVisualWorkbook');if(book)book.dispatchEvent(new Event('course-show-check'));else document.getElementById('lsFinalSubmission')?.scrollIntoView({block:'start'});});
  appEl.querySelectorAll('[data-web-roadmap]').forEach(b=>b.onclick=()=>moveTo({kind:'web-roadmap'}));
  appEl.querySelectorAll('[data-web-level]').forEach(b=>b.onclick=()=>moveTo({kind:'level',course:'web',level:Number(b.dataset.webLevel)}));
- appEl.querySelectorAll('[data-open-lesson]').forEach(b=>b.onclick=()=>moveTo({kind:'lesson',lessonId:b.dataset.openLesson}));
+ appEl.querySelectorAll('[data-open-lesson]').forEach(b=>b.onclick=()=>moveTo({kind:'lesson',lessonId:b.dataset.openLesson,workbookPage:1,focusWorkbook:true}));
  document.getElementById('home').onclick=()=>moveTo({kind:'home'});
  if(teacher)document.getElementById('manage').onclick=()=>moveTo({kind:'manage',tab:'lessons'});
  document.getElementById('password').onclick=()=>moveTo({kind:'password'});
@@ -188,14 +188,14 @@ function lessonScreen(l){
   const companionBlock=integrated?'<section class="panel hl1-outer"><div id="htmlLevel1Studio"></div></section>':'';
   const additionalMedia=foundationLesson(l.id)&&(img||vid)?`<section class="panel"><details open><summary>先生の追加画像・動画</summary>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'先生の追加画像')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:''}${vid?`<iframe class="media-frame" loading="lazy" title="先生の追加動画" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</details></section>`:'';
   const standaloneEditor=l.course==='web'&&!integrated&&!foundationLesson(l.id)?'<section class="panel"><h2>🧑‍💻 Web開発エディターとプレビュー</h2><p class="muted">HTML・CSS・JavaScriptを入力し、結果を確かめましょう。</p><div id="webWorkspace"></div></section>':'';
-  appEl.innerHTML=`${nav()}<section class="panel"><span class="pill">${esc(courses[l.course])} / レベル${l.level}</span><h1>${esc(l.title)}</h1><p>${esc(l.goal)}</p>${lessonIntro(l)}</section>${foundationLesson(l.id)?'<section id="webVisualWorkbook"></section>':''}${companionBlock}${pdfBlock}${additionalMedia}${explanationBlock}${practiceBlock}${standaloneEditor}
+  appEl.innerHTML=`${nav()}<section class="panel"><span class="pill">${esc(courses[l.course])} / レベル${l.level}</span><h1>${esc(l.title)}</h1><p>${foundationLesson(l.id)?'<strong>この教材全体の目標：</strong>':''}${esc(l.goal)}</p>${lessonIntro(l)}</section>${foundationLesson(l.id)?'<section id="webVisualWorkbook"></section>':''}${companionBlock}${pdfBlock}${additionalMedia}${explanationBlock}${practiceBlock}${standaloneEditor}
   ${integrated&&student?'<p id="lsFinalSubmissionLock" class="notice">レッスン全体の最終提出は、第11ページの最終確認テスト提出後に利用できます。</p>':''}<section class="panel" id="lsFinalSubmission" ${integrated&&student?'hidden':''}><h2>${integrated?'レッスン全体の最終提出':'STEP 3｜確認問題'}</h2>${integrated?'<p class="muted">上の各PDFページのミッションとは別に、先生へレッスン全体の回答を提出できます。</p>':''}<p>${esc(l.question||'学習したことを説明してください。')}</p>${(l.options||[]).length?`<form id="submitTest"><div class="question">${l.options.map((o,i)=>`<label><input type="radio" name="answer" value="${i}" required>${esc(o)}</label>`).join('')}</div><button>回答を提出する</button></form>`:`<form id="submitTest"><label>回答<textarea name="answer" maxlength="4000" required></textarea></label><button>回答を提出する</button></form>`}<div id="submitMsg"></div><p class="muted tiny">4択問題はその場で自動採点します。正解情報はブラウザに送られるため、教室内の練習・確認用です。記述式・制作課題は先生が採点します。</p></section>
   <section class="panel"><h2>提出履歴</h2>${mine.length?mine.map(s=>`<p>${s.kind==='test'?'テスト':'練習'}：${['graded','self_graded'].includes(s.status)?`${Number(s.score)}点 ／ ${esc(s.feedback||'')}${s.status==='self_graded'?'（自己採点）':''}`:'採点待ち'}</p>`).join(''):'<p>まだ提出はありません。</p>'}</section>`;
   if(foundationLesson(l.id)){
     const available=WEB_COURSE.lessons.filter(item=>lessons.some(x=>x.id===item.id));
     const index=available.findIndex(item=>item.id===l.id);
     const links=[available[index-1],available[index+1]];
-    appEl.insertAdjacentHTML('beforeend','<section class="panel actions">'+links.map((item,i)=>item?`<button class="ghost" data-open-lesson="${esc(item.id)}">${i?'次の教材':'前の教材'}：LEVEL${item.level} ${esc(item.title)}</button>`:'').join('')+'</section>');
+    appEl.insertAdjacentHTML('beforeend','<section class="panel course-lesson-navigation"><h2>別の教材へ</h2><p>上部の矢印は今の教材内のページ移動です。次の回へ進むときは、下のボタンで1ページ目から開きます。</p><div class="actions">'+links.map((item,i)=>item?`<button class="ghost" data-open-lesson="${esc(item.id)}">${i?'次の教材の1ページ目へ':'前の教材の1ページ目へ'}：LEVEL${item.level} ${esc(item.title)}</button>`:'').join('')+'</div></section>');
   }
   wireNav();
   const finalAssessment=integrated?mountFinalAssessment({container:document.getElementById('lsFinalSubmission'),lesson:l,student,uid:me.uid,db,canSubmit:()=>workbookTestSubmitted}):null;
@@ -209,7 +209,7 @@ function lessonScreen(l){
       console.error(err);const node=document.getElementById('htmlLevel1Studio');if(node)node.innerHTML=msg('教材連動画面を読み込めません：'+err.message,true);
     });
   }else if(foundationLesson(l.id)){
-    mountIllustratedWebCourse({container:document.getElementById('webVisualWorkbook'),lesson:l,db,student,uid:me.uid,mountWebWorkspace});
+    mountIllustratedWebCourse({container:document.getElementById('webVisualWorkbook'),lesson:l,db,student,uid:me.uid,mountWebWorkspace,initialPage:currentScreen.workbookPage,scrollOnEntry:currentScreen.focusWorkbook===true,onPageChange:page=>{if(currentScreen.kind==='lesson'&&currentScreen.lessonId===l.id){currentScreen.workbookPage=page;currentScreen.focusWorkbook=true;}}});
   }else if(l.course==='web'){
     mountWebWorkspace({container:document.getElementById('webWorkspace'),lesson:l,db,student,uid:me.uid}).catch(err=>{
       const node=document.getElementById('webWorkspace');if(node)node.innerHTML=msg('Webエディターを読み込めません：'+err.message,true);
