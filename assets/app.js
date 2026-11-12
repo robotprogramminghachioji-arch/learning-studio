@@ -1,7 +1,7 @@
-import {mountFinalAssessment} from './final-assessment.js?v=31fe5abceef6';
+import {mountFinalAssessment} from './final-assessment.js?v=7265478edfa1';
 import {initializeHeader} from './page-navigation.js?v=067885ce2b97';
 import {mountWebWorkspace} from './web-workspace.js?v=7e4e51195dc5';
-import {mountHtmlLevel1Companion} from './html-level1-companion.js?v=999f0b46c460';
+import {mountHtmlLevel1Companion} from './html-level1-companion.js?v=8a59cd5511bf';
 import {initializeApp,deleteApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updatePassword} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,getDocs,collection,query,where,setDoc,updateDoc,addDoc,deleteDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
@@ -88,6 +88,10 @@ function initializeNavigation(){
   // Browser/OS gestures still have the final say; they cannot be blocked in every environment.
   history.pushState(browserGuard,'',location.href);
   window.addEventListener('popstate',()=>{
+    if(document.getElementById('lsHelpDialog')?.open){
+      history.pushState(browserGuard,'',location.href);
+      document.getElementById('lsHelpDialog').close();return;
+    }
     if(browserExitApproved)return;
     history.pushState(browserGuard,'',location.href);
     openBrowserBackDialog();

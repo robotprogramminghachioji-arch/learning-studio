@@ -157,7 +157,8 @@ test('PDF uses the large left column, zooms to 125/150/200%, and all 12 pages ma
   assert.equal(await page.locator('#hl1Current').textContent(),`PDF ${n}ページ`);
   const expectedTitle=(await page.locator(`#hl1PageSelect option[value="${n}"]`).textContent()).replace(/^\d+\. /,'').replace(/［.*］$/,'');
   assert.equal(await page.locator('#hl1Title').textContent(),expectedTitle);
-  assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith(`${String(n).padStart(2,'0')}.webp`));
+  await page.waitForFunction(()=>{const img=document.querySelector('#hl1Image');return !!img.getAttribute('src')&&img.complete&&img.naturalWidth>0;});
+  assert.ok(n===1?(await page.locator('#hl1Image').getAttribute('src')).includes('01.webp'):(await page.locator('#hl1Image').getAttribute('src')).startsWith('data:image/webp'));
   assert.ok(n===1?await page.locator('.hl1-task').count()===0:await page.locator('.hl1-task').count()>=7);
   await page.waitForFunction(()=>{const image=document.querySelector('#hl1Image');return image.complete&&image.naturalWidth>0;});
  }
@@ -608,7 +609,7 @@ test('Desktop unified header keeps account and workbook controls in two compact 
  await page.waitForFunction(()=>document.querySelector('.hl1-practice').scrollTop>0);await assertUnifiedHeader(page);
  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));await settleLayout(page);await assertUnifiedHeader(page);
  await page.locator('#hl1Prev').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 2ページ');
- assert.ok(new URL(await page.locator('#hl1Image').getAttribute('src'),base).pathname.endsWith('02.webp'));
+ await page.waitForFunction(()=>document.querySelector('#hl1Image').src.startsWith('data:image/webp'));
  await page.locator('#hl1Next').click();assert.equal(await page.locator('#hl1Current').textContent(),'PDF 3ページ');
  await page.locator('#hl1Scale').selectOption('75');await settleLayout(page);
  await page.screenshot({path:'/tmp/learning-studio-unified-header-desktop.png'});
@@ -833,25 +834,55 @@ for(const mobile of [false,true])test(`Help opens teacher instructions without l
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  }
  await page.setViewportSize({width:mobile?375:1440,height:mobile?812:1000});
- const popupPromise=page.waitForEvent('popup');await page.locator('#lsHelp').click();const helpPage=await popupPromise;
- await helpPage.waitForLoadState();
- assert.equal(await helpPage.locator('h1').textContent(),'先生向け 教材・問題編集手順書');
- assert.equal(await helpPage.evaluate(()=>window.opener===null),true);
- assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>保存前の原稿</h1>');
+ const url=page.url(),pages=page.context().pages().length;
+ await selectPage(page,4);await page.locator('#lsHelp').click();
+ const help=page.locator('#lsHelpDialog');
+ await help.locator('h1').waitFor();
+ assert.equal(await help.locator('h1').textContent(),'先生向け 教材・問題編集手順書');
+ assert.equal(page.context().pages().length,pages);
  for(const width of mobile?[320,375,844]:[1440]){
-  await helpPage.setViewportSize({width,height:mobile?812:1000});
-  assert.equal(await helpPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.setViewportSize({width,height:mobile?812:1000});
+  assert.equal(await help.evaluate(el=>el.scrollWidth<=el.clientWidth),true);
   for(const id of ['start','lessons','workbook','backup','trouble']){
-   await helpPage.locator(`nav a[href="#${id}"]`).click();
-   assert.equal(new URL(helpPage.url()).hash,`#${id}`);
-   const rect=await helpPage.locator(`#${id}`).boundingBox();assert.ok(rect.y>=0&&rect.y<812);
+   await help.locator(`nav a[href="#${id}"]`).click();
+   assert.equal(page.url(),url);
+   assert.equal(await page.locator('#lsHelpClose').isVisible(),true);
+   assert.ok((await page.locator('#lsHelpClose').boundingBox()).y>=0);
   }
  }
- await helpPage.setViewportSize({width:mobile?375:1440,height:mobile?812:1000});
- await page.screenshot({path:`/tmp/learning-studio-help-header-${mobile?'mobile':'desktop'}.png`});
- await helpPage.locator('nav').scrollIntoViewIfNeeded();
- await helpPage.screenshot({path:`/tmp/learning-studio-help-${mobile?'mobile':'desktop'}.png`,fullPage:true});
- await helpPage.close();
+ await page.setViewportSize({width:mobile?375:1440,height:mobile?812:1000});
+ await help.locator('nav').scrollIntoViewIfNeeded();
+ await page.screenshot({path:`/tmp/learning-studio-help-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('#lsHelpClose').click();assert.equal(await help.isVisible(),false);
+ assert.equal(await page.locator('#hl1Current').textContent(),'PDF 4ページ');
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),'<h1>保存前の原稿</h1>');
+ assert.equal(await page.locator('#lsHelp').evaluate(el=>el===document.activeElement),true);
+ await page.locator('#lsHelp').click();await page.keyboard.press('Escape');assert.equal(await help.isVisible(),false);
+ await page.locator('#lsHelp').click();await page.goBack();await page.waitForFunction(()=>!document.querySelector('#lsHelpDialog').open);
+ assert.equal(await page.locator('#lsBackDialog').isVisible(),false);
+ assert.equal(await page.locator('#hl1Current').textContent(),'PDF 4ページ');
  await page.locator('#logout').click();await page.waitForSelector('#login');
  assert.equal(await page.locator('#lsHelp').isVisible(),true);
+});
+
+for(const mobile of [false,true])test(`Every workbook page includes matching learning/check guidance (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile});await minimize(page);
+ const book=JSON.parse(await fs.readFile(path.join(root,'assets/html-level1-workbook.json'),'utf8'));
+ for(let n=2;n<=12;n++){
+  await selectPage(page,n);
+  await page.waitForFunction(()=>{const i=document.querySelector('#hl1Image');return i.getAttribute('src')?.startsWith('data:')&&i.complete&&i.naturalWidth>0;},null,{timeout:30000});
+  const guide=await page.locator('#hl1PageGuide').textContent();
+  for(const task of book.pages[n-1].tasks)assert.ok(guide.includes(task.text),`Page ${n}: ${task.text}`);
+  assert.ok(!await page.locator('#hl1PdfStatus').textContent().then(s=>s.includes('できません')));
+  if([4,6,9,11].includes(n))await page.screenshot({path:`/tmp/learning-studio-aligned-${n}-${mobile?'mobile':'desktop'}.png`});
+ }
+ // A cloud-authored question must stay paired with its current page, too.
+ await page.locator('#wbEdit').click();await page.locator('#wbPage').selectOption('5');
+ await page.locator('#wbFields [data-task] [name=text]').first().fill('先生が追加した属性の確認');
+ await page.locator('#wbSave').click();await page.waitForFunction(()=>document.querySelector('#wbAuthorStatus').textContent.includes('保存しました'),null,{timeout:30000});
+ await page.locator('#wbClose').click();await selectPage(page,6);
+ assert.ok((await page.locator('#hl1PageGuide').textContent()).includes('先生が追加した属性の確認'));
+ const saved=await page.evaluate(id=>window.__firebase.data.lessons[id].workbook,lessonId);
+ const studentPage=await openStudio(t,{mobile,workbook:saved,completedThrough:6});await minimize(studentPage);await selectPage(studentPage,6);
+ assert.ok((await studentPage.locator('#hl1PageGuide').textContent()).includes('先生が追加した属性の確認'));
 });

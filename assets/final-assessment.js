@@ -1,5 +1,5 @@
 import {addDoc,collection,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
-import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=1c39834a68db';
+import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=95ab371178ef';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function mountFinalAssessment({container,lesson,student,uid,db,canSubmit}){
   let questions=DEFAULT_WORKBOOK.finalQuestions,saving=false;

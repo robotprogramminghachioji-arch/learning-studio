@@ -37,4 +37,7 @@ Linuxでは `/usr/bin/chromium` があれば使用し、それ以外ではPlaywr
 
 編集画面は `/tmp/learning-studio-author-dialog-{desktop,mobile}.png`、編集PDFは `/tmp/learning-studio-teacher-edited-{desktop,mobile}.pdf` に出力します。PDFの変更ページは画像として格納し、日本語の描画を維持します。原本PDFは変更しません。本番Firestoreへの書き込み・権限はネットワーク制限のため未検証です。
 
-先生向けヘルプは、PCとスマートフォン（320px・375px・横向き幅）で右上ボタンの操作領域、ログアウトとの重なり・横はみ出し、別タブ表示、目次の移動、元の編集中コード保持、ログアウト後の表示を確認します。手順書の画面は `/tmp/learning-studio-help-{desktop,mobile}.png` に出力します。
+先生向けヘルプは、PCとスマートフォン（320px・375px・横向き幅）で右上ボタンの操作領域、ログアウトとの重なり・横はみ出し、画面内のヘルプ表示、目次の移動、「教材に戻る」・Esc・ブラウザの戻る操作、元の学習ページと編集中コード保持、ログアウト後の表示を確認します。手順書の画面は `/tmp/learning-studio-help-{desktop,mobile}.png` に出力します。
+
+
+教材とチェックの対応は、PC・スマートフォンで第2〜12ページすべての新本文を実際に画像生成し、教材枠の項目と現在の問題の対応、先生による問題変更後の連動を確認します。第4・6・9・11ページの画面は `/tmp/learning-studio-aligned-{ページ番号}-{desktop,mobile}.png` に出力します。既存の先生編集テストでは全12ページのPDF生成も実行します。

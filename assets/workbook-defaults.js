@@ -1,7 +1,7 @@
 // Generated from html-level1-workbook.json. Edit the JSON source.
 export const DEFAULT_WORKBOOK={
   "schemaVersion": 1,
-  "revision": "default-1",
+  "revision": "6779430f-fddf-4343-95ab-0c886aa54fe5",
   "pages": [
     {
       "id": "p01",
@@ -57,8 +57,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "",
       "document": {
         "title": "Webページが見えるしくみ・ブラウザ",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                02 / 12          STEP 01 Webページが見えるしくみ\n\n\n\n\nHTMLを書くと、どうして画面に文字が出るのだろう？\n\n\n Webページは「データ」と「表示」の組み合わせ\n\n  ⌨       ▤      \n       →       →     エディター              HTMLファイル            ブラウザ\n    人がHTMLコードを書く                  index.htmlとして保存           コードを読み、ページに表示\n\n\n\n\n 例： HTMLに <h1>こんにちは</h1> と書くと、ブラウザは大きな見出し「こんにちは」を表示します。\n\n\n  ブラウザとは？              エディターとは？\n\n Webページを見る・操作するソフト。Chrome、Edge、   HTMLなどのコードを書く・直すソフト。メモ帳、VS\n Firefoxなど。アドレス欄にURLを入力してWebサイトへ     Code、Learning StudioのHTMLエディターなどがあり\n アクセスします。                     ます。\n\n\n\n ブラウザの画面を見てみよう\n\n\n ● ● ● 　はじめてのWebページ　 ×\n\n ←  →  ↻     https://example.com                 ☆\n\n\n\n ← 戻る           → 進む             ↻ 更新               URL欄\n\n ひとつ前に見ていたページ    戻ったあと、次のページへ。   今のページを読み直す。     Webページの場所（アドレ\n へ。                                              ス）を表示。\n\n\n ネット上とパソコン内は違う\n\n\n インターネット上のWebサイト            自分のパソコンにあるHTML\n\n ブラウザに https://... のURLを入力して表示。サー        index.html をブラウザで開いて表示。アドレス欄が\n バーからページのデータを受け取ります。                  file:///... のようになります。\n\n\n\n 考えてみよう：「HTMLを保存するソフト」と「HTMLを表示するソフト」はそれぞれ何でしょう？\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     2 / 12",
-        "edited": false
+        "body": "【Webページが見えるしくみ】\nエディターはHTMLコードを書く・直す道具です。メモ帳、VS Code、Learning StudioのHTMLタブなどがあります。\nブラウザはHTMLを読み、Webページとして表示・操作する道具です。Chrome、Edge、Firefoxなどがあります。\nエディターで <h1>こんにちは</h1> と書くと、ブラウザには大きな見出し「こんにちは」が表示されます。\n\n【ブラウザの操作とブラウザ図】\nブラウザ図： ← 戻る　→ 進む　更新（丸い矢印）　アドレスバー\n← 戻る：ひとつ前に見ていたページへ戻ります。\n→ 進む：戻ったあと、次のページへ進みます。\n更新（丸い矢印）：今のページをもう一度読み込みます。\nアドレスバー：Webページの場所（URL）を表示・入力する欄です。\nブラウザを開き、この4つの場所を指さして確認しましょう。\n\n【URLとファイル名】\nURLはページの場所を表すアドレスです。https://example.com/ などはネット上の場所です。ファイル名は index.html のようなファイルの名前です。\nfile:///.../index.html は自分の端末内のファイルを開いた例です。端末で表示しただけではインターネット上に公開されません。\nエディターとブラウザの役割、URLとファイル名の違いを自分の言葉で説明しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -172,8 +172,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<h1>こんにちは！</h1>\n<p>HTMLの練習中です。</p>",
       "document": {
         "title": "HTML・CSS・JavaScriptとエディター",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                03 / 12          STEP 02 エディターとブラウザを使い分ける\n\n\n\n\nLearning Studioでも、ふだんのパソコンでも、役割は同じ。\n\n\n Webページをつくる3つの技術\n\n\n HTML ＝ 内容・構造            CSS ＝ 見た目                    JavaScript ＝ 動作\n\n 見出し、文章、画像、リンクな     色、文字の大きさ、余白、配置な    ボタンで表示を変えるなど、動き\n\n ど、「何があるか」を表します。    どを決めます。            を加えます。\n\n\n   <h1>こんにちは</h1>                           color: blue;                                  alert(\"OK\");\n\n\n\n レベル1では HTMLを中心に練習します。CSS・JavaScriptは後の学習で詳しく扱います。\n\n\n  Learning Studioのエディターでの操作\n\n\n Learning Studio　/　Web開発 Lv.1　/　HTML入門\n\n\n   HTML    CSS     JavaScript                  プレビュー\n\n   <h1>こんにちは！</h1>            こんにちは！\n   <p>HTMLの練習中です。</p>\n\n                                HTMLの練習中です。\n\n\n       ▶ プレビューを更新　｜　☁ 学習内容を保存\n\n\n\n\n   1  HTML タブを選ぶ            2 コードを書きかえる           3 「プレビューを更新」を押      4 「学習内容を保存」を押す\n\n                                    す\n\n\n  Learning Studioの保存               HTMLを保存（ダウンロード）\n\n 「学習内容を保存」は、学習中のコードを生徒の      「HTMLを保存」ボタンを使うと、ブラウザで開ける\n Firebase記録に保存する機能です。HTMLファイルのダ      .html ファイルをダウンロードできます。\n ウンロードとは別です。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     3 / 12",
-        "edited": false
+        "body": "【HTML・CSS・JavaScriptの役割】\nHTML：見出し、文章、画像など、Webページの内容と構造を作ります。\nCSS：色、文字サイズ、余白、配置などの見た目を整えます。\nJavaScript：ボタンを押すと表示が変わるなどの動作を付けます。\nレベル1ではHTMLを中心に練習します。\n\n【Learning Studioで書いて確かめる】\n1. 「エディターを開く」を押し、「HTML」タブを選びます。\n2. 次のコードを入力します。\n<h1>こんにちは！</h1>\n<p>HTMLの練習中です。</p>\n3. 「プレビューを更新」を押し、見出しと文章が出たか確認します。\n4. HTMLタブとプレビューの場所を指さして確認しましょう。\n\n【2つの保存を区別する】\n「学習内容を保存」：ログイン中の生徒の学習コードをクラウド（Firebase）に記録します。保存成功の表示を確認しましょう。\n「HTMLを保存」：ブラウザで開ける .html ファイルを端末へダウンロードします。クラウドへの学習記録とは別です。\n表示を確かめる操作は「プレビューを更新」です。保存しただけで表示確認を済ませたことにはなりません。\n2つの保存の違いを自分の言葉で説明しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -288,8 +288,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>",
       "document": {
         "title": ".html拡張子・保存とブラウザで開く",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                04 / 12          STEP 03 拡張子 .html とファイルの開き方\n\n\n\n\n「HTMLファイル」を保存してブラウザで開く流れを実際に覚えよう。\n\n\n\n ファイル名の最後が「拡張子」\n\n                    index.html\n\n                       ファイル名　＋　HTMLファイルであることを表す拡張子\n\n\n\n  OK：index.html                               NG：index.html.txt\n\n HTMLコードを保存し、ブラウザで表示できます。     最後が .txt なのでテキストファイルです。ファイル名\n\n   index.html                          の表示設定を確認しましょう。index.html.txt\n\n\n\n 自分のパソコンで開く6ステップ\n\n\n  1 メモ帳（またはVS Code）を開きます。\n\n\n  2 下の短いHTMLコードを入力します。\n\n\n  3 名前を付けて保存→ ファイル名をindex.html にします。\n\n\n  4 メモ帳なら「ファイルの種類」をすべてのファイル、「文字コード」をUTF-8 にして保存します。\n\n\n  5  保存したindex.html を右クリック →プログラムから開く→ Chrome/Edgeを選びます。\n\n\n  6  直したらCtrl + S で保存し、ブラウザでCtrl + R を押して確認します。\n\n\n  <!DOCTYPE html>\n  <html lang=\"ja\">\n  <head><meta charset=\"UTF-8\"><title>練習</title></head>\n  <body><h1>はじめてのページ</h1></body>\n  </html>\n\n\n\n 大切：.htmlと名前を付けただけで自動的にWebページになるわけではありません。 ファイルの中に正しい\n HTMLコードが必要です。パソコン内で開けても、インターネット上に公開したことにはなりません。\n\n\n\n 確認：ブラウザのアドレス欄が file:///C:/... なら、ネット上ではなくパソコン内のファイルを開いています。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     4 / 12",
-        "edited": false
+        "body": "【拡張子と文字コード】\nファイル名の末尾の .html は、HTMLファイルであることを示す拡張子です。index.html はHTML、index.html.txt は末尾が .txt なのでテキストファイルです。\n名前だけでなく、中にHTMLコードを書く必要があります。日本語の文字化けを防ぐため、保存時はUTF-8を選びます。\n\n【Learning Studioでダウンロードして開く】\n1. HTMLタブにコードを入力し「プレビューを更新」で確認します。\n2. 「HTMLを保存」を押して .html ファイルをダウンロードします。\n3. PCではダウンロード先のファイルを右クリックし、「プログラムから開く」からChromeやEdgeを選びます。\n4. スマートフォンでは「ファイル」やダウンロード一覧でファイルを探し、対応するブラウザで開きます。端末で開けない場合は先生とPCで確認し、未確認の操作にはチェックしません。\n\n【メモ帳やVS Codeを使う場合】\n次のコードを入力し、名前を付けて保存します。メモ帳では「ファイルの種類」を「すべてのファイル」、「文字コード」をUTF-8にして index.html として保存します。\n<!DOCTYPE html>\n<html lang=\"ja\">\n<head><meta charset=\"UTF-8\"><title>練習</title></head>\n<body><h1>はじめてのページ</h1></body>\n</html>\n直したらエディターでCtrl+S（保存）、ブラウザでCtrl+R（更新）を押します。Learning Studioでは変更後にもう一度ダウンロードすると端末用ファイルを更新できます。\nfile:/// で自分のファイルを開いても、ネット上に公開したことにはなりません。",
+        "edited": true
       },
       "tasks": [
         {
@@ -402,8 +402,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>",
       "document": {
         "title": "HTML文書全体の構造",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                05 / 12          STEP 04 HTML全体の基本構造\n\n\n\n\nWebページの「外側の入れ物」と「画面に表示する部分」を理解しよう。\n\n\n HTMLは大きく分けて「head」と「body」\n\n\n\n                                                 <!DOCTYPE html>\n           HTML文書\n                                                 <html lang=\"ja\">\n                                                 <head>\n                                                   <meta charset=\"UTF-8\">\n       <head>          <body>                                                   <meta name=\"viewport\" content=\"width=device-width,\n   ページについての    ページに表示する        initial-scale=1.0\">\n      情報          内容            <title>はじめてのWebページ</title>\n    文字コード・タイトル    見出し・文章・画像な        </head>\n        など             ど               <body>\n                                     <h1>こんにちは！</h1>\n                                 <p>わたしはHTMLを勉強しています。</p>\n                                                 </body>\n                                                 </html>\n\n\n\n ① 宣言         <!DOCTYPE html> …… 最初に書く、HTML文書であることの宣言。\n\n\n ② 全体         <html lang=\"ja\"> …… HTML文書全体を囲む。lang=\"ja\" は日本語。\n\n\n ③ head        <meta charset=\"UTF-8\"> …… 日本語などの文字を正しく扱うための設定。\n                 <title>...</title> …… ブラウザのタブなどに表示するタイトル。\n\n\n ④ body        <h1>...</h1> …… ページ上に表示する大きな見出し。\n                 <p>...</p> …… ページ上に表示する文章。\n\n\n 混同しやすい： <title> はブラウザのタブ名、<h1> はページの中の大見出しです。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     5 / 12",
-        "edited": false
+        "body": "【文書全体の構造】\n<!DOCTYPE html> は先頭に書く、HTML文書であることの宣言です。\n<html lang=\"ja\"> と </html> が文書全体を囲みます。ja は文書の言語が日本語であることを示します。\n<head> と </head> の中には、文字コードやタイトルなどページの情報を書きます。\n<body> と </body> の中には、画面に見える見出し・文章・画像などの内容を書きます。\n\n【入力して確認するコード】\n<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>\nHTMLタブに入力し、headとbodyそれぞれの開始タグ・終了タグがそろっていることを確認します。\n\n【混同しやすい表示場所】\n<meta charset=\"UTF-8\"> は日本語などの文字を正しく扱う設定です。\n<title> はブラウザのタブ名、<h1> はページ内の大きな見出しです。Learning Studioの埋め込みプレビューではブラウザ全体のタブ名は変わりません。HTMLを保存して別に開くとタブ名も確認できます。\ntitleとh1の表示場所の違いを自分の言葉で説明しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -520,8 +520,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>",
       "document": {
         "title": "タグ・要素・属性を読む",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                06 / 12          STEP 04 タグ・要素・属性を読む\n\n\n\n\n\n記号を丸暗記するより「どの部分が何をしているか」を見てみよう。\n\n\n\n タグは内容の役割を伝える目印\n\n\n                    <h1> こんにちは  </h1>\n\n\n        開始タグ           内容（テキスト）           終了タグ\n\n\n\n 入れ子のしくみ                  属性とは？\n\n タグの中に別のタグを入れられます。外側のタグを閉じ   タグに追加する情報です。href はリンク先、src は画像\n る順序にも注意。                         の場所、alt は画像の説明。\n\n\n    <body>                                                       <a href=\"https://example.com/\">\n     <h1>こんにちは</h1>                     サイトへ\n    <p>元気です。</p>                                          </a>\n    </body>\n\n\n\n\n よく使う基本タグ\n\n\n タグ          役割                入力例\n\n\n <h1>          一番大きな見出し              <h1>わたしのページ</h1>\n\n\n <h2>          小さめの見出し                <h2>好きなもの</h2>\n\n\n <p>          文章・段落                   <p>こんにちは</p>\n\n\n <ul> / <li>       箇条書き                       <li>ゲーム</li>\n\n\n <a>          リンク                              <a href=\"...\">開く</a>\n\n\n <img>         画像                                <img src=\"...\" alt=\"...\">\n\n\n <br>          文章内で改行                 1行目<br>2行目\n\n\n  HTMLでは <img> や <br> に終了タグはありません。 タグは半角英数字・半角記号で入力します。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     6 / 12",
-        "edited": false
+        "body": "【タグ・要素・属性】\n<h1>こんにちは</h1> は、開始タグ <h1>、内容「こんにちは」、終了タグ </h1> でできています。終了タグには / が付きます。\nタグを入れ子にしたときは、内側を先に閉じます。\n<body><h1>こんにちは</h1><p>元気です。</p></body>\n\n【よく使うタグ】\n<h1>：ページの大きな見出し。<h2>：その下の小見出し。\n<p>：文章・段落。例：<p>HTMLを学んでいます。</p>\n<ul>：箇条書き全体。<li>：箇条書きの1項目。\n例：<ul><li>ゲーム</li><li>音楽</li></ul>\n<a>：リンク。<img>：画像。<br>：文章内の改行。\n<img> と <br> には終了タグがありません。\n\n【属性はタグに追加する情報】\n<a href=\"https://example.com/\">サイトへ</a>\nhref はリンク先のURLを指定します。\n<img src=\"images/cat.svg\" alt=\"草原で休むねこ\">\nsrc は画像の場所、alt は画像の内容を説明する文字です。\nHTMLの記号は半角で入力します。属性の値は引用符で囲みます。\n\n【練習】\nHTMLタブに <p>自分の好きな文章</p> を書き、プレビューを更新します。\nhrefかsrcの例を使い、属性が何を指定しているか説明しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -643,8 +643,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>",
       "document": {
         "title": "実習① HTMLの骨組みを入力",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                07 / 12          STEP 05 実習① HTMLの骨組みを入力する\n\n\n\n\nまずは、文章が表示されるまでを確実に体験しよう。\n\n\n  Learning StudioでHTMLタブを開こう\n\n\n ① HTMLタブ     →     ② 下のコードを入力     →     ③ プレビューを更新     →     ④ 学習内容を保存\n\n\n\n   <!DOCTYPE html>\n\n   <html lang=\"ja\">\n   <head>\n\n     <meta charset=\"UTF-8\">\n     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\n    <title>はじめてのWebページ</title>\n\n   </head>\n   <body>\n\n   <h1>こんにちは！</h1>\n   <p>わたしはHTMLを勉強しています。</p>\n\n   </body>\n\n   </html>\n\n\n\n コードの中で探してみよう             正しい表示の見本\n\n ① <head> の開始と終了\n ② <title> の文字             こんにちは！\n ③ <body> の中身\n ④ <h1> の見出し                        わたしはHTMLを勉強しています。\n\n\n\n ここを変えると何が起こる？\n\n\n   A 「こんにちは！」を「わたしのページ」に書きかえて実行してみよう。                      □できた\n\n\n\n   B   <title> の中を「HTMLの練習」にしてみよう。                                □できた\n\n\n\n   C   <p> の内容を好きな文章にしてみよう。                                    □できた\n\n\n\n ヒント：見出しや文章が消えたときは、<、>、/、引用符 \" を確認しよう。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     7 / 12",
-        "edited": false
+        "body": "【HTMLの骨組みを入力する】\n1. エディターを開き、HTMLタブに次のコードを入力します。\n<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>はじめてのWebページ</title>\n</head>\n<body>\n  <h1>こんにちは！</h1>\n  <p>わたしはHTMLを勉強しています。</p>\n</body>\n</html>\n2. 「プレビューを更新」で見出しと文章を確認します。\n3. 「学習内容を保存」を押し、保存成功の表示を確認します。\n\n【コードの中で確かめること】\n先頭に <!DOCTYPE html> があるか。\n<html lang=\"ja\"> と </html> で全体を囲んだか。\nheadの中に <title> と </title> があるか。\nbodyの中に <h1> の見出しと <p> の文章があるか。\n見出しや文章を入れるのはheadではなくbodyです。\n\n【文字を変えてみる】\nh1の「こんにちは！」を「わたしのページ」に、pの中身を好きな文章に変え、プレビューを更新します。\ntitleはブラウザのタブ名です。HTMLを保存してブラウザで開くと確認できます。\n表示がおかしいときは <、>、/、引用符と、タグを閉じる順序を確認しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -738,8 +738,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>わたしの自己紹介</title>\n</head>\n<body>\n  <h1>わたしの自己紹介</h1>\n  <p>こんにちは！ わたしは○○です。</p>\n  <h2>好きなもの</h2>\n  <ul>\n    <li>ゲーム</li>\n    <li>音楽</li>\n    <li>ねこ</li>\n  </ul>\n  <p>好きなサイトはこちらです。</p>\n  <a href=\"https://example.com/\">サイトを見る</a>\n</body>\n</html>",
       "document": {
         "title": "実習② 自己紹介ページに発展",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                08 / 12          STEP 05 実習② 自己紹介ページへ発展\n\n\n\n\n\n見出しと文章だけから、リスト・リンクのあるページにしよう。\n\n\n\n 見出しを増やす → リストにする → リンクをつける\n\n\n ① 見出し               ② 箇条書き              ③ リンク\n\n                     ゲーム\n                                                 サイトを見る ↗\n  わたしの自己紹介        音楽\n                     ねこ\n  好きなもの\n\n\n\n\n 次の完成版を入力しよう\n\n\n  <!DOCTYPE html>\n  <html lang=\"ja\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n   <title>わたしの自己紹介</title>\n  </head>\n  <body>\n   <h1>わたしの自己紹介</h1>\n   <p>こんにちは！ わたしは○○です。</p>\n   <h2>好きなもの</h2>\n    <ul>\n     <li>ゲーム</li>\n     <li>音楽</li>\n     <li>ねこ</li>\n    </ul>\n   <p>好きなサイトはこちらです。</p>\n    <a href=\"https://example.com/\">サイトを見る</a>\n  </body>\n  </html>\n\n\n\n 自分だけのページに変える             リンクについて\n\n  「○○」を自分のニックネームに変える                 href=\"https://example.com/\" がリンク先。クリック先\n   好きなものを3つ考える                 のURLが正しいか確認しよう。知らないサイトへのリン\n  見出しを「わたしのすきな〇〇」に変える        クは先生と確認してから使おう。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     8 / 12",
-        "edited": false
+        "body": "【自己紹介ページを作る】\nHTMLタブで、bodyの中に次のコードを書きます。\n<h1>わたしの自己紹介</h1>\n<p>こんにちは！ わたしは○○です。</p>\n<h2>好きなもの</h2>\n<ul>\n  <li>ゲーム</li>\n  <li>音楽</li>\n  <li>ねこ</li>\n</ul>\n<a href=\"https://example.com/\">サイトを見る</a>\n\n【それぞれの役割】\nh1は自己紹介のタイトル、pは自己紹介文、h2は「好きなもの」の小見出しです。\nulでリスト全体を囲み、その内側にliを3つ入れます。各項目を </li> で閉じてから </ul> を書きます。\naはリンクです。href属性でリンク先のURLを指定し、タグで囲む文字がリンクの表示になります。\n\n【自分の内容に変える】\n「○○」を自分のニックネームに、liの中身を好きなもの3つに変えます。自分のページに入れた3つを回答欄にも書きましょう。\n「プレビューを更新」でタイトル・文章・小見出し・3項目のリスト・リンクの表示を確認します。確認したら操作確認にチェックを入れます。\n知らないサイトのURLを使うときは先生と確認しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -834,8 +834,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head><meta charset=\"UTF-8\"><title>好きな動物</title></head>\n<body>\n  <h1>好きな動物</h1>\n  <p>わたしはねこが好きです。</p>\n  <img src=\"images/cat.svg\" alt=\"草原で休むねこ\" width=\"300\">\n</body>\n</html>",
       "document": {
         "title": "画像の表示・ファイルとパス",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                09 / 12          STEP 06 画像を入れる・ファイルを整理する\n\n\n\n\n画像はHTMLコードに書くだけでなく、実際の画像データも必要です。\n\n\n 画像は <img> タグで表示\n\n\n                                        ブラウザの表示\n 画像のファイル           HTMLのコード\n                                                好きな動物\n                               <h2>好きな動物</h2>\n                         <p>わたしはねこが好きです。</p>      →         →                                         <img src=\"images/cat.svg\" alt=\"草原\n                       で休むねこ\" width=\"300\">\n\n\n\n\n\n ファイルの置き場所とパス\n\n\n フォルダーの例                  画像の場所の指定\n\n                                                          src=\"images/cat.svg\" は「HTMLと同じフォルダーの中\n   my-first-page\n                             にある images フォルダーの cat.svg」という意味。\n    index.html\n    images\n                                                          alt は画像が読めないときにも役立つ説明文です。\n       cat.svg\n\n\n\n  Learning Studioとの違い： 現在のWebエディターは安全のため外部画像やパソコン上の画像ファイルを直接読\n み込めない設定です。そのため src=\"images/cat.svg\" を入力しても、Learning Studio内のプレビューでは画像が\n 出ない場合があります。\n\n 付属の「ローカル実習サンプル」をパソコンで開くと、画像の仕組みを確認できます。\n\n\n\n よくあるミス： 画像が見えないときは、①画像が存在する？ ②名前と拡張子は一致？ ③フォルダーの場所は正しい？\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                     9 / 12",
-        "edited": false
+        "body": "【画像はimgタグで表示する】\n<img src=\"images/cat.svg\" alt=\"草原で休むねこ\" width=\"300\">\nsrc属性は画像ファイルの場所、alt属性は画像の内容を説明する代替テキストです。画像が読み込めない場合や読み上げにも役立ちます。\n\n【ファイルとパスの対応】\nmy-first-page/\n  index.html\n  images/\n    cat.svg\nこの例では、index.htmlと同じ階層のimagesフォルダーにcat.svgを置きます。HTMLから見た位置が images/cat.svg です。\nこの一覧でindex.htmlとimages/cat.svgの場所を確かめましょう。\n\n【入力と表示を分けて確認する】\nHTMLタブに、srcとaltの両方を付けたimgタグを入力します。\nLearning Studioのプレビューは安全のため、外部画像や端末内の画像を直接読み込めない設定です。タグが正しくても画像が出ないことがあります。\n実際に表示を確認する場合は、先生と画像ファイルを用意し、PCで上のフォルダー構成を作り、HTMLをブラウザで開きます。画像ファイルも必要です。\n\n【画像が表示されないとき】\n画像が存在するか、ファイル名・大文字小文字・拡張子が一致するか、フォルダーの場所とsrcが合うかを調べます。\nプレビューの制限とファイルの指定ミスを区別して説明しましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -950,8 +950,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>わたしの自己紹介</title>\n</head>\n<body>\n  <h1>わたしの自己紹介</h1>\n  <p>こんにちは！ わたしは○○です。</p>\n  <h2>好きなもの</h2>\n  <ul>\n    <li>ゲーム</li>\n    <li>音楽</li>\n    <li>ねこ</li>\n  </ul>\n  <p>好きなサイトはこちらです。</p>\n  <a href=\"https://example.com/\">サイトを見る</a>\n</body>\n</html>",
       "document": {
         "title": "自分で考えて改善・デバッグ",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                10 / 12          STEP 07 自分で考えて改善する\n\n\n\n\n\n答えをコピーするだけでなく、考えてコードを変えてみよう。\n\n\n\n\n    MISSION 1  自分を紹介しよう\n\n  <h1> の見出しと <p> の文章を、オリジナルに変更する。\n\n どんなタイトルにする？\n\n\n\n\n    MISSION 2  好きなものを3つ追加\n\n  <ul> と <li> を使って、好きなゲーム・動物・食べ物などを紹介する。\n\n どんな3つを紹介する？\n\n\n\n\n    MISSION 3  ページの構造を説明する\n\n  <head> には何を、<body> には何を書くか、自分の言葉で説明してみよう。\n\n head：　　　　　　　　　body：\n\n\n\n デバッグ：表示がおかしい！ どこが間違っている？\n\n\n 問題 A：終了タグがない              問題 B：タグがずれている\n\n\n   <h1>こんにちは！                                             <ul>\n   <p>好きなものはゲームです。</p>                           <li>ねこ</li>\n                                                     <li>ゲーム</ul>\n  修正する場所：___________________\n                                           修正する場所：___________________\n\n\n\n むずかしくなったら、最初に動いた状態に戻して1か所ずつ変更し、プレビューで確かめよう。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                    10 / 12",
-        "edited": false
+        "body": "【自分で考えて改善する】\n1. <h1> の文字を「こんにちは！」以外の自分らしいタイトルに変えます。\n2. <p> の文章を「わたしはHTMLを勉強しています。」から、自分の言葉の自己紹介に変えます。\n3. <ul> の中に <li> を3つ以上入れ、好きなものをリストにします。\n例：<ul><li>ゲーム</li><li>音楽</li><li>ねこ</li></ul>\n変更ごとに「プレビューを更新」で確かめます。\n\n【問題A：終了タグを見つける】\n誤り：<h1>こんにちは！\nh1の終了タグがありません。\n修正：<h1>こんにちは！</h1>\n\n【問題B：閉じる順序を調べる】\n誤り：<ul><li>ねこ</li><li>ゲーム</ul>\n2つ目のliの閉じタグが足りません。内側のliを先に閉じます。\n修正：<ul><li>ねこ</li><li>ゲーム</li></ul>\nこの教材の問題A・問題Bで、足りないタグを指さしましょう。\n\n【デバッグの進め方】\n表示がおかしいときは、最初に動いていた状態から1か所ずつ直し、プレビューで確認します。一度に全部消したり、適当にタグを増やしたりしません。\nheadはページ情報、bodyは表示する内容です。\n改善した場所と、なぜそう工夫したかを自分の言葉で書きましょう。",
+        "edited": true
       },
       "tasks": [
         {
@@ -1056,8 +1056,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "",
       "document": {
         "title": "確認テスト（10問）",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                11 / 12          STEP 08 確認テスト\n\n\n\n\n\n答えを選んだ理由も、先生に説明できるとすばらしい。\n\n\n\n    Webページを表示するソフトはどれ？   1\n    □ ブラウザ　□ エディター　□ 電卓\n\n\n    HTMLファイルとして正しい名前は？   2\n    □ index.txt　□ index.html　□ index.html.txt\n\n\n    HTMLコードを書いたり編集したりする道具は？   3\n    □ ブラウザ　□ エディター　□ カメラ\n\n\n\n    ページに表示する見出しや文章を入れる場所は？\n   4\n    □ head　□ body　□ title\n\n\n\n    ブラウザのタブ名を書くタグは？\n   5\n    □ <h1>　□ <title>　□ <p>\n\n\n\n    見出しを書くタグは？\n   6\n    □ <h1>　□ <p>　□ <img>\n\n\n\n    ほかのページに移動できるリンクのタグは？\n   7\n    □ <a>　□ <br>　□ <body>\n\n\n    HTMLを変更したあと、ブラウザで新しい表示を確認する基本操作は？   8\n    □ 更新　□ 印刷　□ 戻る\n\n\n 記述問題（短く答えよう）\n\n\n   9  <head> と <body> の役割の違いを書こう。\n\n\n\n\n\n   10 自分のパソコンの index.html をブラウザで開く方法を書こう。\n\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML                                                                    11 / 12",
-        "edited": false
+        "body": "【最終確認テスト：全10問】\n第1〜10ページの学習を振り返り、選択8問と記述2問のすべてに回答します。右側（スマートフォンでは「実習・問題」）で回答して「テストを提出する」を押します。\n\n1. Webページを表示するソフトはどれ？\nブラウザ ／ エディター ／ 電卓\n\n2. HTMLファイルとして正しい名前は？\nindex.txt ／ index.html ／ index.html.txt\n\n3. HTMLコードを書いたり編集したりする道具は？\nブラウザ ／ エディター ／ カメラ\n\n4. ページに表示する見出しや文章を入れる場所は？\nhead ／ body ／ title\n\n5. ブラウザのタブ名を書くタグは？\n<h1> ／ <title> ／ <p>\n\n6. 見出しを書くタグは？\n<h1> ／ <p> ／ <img>\n\n7. ほかのページへのリンクのタグは？\n<a> ／ <br> ／ <body>\n\n8. HTML変更後にブラウザで更新する操作は？\n更新 ／ 印刷 ／ 戻る\n\n9. <head>と<body>の役割の違いを書こう。\n\n10. 自分のPC内のindex.htmlをブラウザで開く方法を書こう。\n\n提出後に第12ページと、レッスン全体の最終提出が利用できます。",
+        "edited": true
       },
       "tasks": [
         {
@@ -1208,8 +1208,8 @@ export const DEFAULT_WORKBOOK={
       "sample": "",
       "document": {
         "title": "完成チェック・振り返り",
-        "body": "学びの教室 × Learning Studio  WEB開発 / レベル1\n   </>                                                12 / 12            FINISH 振り返り・完成チェック\n\n\n\n\n\n「できた！」を確かめて、次につなげよう。\n\n\n\n 作品完成チェックリスト\n\n\n □ HTMLタブにコードを入力できた           □ プレビューを更新できた\n\n\n □ headとbodyの違いが分かった            □ h1とpを書きかえた\n\n\n □ リストを追加できた                 □ 学習内容を保存した\n\n\n □ .htmlファイルの意味を説明できる          □ ブラウザで開く方法が分かった\n\n\n 3つの振り返り\n\n\n 今日、できるようにな\n\n ったこと\n\n\n\n\n\n まだむずかしいこと・\n\n 質問したいこと\n\n\n\n\n 次に作ってみたいWeb\n ページ\n\n\n\n\n 次の学習へ\n\n\n レベル1をもう一度                   次のテーマ：CSS\n\n 自己紹介の内容を変えたり、別の題材で新しいページを   HTMLで作ったページに、色や文字の大きさを付けてみ\n 作ろう。                        よう。\n\n\n\n\n     完成おめでとう！\n\n        エディターで書く → ブラウザで確かめる → 直してみる。これがWeb制作の基本です。★\n\n\n\n\nHTML入門｜第1回：WebページのしくみとHTML学習に役立つ参考サイト　MDN「HTML: コンテンツの作成」「基本的なHTMLの構文」「ファイルの扱い」／ サルワカ「初心者向けHTML入門」             12 / 12",
-        "edited": false
+        "body": "【作品完成チェック】\n実際の操作と作品を確かめ、できた項目にチェックを入れます。\n・HTMLタブにコードを入力できた。\n・「プレビューを更新」で表示を確認できた。\n・headとbodyの違いが説明できる。\n・h1とpの文字を自分で変更できた。\n・liを使ったリストを追加できた。\n・「学習内容を保存」で保存成功を確認した。\n・.htmlという拡張子の意味を説明できる。\n・HTMLファイルをブラウザで開く方法を説明できる。\n\n【思い出すためのヒント】\nheadはタイトルや文字コードなどのページ情報、bodyは画面に表示する内容です。\nh1は見出し、pは文章です。ulの中にliを並べるとリストになります。\n「学習内容を保存」はクラウド記録、「HTMLを保存」はファイルのダウンロードです。.htmlはHTMLファイルを表す拡張子です。\nPCではファイルを右クリック→「プログラムから開く」→ブラウザを選びます。\nまだできない項目は対象ページに戻って確かめ、先生に聞きましょう。\n\n【3つの振り返り】\n1. 今日、できるようになったことは？（必須）\n2. まだ難しいこと・先生に質問したいことは？（任意）\n3. 次に作ってみたいWebページは？（任意）\n自分の言葉で回答欄に書き、「回答とコードをチェック」で確認します。\n次は、HTMLで作ったページにCSSで色や文字の大きさを付ける学習へ進みます。",
+        "edited": true
       },
       "tasks": [
         {
