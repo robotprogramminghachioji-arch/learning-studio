@@ -94,7 +94,7 @@ before(async()=>{
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(require('node:fs').existsSync('/usr/bin/chromium')?'/usr/bin/chromium':chromium.executablePath()),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 });
 after(async()=>{await browser?.close();await new Promise(resolve=>server?.close(resolve));});
-async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress,cachedAssets=false,workbook}={}){
+async function openStudio(t,{role='student',mobile=false,holdReads=false,failReads=false,failWrites=false,remoteCode,completedThrough=0,localProgress,cachedAssets=false,workbook,extraLessons=[],courseAccess,startAtHome=false}={}){
  if(completedThrough){
   remoteCode={...remoteCode,pageWork:{...remoteCode?.pageWork,_learning:{version:1,currentPage:1,testSubmitted:completedThrough>=11,completed:Object.fromEntries(Array.from({length:12},(_,i)=>['p'+String(i+1).padStart(2,'0'),i<completedThrough]))}}};
  }
@@ -107,7 +107,7 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
  const web=JSON.parse(await fs.readFile(path.join(root,'assets/web-lesson01.json'),'utf8'));
  // A representative higher-level lesson exercises the existing standalone path.
  web.push({id:'test-web-level2',course:'web',level:2,title:'テスト用CSS教材',goal:'CSSを編集する',question:'学習したことを書こう'});
- await page.addInitScript(({role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook})=>{
+ await page.addInitScript(({role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook,extraLessons,courseAccess})=>{
   if(window.top!==window)return;
   const data={teachers:role==='teacher'?{'teacher-uid':{enabled:true}}:{},
    students:{student01:{displayName:'テスト生徒',enabled:true,activeUid:'student-uid'}},
@@ -115,6 +115,8 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
    lessons:Object.fromEntries([...lessons,...web].map(l=>[l.id,{...l,published:true}])),
    login_lookup:{'6d35659c221c9e952e486089108f09bf3ce16989fac1a166a9deea99c4cd629d':{email:'student01@example.test'}},
    submissions:{},answer_keys:{},web_workspaces:remoteCode?{[workspaceId]:remoteCode}:{}};
+  for(const lesson of extraLessons)data.lessons[lesson.id]=lesson;
+  if(courseAccess)data.student_access['student-uid'].allowedCourses=courseAccess;
   if(workbook)data.lessons['web-html-l1-lesson01'].workbook=workbook;
   window.__firebase={role,data,writes:[],authEvents:[],holdReads,releaseReads:[],failReads,failWrites};
   localStorage.setItem('ls_student_id','student01');
@@ -122,7 +124,7 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
    localStorage.setItem('ls-html-level1-pages:student-uid:web-html-l1-lesson01',JSON.stringify(localProgress));
    sessionStorage.setItem('fixture-local','yes');
   }
- },{role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook});
+ },{role,lessons,web,holdReads,failReads,failWrites,remoteCode,workspaceId,localProgress,workbook,extraLessons,courseAccess});
  if(!cachedAssets){
  await page.route('https://www.gstatic.com/firebasejs/**',route=>{
   const name=new URL(route.request().url()).pathname.split('/').pop();
@@ -132,6 +134,7 @@ async function openStudio(t,{role='student',mobile=false,holdReads=false,failRea
  await page.route(url=>!url.href.startsWith(base)&&url.hostname!=='www.gstatic.com',route=>route.abort());
  }
  await page.goto(base);
+ if(startAtHome){await page.waitForSelector('.course');return page;}
  await page.waitForSelector('[data-course=web]');
  await page.locator('[data-course=web][data-level="1"]').click();
  await page.locator(`[data-id="${lessonId}"]`).click();
@@ -278,7 +281,7 @@ test('Teacher still has seven courses, student/lesson management and standalone 
  await page.locator('#tabLessons').click();assert.ok((await page.locator('#teacherBody').textContent()).includes('教材'));
  await page.locator('#tabGrades').click();assert.ok((await page.locator('#teacherBody').textContent()).includes('採点'));
  await page.locator('#home').click();await page.locator('[data-course=web][data-level="2"]').click();
- await page.locator('.lesson-tile').first().click();await page.waitForSelector('#webHtmlEditor');
+ await page.locator('[data-id="test-web-level2"]').click();await page.waitForSelector('#webHtmlEditor');
  assert.equal(await page.locator('#hl1EditorWindow').count(),0);await page.locator('#webHtmlEditor').fill('<h1>通常教材も編集可</h1>');await page.locator('#webRun').click();
  assert.equal(await page.frameLocator('#webPreview').locator('h1').textContent(),'通常教材も編集可');
 });
@@ -885,4 +888,176 @@ for(const mobile of [false,true])test(`Every workbook page includes matching lea
  const saved=await page.evaluate(id=>window.__firebase.data.lessons[id].workbook,lessonId);
  const studentPage=await openStudio(t,{mobile,workbook:saved,completedThrough:6});await minimize(studentPage);await selectPage(studentPage,6);
  assert.ok((await studentPage.locator('#hl1PageGuide').textContent()).includes('先生が追加した属性の確認'));
+});
+
+async function courseData(){return JSON.parse(await fs.readFile(path.join(root,'assets/web-course.json'),'utf8'));}
+async function openCourseLesson(page,lesson){
+ await page.locator('#home').click();await page.locator(`[data-course=web][data-level="${lesson.level}"]`).click();
+ await page.locator(`[data-id="${lesson.id}"]`).click();await page.locator('#webHtmlEditor').waitFor();
+ await page.locator('[data-course-practice]').click();
+ const frame=page.frameLocator('#webPreview');await frame.locator('main[data-game]').waitFor();return frame;
+}
+async function expireCourseGame(frame){
+ await frame.locator('body').evaluate(()=>{const original=Date.now;Date.now=()=>original()+20000;});
+ await frame.locator('#time').filter({hasText:/^0$/}).waitFor();
+}
+async function playCourseSample(page,frame,lesson){
+ const n=Number(lesson.id.slice(-2)),level=lesson.level;
+ if(level===1){
+  for(let i=0;i<(n===3||n===4||n===6?5:3);i++)await frame.locator('#collect').click();
+  assert.equal(await frame.locator('#score').textContent(),n===3||n===4||n===6?'5':'3');
+  if(await frame.locator('#reset').count()){await frame.locator('#reset').click();assert.equal(await frame.locator('#score').textContent(),'0');}
+  if(n===5||n===6)assert.ok(await frame.locator('img').evaluate(i=>i.complete&&i.naturalWidth>0));
+ }else if(level===2&&n===1){
+  for(let i=0;i<3;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'3');
+ }else if(level===2){
+  await frame.locator('[data-box="0"]').click();assert.ok((await frame.locator('#message').textContent()).includes('からっぽ'));
+  await frame.locator('[data-box="1"]').click();assert.ok((await frame.locator('#message').textContent()).includes('宝を発見'));
+  assert.equal(await frame.locator('[data-box]:not(:disabled)').count(),0);
+  if(await frame.locator('#reset').count()){await frame.locator('#reset').click();assert.equal(await frame.locator('[data-box]:disabled').count(),0);}
+ }else if(level===3){
+  if(n===1){for(let i=0;i<5;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'10');assert.equal(await frame.locator('#collect').isDisabled(),true);}
+  else if([2,3,6].includes(n)){
+   await frame.locator('body').evaluate(()=>{Math.random=()=>0;});
+   await frame.locator('[data-hand="2"]').click();assert.ok((await frame.locator('#message').textContent()).includes('勝ち'));
+   await frame.locator('[data-hand="0"]').click();assert.ok((await frame.locator('#message').textContent()).includes('あいこ'));
+   await frame.locator('[data-hand="1"]').click();assert.ok((await frame.locator('#message').textContent()).includes('負け'));
+   if(n!==2){
+    assert.equal(await frame.locator('#score').textContent(),'1');assert.equal(await frame.locator('#rounds').textContent(),'3');
+    if(n===6){for(let i=0;i<4;i++)await frame.locator('[data-hand="2"]').click();assert.equal(await frame.locator('#history li').count(),5);}
+    await frame.locator('#reset').click();assert.equal(await frame.locator('#rounds').textContent(),'0');
+   }
+  }else if(n===4){
+   for(let i=0;i<3;i++){await frame.locator('#choices button').nth(i).click();assert.equal(await frame.locator('#choices button:not(:disabled)').count(),0);await frame.locator('#next').click();}
+   assert.equal(await frame.locator('#score').textContent(),'3');assert.ok((await frame.locator('#question').textContent()).includes('全問終了'));
+   await frame.locator('#reset').click();assert.equal(await frame.locator('#score').textContent(),'0');
+  }else if(n===5){
+   await frame.locator('body').evaluate(()=>{Math.random=()=>.6;});await frame.locator('#reset').click();
+   await frame.locator('#guess').fill('0');await frame.locator('#checkGuess').click();assert.equal(await frame.locator('#attempts').textContent(),'0');
+   await frame.locator('#guess').fill('6');await frame.locator('#guess').press('Enter');assert.ok((await frame.locator('#message').textContent()).includes('大きい'));
+   await frame.locator('#guess').fill('8');await frame.locator('#checkGuess').click();assert.ok((await frame.locator('#message').textContent()).includes('小さい'));
+   await frame.locator('#guess').fill('7');await frame.locator('#checkGuess').click();assert.equal(await frame.locator('#message').textContent(),'正解！');
+  }
+ }else if(level===4){
+  if([1,2,4].includes(n)){
+   await frame.locator('body').evaluate(()=>{Math.random=()=>0;});
+   if(n===4)await frame.locator('#difficulty').selectOption('1200');
+   await frame.locator('#start').click();
+   if(n===1)await frame.locator('#collect').click();else await frame.locator('#holes button').first().click();
+   assert.equal(await frame.locator('#score').textContent(),'1');
+   if(n!==1){await frame.locator('#holes button').first().click();assert.equal(await frame.locator('#score').textContent(),'1');}
+   await expireCourseGame(frame);assert.equal(await frame.locator('#time').textContent(),'0');
+   await frame.locator('#start').click();assert.equal(await frame.locator('#score').textContent(),'0');
+  }else{
+   if(n===6)await frame.locator('#start').click();
+   if(n===3){await frame.locator('#board').focus();await frame.locator('#board').press('ArrowRight');assert.equal(await frame.locator('#player').evaluate(el=>el.style.left),'20%');}
+   if(n===5){await frame.locator('[data-move=right]').click();await frame.locator('[data-move=right]').click();assert.equal(await frame.locator('#player').evaluate(el=>el.style.left),'20%');await frame.locator('[data-move=down]').click();await frame.locator('[data-move=down]').click();for(let i=0;i<3;i++)await frame.locator('[data-move=right]').click();}
+   else{for(let i=0;i<4;i++)await frame.locator('[data-move=right]').click();for(let i=0;i<2;i++)await frame.locator('[data-move=down]').click();}
+   assert.equal(await frame.locator('#score').textContent(),'1');
+   if(n===6){await expireCourseGame(frame);const before=await frame.locator('#player').getAttribute('style');await frame.locator('[data-move=left]').click();assert.equal(await frame.locator('#player').getAttribute('style'),before);}
+  }
+ }else{
+  for(let i=0;i<5;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#collect').isDisabled(),true);
+  if(n>=2)assert.equal(await frame.locator('#best').textContent(),'5');
+  await frame.locator('#reset').click();assert.equal(await frame.locator('#score').textContent(),'0');
+  if(n===5){await frame.locator('#theme').selectOption('night');assert.equal(await frame.locator('html').getAttribute('data-theme'),'night');}
+  if(n===6)assert.equal(await frame.locator('#version').textContent(),'1.0.0');
+ }
+}
+
+for(const mobile of [false,true])test(`All 30 foundations samples run, play and fit the screen (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ const course=await courseData();assert.equal(course.lessons.length,30);
+ for(const lesson of course.lessons){
+  const frame=await openCourseLesson(page,lesson);
+  assert.ok((await page.locator('.web-lesson-meta').textContent()).includes('60〜90分'));
+  assert.ok((await page.locator('.lesson-text').first().textContent()).includes('【'));
+  try{await playCourseSample(page,frame,lesson);}catch(err){err.message=lesson.id+': '+err.message;throw err;}
+  assert.equal(await frame.locator('html').evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' preview fits');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' lesson fits');
+  if(mobile){await page.setViewportSize({width:320,height:812});assert.equal(await frame.locator('html').evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' 320px preview fits');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' 320px lesson fits');await page.setViewportSize({width:375,height:812});}
+  if(Number(lesson.id.slice(-2))===6){await page.locator('.web-preview-panel').scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/web-course-level${lesson.level}-${mobile?'mobile':'desktop'}.png`});}
+ }
+});
+
+for(const mobile of [false,true])test(`Roadmap explains three courses of five levels and labels planned content (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ await page.locator('[data-web-roadmap]').click();assert.equal(await page.locator('.web-roadmap-course').count(),3);
+ assert.equal(await page.locator('.web-roadmap-levels li').count(),15);assert.equal(await page.locator('[data-web-level]').count(),5);
+ assert.ok((await page.locator('.web-roadmap-intro').textContent()).includes('全30教材'));
+ assert.equal(await page.locator('.web-roadmap-course').nth(1).getByText('今後の学習予定',{exact:true}).count(),1);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.screenshot({path:`/tmp/web-course-roadmap-${mobile?'mobile':'desktop'}.png`});
+ for(let level=1;level<=5;level++){
+  await page.locator(`[data-web-level="${level}"]`).click();assert.equal(await page.locator('[data-id^="web1-"]').count(),6);
+  await page.locator('[data-web-roadmap]').click();
+ }
+});
+
+test('Teacher registers drafts, preserves edited lessons, publishes deliberately and students see only published lessons',async t=>{
+ const course=await courseData(),first={...course.lessons[0],title:'先生の編集を保持',explanation:'先生の説明を保持',published:false};
+ const page=await openStudio(t,{role:'teacher',startAtHome:true,extraLessons:[first]});page.on('dialog',d=>d.accept());
+ await page.locator('#manage').click();await page.locator('#importFoundations').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('登録処理が完了'));
+ const registered=await page.evaluate(()=>Object.values(window.__firebase.data.lessons).filter(l=>l.id.startsWith('web1-')));
+ assert.equal(registered.length,30);assert.equal(registered.every(l=>l.published===false),true);
+ assert.equal(registered.find(l=>l.id===first.id).explanation,first.explanation);
+ assert.equal(registered.some(l=>l._template||l.teacherGuide&&l.id!==first.id),false);
+ const writes=await page.evaluate(()=>window.__firebase.writes.length);await page.locator('#importFoundations').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('全教材が登録済み'));
+ assert.equal(await page.evaluate(()=>window.__firebase.writes.length),writes);
+ const studentDraft=await openStudio(t,{startAtHome:true,extraLessons:registered});
+ await studentDraft.locator('[data-course=web][data-level="1"]').click();assert.equal(await studentDraft.locator('[data-id^="web1-"]').count(),0);
+ await page.locator('#publishFoundations').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('公開処理が完了'));
+ const published=await page.evaluate(()=>Object.values(window.__firebase.data.lessons).filter(l=>l.id.startsWith('web1-')));
+ assert.equal(published.every(l=>l.published===true),true);assert.equal(published.find(l=>l.id===first.id).title,first.title);
+ const student=await openStudio(t,{startAtHome:true,extraLessons:published});
+ for(let level=1;level<=5;level++){await student.locator('[data-course=web][data-level="'+level+'"]').click();assert.equal(await student.locator('[data-id^="web1-"]').count(),6);await student.locator('#home').click();}
+ await student.locator('[data-course=web][data-level="1"]').click();await student.locator('[data-id="'+first.id+'"]').click();
+ assert.equal(await student.locator('.lesson-text').first().textContent(),first.explanation);
+});
+
+test('Failed course registration shows an error and can be retried without duplicate or partial overwrite',async t=>{
+ const page=await openStudio(t,{role:'teacher',startAtHome:true,failWrites:true});page.on('dialog',d=>d.accept());
+ await page.locator('#manage').click();await page.locator('#importFoundations').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('完了できませんでした'));
+ assert.equal(await page.evaluate(()=>Object.keys(window.__firebase.data.lessons).filter(id=>id.startsWith('web1-')).length),0);
+ await page.evaluate(()=>window.__firebase.failWrites=false);await page.locator('#importFoundations').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('登録処理が完了'));
+ assert.equal(await page.evaluate(()=>Object.keys(window.__firebase.data.lessons).filter(id=>id.startsWith('web1-')).length),30);
+});
+
+test('Course assignment is retained; students without Web access do not see course or roadmap controls',async t=>{
+ const page=await openStudio(t,{startAtHome:true,courseAccess:['python']});
+ assert.equal(await page.locator('[data-course=web]').count(),0);assert.equal(await page.locator('[data-web-roadmap]').count(),0);
+ assert.equal(await page.locator('[data-course=python]').count(),5);assert.equal(await page.locator('#importFoundations').count(),0);
+});
+
+test('Student saves a new course work, submits reflection and downloads a playable page with persistent best score',async t=>{
+ const course=await courseData(),lesson={...course.lessons.find(l=>l.id==='web1-l5-lesson02'),published:true};
+ const page=await openStudio(t,{startAtHome:true,extraLessons:[lesson]});await openCourseLesson(page,lesson);
+ await page.locator('#webHtmlEditor').fill(lesson.starterHtml.replace('星を集める</button>','作品の星を集める</button>'));
+ await page.locator('#webRun').click();await page.locator('#webSave').click();await page.waitForFunction(()=>document.querySelector('#webSaveState').textContent==='Firebaseに保存済み');
+ const saved=await page.evaluate(id=>window.__firebase.data.web_workspaces['student-uid__'+id],lesson.id);
+ assert.ok(saved.html.includes('作品の星を集める'));assert.equal(saved.missions,undefined);
+ assert.ok((await page.locator('#webFeedback').textContent()).includes('学習内容を保存しました。'));
+ const response='最高得点は端末保存、学習コードはクラウド保存です。プレビューでは最高得点を永続保存できなくてもゲームが動くことを確認しました。';
+ await page.locator('#submitTest textarea').fill(response);await page.locator('#submitTest button').click();await page.waitForFunction(()=>document.querySelector('#submitMsg').textContent.includes('先生の採点'));
+ assert.equal(await page.evaluate(()=>window.__firebase.data.submissions['test-created'].response),response);
+ const downloadPromise=page.waitForEvent('download');await page.locator('#webDownload').click();const download=await downloadPromise;
+ assert.equal(download.suggestedFilename(),'index.html');const html=await fs.readFile(await download.path(),'utf8');assert.ok(html.includes(lesson.starterJs));
+ const exported=await page.context().newPage();t.after(()=>exported.close());
+ await exported.route(base+'/exported-game.html',r=>r.fulfill({contentType:'text/html',body:html}));await exported.goto(base+'/exported-game.html');
+ for(let i=0;i<5;i++)await exported.locator('#collect').click();assert.equal(await exported.locator('#best').textContent(),'5');
+ await exported.reload();assert.equal(await exported.locator('#best').textContent(),'5');
+ await exported.locator('#collect').click();assert.equal(await exported.locator('#best').textContent(),'5');
+ await page.locator('#home').click();await openCourseLesson(page,lesson);assert.ok((await page.locator('#webHtmlEditor').inputValue()).includes('作品の星を集める'));
+});
+
+
+test('Bulk course publication skips unregistered templates and teacher-authored multiple-choice changes',async t=>{
+ const course=await courseData(),text={...course.lessons[0],published:false},choice={...course.lessons[1],options:['A','B','C','D'],published:false};
+ const page=await openStudio(t,{role:'teacher',startAtHome:true,extraLessons:[text,choice]});page.on('dialog',d=>d.accept());
+ await page.locator('#manage').click();await page.locator('#publishFoundations').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('公開処理が完了'));
+ const state=await page.evaluate(()=>window.__firebase.data.lessons);
+ assert.equal(state[text.id].published,true);assert.equal(state[choice.id].published,false);
+ assert.equal(Object.keys(state).filter(id=>id.startsWith('web1-')).length,2);
 });

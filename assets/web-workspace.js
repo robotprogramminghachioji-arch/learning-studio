@@ -42,7 +42,7 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
   try{savedLocal=localStorage.getItem(draftKey);}catch{/* Storage may be unavailable in private browsing. */}
   if(savedLocal){try{const parsed=JSON.parse(savedLocal); if(typeof parsed.html==='string') code={html:parsed.html,css:parsed.css||'',js:parsed.js||''};}catch{/* ignore invalid local drafts */}}
   container.innerHTML=`
-    <div class="web-workspace">
+    <div class="web-workspace${lesson.id.startsWith('web1-')?' web-workspace--game':''}">
       <div class="web-workspace-header"><div><strong>コードを書く → 実行する → チャレンジ</strong><div class="muted tiny">HTML・CSS・JavaScriptを切り替えて編集できます</div></div><span class="pill" id="webSaveState">${isStudent?'読み込み中':'先生プレビュー'}</span></div>
       <div class="web-workspace-grid">
         <div class="web-code-panel">
@@ -118,10 +118,10 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
       state.textContent='Firebaseに保存中…';
       const payload={ownerUid:uid,studentId:student.id,lessonId:lesson.id,
         html:code.html,css:code.css,js:code.js,updatedAt:serverTimestamp()};
-      if(!linkedWorkbook){payload.missions=count;payload.completed=count===3;}
+      if(introMissions){payload.missions=count;payload.completed=count===3;}
       await setDoc(workspaceRef,payload,{merge:true});
       state.textContent='Firebaseに保存済み';
-      if(showFeedback)feedback.textContent=linkedWorkbook?'HTML・CSS・JavaScriptをFirebaseに保存しました。ページごとの回答は教材ミッションの「このページを保存」で保存できます。':`学習内容を保存しました（達成 ${count} / 3）。`;
+      if(showFeedback)feedback.textContent=linkedWorkbook?'HTML・CSS・JavaScriptをFirebaseに保存しました。ページごとの回答は教材ミッションの「このページを保存」で保存できます。':introMissions?`学習内容を保存しました（達成 ${count} / 3）。`:'学習内容を保存しました。';
     }catch(error){
       state.textContent='Firebase保存エラー';
       if(showFeedback || active)feedback.textContent=`保存できませんでした：${error.code||error.message}`;
@@ -153,7 +153,7 @@ export async function mountWebWorkspace({container, lesson, db, student, uid, li
   $('#webDownload').addEventListener('click',()=>{
     const combined=composeDocument(collectCode(),false);
     const blob=new Blob([combined],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='my-web-page.html';a.click();
+    const a=document.createElement('a');a.href=url;a.download=lesson.id.startsWith('web1-')?'index.html':'my-web-page.html';a.click();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
   async function loadRemote(){

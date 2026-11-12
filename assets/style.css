@@ -252,3 +252,17 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 #lsHelpContent{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .hl1-page-guide{background:white;padding:16px;line-height:1.8;overflow-wrap:anywhere}.hl1-page-guide li{margin-bottom:16px}.hl1-page-guide p{white-space:pre-wrap}
 @media(max-width:600px){.ls-help-dialog{height:100dvh;border-radius:0}.ls-help-toolbar{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:8px}}
+/* Web foundations course and the three-course learning roadmap. */
+.web-roadmap-link{margin:6px 0 16px;text-align:left;line-height:1.5}
+.web-roadmap-intro{background:linear-gradient(120deg,#f0f6ff,#fff);border-color:#c4d7f1}
+.web-roadmap-intro p,.web-roadmap-course p,.web-level-intro p,.web-lesson-meta p{line-height:1.85}
+.web-roadmap-levels{padding-left:26px}.web-roadmap-levels li{padding:12px 8px;border-bottom:1px solid #dce5f1;line-height:1.7}.web-roadmap-levels p{margin:6px 0 10px}
+.web-roadmap-course .pill{margin-bottom:10px}.web-level-intro{padding:16px;background:#f2f7ff;border-radius:12px;margin:16px 0}.web-level-intro h2{margin-top:10px}
+.web-lesson-meta{border-top:1px solid #e0e7f2;margin-top:16px;padding-top:8px}
+.lesson-tile{text-align:left;line-height:1.65;overflow-wrap:anywhere}.lesson-tile .meta{display:block;margin-top:5px}
+.lesson-text{overflow-wrap:anywhere}#webWorkspace{scroll-margin-top:80px}
+#webWorkspaceSummary pre{max-width:450px;max-height:300px;overflow:auto;font-size:12px}
+@media(max-width:600px){.web-roadmap-levels{padding-left:20px}.web-roadmap-levels li{padding-left:0}.web-roadmap-levels button{width:100%}.web-level-intro{padding:12px}}
+.web-legacy-lessons{margin-top:24px;padding-top:12px;border-top:1px solid #dce5f1}.web-legacy-lessons summary{cursor:pointer;padding:10px 0;line-height:1.7}
+.web-workspace--game #webPreview{height:620px}
+@media(max-width:760px){.web-workspace--game #webPreview{height:660px}}
