@@ -4,7 +4,8 @@
   "scripts": {
     "test": "npm run check:assets && node --test tests/learning-studio.browser.cjs",
     "version:assets": "node scripts/update-asset-versions.mjs",
-    "check:assets": "node scripts/update-asset-versions.mjs --check"
+    "check:assets": "node scripts/update-asset-versions.mjs --check",
+    "visuals:assets": "node scripts/generate-web-visuals.mjs"
   },
   "devDependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

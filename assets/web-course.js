@@ -20,5 +20,5 @@ export function levelIntro(level){
 }
 export function lessonIntro(lesson){
   const source=foundationLesson(lesson.id);if(!source)return '';
-  return `<div class="web-lesson-meta"><p><strong>目安時間：</strong>${esc(lesson.duration||source.duration)} ／ <strong>前提：</strong>${esc(lesson.prerequisite||source.prerequisite)}</p><p>Input（読む）→ Output（作る）→ Check（動作確認）→ Reflect（振り返り）の順に進めます。</p>${lesson._template?'<p class="notice">先生用の教材見本です。生徒が受講するには「先生用管理」から教材を登録し、確認後に公開してください。</p>':''}<div class="actions"><button type="button" data-course-practice>実習エディターへ</button><button class="ghost" type="button" data-course-check>確認問題へ</button><button class="ghost" type="button" data-web-roadmap>コース①〜③の構成を見る</button></div></div>`;
+  return `<div class="web-lesson-meta"><p><strong>目安時間：</strong>${esc(lesson.duration||source.duration)} ／ <strong>前提：</strong>${esc(lesson.prerequisite||source.prerequisite)}</p><p>Input（読む）→ Output（作る）→ Check（動作確認）→ Reflect（振り返り）の順に進めます。</p>${lesson._template?'<p class="notice">先生用の教材見本です。生徒が受講するには「先生用管理」から教材を登録し、確認後に公開してください。</p>':''}<div class="actions"><button type="button" data-course-practice>フローティングエディターを開く</button><button class="ghost" type="button" data-course-check>確認問題へ</button><button class="ghost" type="button" data-web-roadmap>コース①〜③の構成を見る</button></div></div>`;
 }
