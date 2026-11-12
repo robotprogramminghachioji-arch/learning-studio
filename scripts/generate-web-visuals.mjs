@@ -83,7 +83,10 @@ function codeCard(p){
  return base(`${c.language}｜変える場所`,panel('変更前（見本）',c.before,96,color.pale)+arrow(320,240,320,268)+panel(c.before===c.after?'処理を見つけて動作を確認':'変更後（ここだけ変える）',c.after,281,'#fff6d9'),446);
 }
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const page=await browser.newPage({viewport:{width:700,height:1400},deviceScaleFactor:1.5});
+// Render text and game UI at four device pixels per CSS pixel, then save losslessly.
+const density=4;
+const page=await browser.newPage({viewport:{width:640,height:1400},deviceScaleFactor:density});
+const pageErrors=[];page.on('pageerror',error=>pageErrors.push(error.message));
 const manifest={};
 try{
  for(const l of course.lessons){
@@ -91,26 +94,25 @@ try{
   const lang={HTML:'starterHtml',CSS:'starterCss',JavaScript:'starterJs'}[p.change.language];
   if(!l[lang].includes(p.change.before))throw Error(`Example snippet no longer matches ${l.id}`);
   await writeFile(path.join(out,l.id+'-diagram.svg'),diagram(l,p));await writeFile(path.join(out,l.id+'-code.svg'),codeCard(p));
-  await page.setContent('<iframe id="preview" sandbox="allow-scripts" style="border:0;width:640px;height:1300px"></iframe>');
   const html=l.starterHtml.replace('</head>',`<style>${l.starterCss}</style></head>`).replace('</body>',`<script>${l.starterJs}</script></body>`);
-  await page.locator('iframe').evaluate((el,source)=>el.srcdoc=source,html);
-  const frame=page.frameLocator('iframe');await frame.locator('main[data-game]').waitFor();
-  await frame.locator('body').evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));});
-  await frame.locator('body').evaluate(()=>{Math.random=()=>.45;const now=Date.now();Date.now=()=>now;});
-  if(l.level===4&&await frame.locator('#start').count())await frame.locator('#start').click();
-  await frame.locator('main').evaluate((main,labels)=>{
+  // Capture trusted repository examples directly: cross-process iframe compositing
+  // can rasterize at 1x before scaling, even when the outer page uses a higher DPR.
+  // A fresh document also clears the previous game's timers and global variables.
+  await page.goto('about:blank');pageErrors.length=0;
+  await page.setContent(html);await page.locator('main[data-game]').waitFor();
+  await page.locator('body').evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));});
+  await page.locator('body').evaluate(()=>{Math.random=()=>.45;const now=Date.now();Date.now=()=>now;});
+  if(l.level===4&&await page.locator('#start').count())await page.locator('#start').click();
+  await page.locator('main').evaluate((main,labels)=>{
    main.style.position='relative';const root=main.getBoundingClientRect();
    labels.forEach(([selector],index)=>{const el=main.querySelector(selector);if(!el)return;const rect=el.getBoundingClientRect(),badge=document.createElement('span');badge.textContent=String(index+1);badge.setAttribute('aria-hidden','true');
     Object.assign(badge.style,{position:'absolute',left:Math.min(root.width-30,Math.max(2,rect.left-root.left-14))+'px',top:Math.max(2,rect.top-root.top-12)+'px',width:'26px',height:'26px',borderRadius:'50%',background:'#ffdd70',border:'2px solid #fff',boxShadow:'0 1px 5px #23395650',color:'#183d75',font:'bold 17px/23px sans-serif',textAlign:'center',zIndex:100});main.append(badge);
    });
   },p.lookFor);
-  const bounds=await frame.locator('main').boundingBox();
-  await frame.locator('main').screenshot({path:path.join(out,l.id+'-preview.webp'),type:'jpeg',quality:90}).then(async bytes=>{
-   // Playwright writes JPEG bytes; convert through Chromium's canvas to an actual WebP.
-   const encoded=bytes.toString('base64');const data=await page.evaluate(async b64=>{const image=new Image();image.src='data:image/jpeg;base64,'+b64;await image.decode();const c=document.createElement('canvas');c.width=image.width;c.height=image.height;c.getContext('2d').drawImage(image,0,0);return c.toDataURL('image/webp',.9).split(',')[1];},encoded);
-   await writeFile(path.join(out,l.id+'-preview.webp'),Buffer.from(data,'base64'));
-  });
-  manifest[l.id]={sourceHash:createHash('sha256').update(JSON.stringify([l.starterHtml,l.starterCss,l.starterJs,p])).digest('hex').slice(0,12),width:Math.round(bounds.width),height:Math.round(bounds.height)};
+  const bounds=await page.locator('main').boundingBox();
+  const image=await page.locator('main').screenshot({path:path.join(out,l.id+'-preview.png'),type:'png'});
+  if(pageErrors.length)throw Error(`Preview failed for ${l.id}: ${pageErrors.join('; ')}`);
+  manifest[l.id]={sourceHash:createHash('sha256').update(JSON.stringify([l.starterHtml,l.starterCss,l.starterJs,p])).digest('hex').slice(0,12),width:Math.round(bounds.width),height:Math.round(bounds.height),pixelWidth:image.readUInt32BE(16),pixelHeight:image.readUInt32BE(20),density,format:'png'};
  }
  await writeFile(path.join(root,'assets/web-visual-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
  console.log(`Generated ${course.lessons.length} screenshots and ${course.lessons.length*2} SVG teaching images.`);

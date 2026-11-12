@@ -35,13 +35,13 @@ const visualManifest=JSON.parse(await readFile(path.join(root,'assets/web-visual
 const visualData={};
 for(const lesson of course.lessons){
   const plan=visualPlans[lesson.id],meta=visualManifest[lesson.id];
-  if(!plan||!meta||meta.sourceHash!==hash(JSON.stringify([lesson.starterHtml,lesson.starterCss,lesson.starterJs,plan])))throw Error('Visual assets need regeneration: '+lesson.id+'. Run npm run visuals:assets');
-  visualData[lesson.id]={...plan,...meta,poster:`assets/web-course-visuals/${lesson.id}-preview.webp`,diagram:`assets/web-course-visuals/${lesson.id}-diagram.svg`,code:`assets/web-course-visuals/${lesson.id}-code.svg`};
+  if(!plan||!meta||meta.format!=='png'||meta.density!==4||meta.sourceHash!==hash(JSON.stringify([lesson.starterHtml,lesson.starterCss,lesson.starterJs,plan])))throw Error('Visual assets need regeneration: '+lesson.id+'. Run npm run visuals:assets');
+  visualData[lesson.id]={...plan,...meta,poster:`assets/web-course-visuals/${lesson.id}-preview.png`,diagram:`assets/web-course-visuals/${lesson.id}-diagram.svg`,code:`assets/web-course-visuals/${lesson.id}-code.svg`};
 }
 outputs.set('assets/web-visual-data.js','// Generated from web-course-visuals.json and web-visual-manifest.json.\nexport const WEB_VISUALS='+JSON.stringify(visualData,null,2)+';\n');
 for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts','assets/web-course-visuals']){
   for(const name of (await readdir(path.join(root,dir))).sort()){
-    if(!/\.(pdf|webp|svg|js|ttf|otf)$/.test(name))continue;
+    if(!/\.(pdf|png|webp|svg|js|ttf|otf)$/.test(name))continue;
     const file=`${dir}/${name}`;versions[file]=hash(await readFile(path.join(root,file)));
   }
 }

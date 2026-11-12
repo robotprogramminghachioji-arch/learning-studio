@@ -1,4 +1,4 @@
-import {assetUrl} from './asset-versions.js?v=78ddd5e723c8';
+import {assetUrl} from './asset-versions.js?v=032329f509d6';
 import {pageKey,requiredTask,pageRequirementsMet,learningState,unlockedThrough,pageStatus,mergeHistory} from './html-level1-progress.js?v=6870227eeca4';
 import {mountFloatingEditor} from './floating-editor.js?v=5b7434c51c8f';
 import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
@@ -6,8 +6,8 @@ import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebas
 
 import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=95ab371178ef';
 import {validateWorkbook,questionKey} from './workbook-model.js?v=1fbf7052033a';
-import {mountWorkbookEditor} from './workbook-editor.js?v=924b6b49d287';
-import {renderDocumentPage,downloadWorkbookPdf} from './workbook-pdf.js?v=08a6bf7ca8ef';
+import {mountWorkbookEditor} from './workbook-editor.js?v=daeed697c5bb';
+import {renderDocumentPage,downloadWorkbookPdf} from './workbook-pdf.js?v=3c3cf77964e3';
 
 const escapeHtml = s => String(s??'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const pad = n => String(n).padStart(2,'0');

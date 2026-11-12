@@ -1,5 +1,5 @@
-import {WEB_VISUALS} from './web-visual-data.js?v=145514f436ae';
-import {assetUrl} from './asset-versions.js?v=78ddd5e723c8';
+import {WEB_VISUALS} from './web-visual-data.js?v=75b0ec66910e';
+import {assetUrl} from './asset-versions.js?v=032329f509d6';
 import {foundationLesson} from './web-course.js?v=8f1b29569cd0';
 import {mountFloatingEditor} from './floating-editor.js?v=5b7434c51c8f';
 import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
@@ -31,7 +31,7 @@ export function mountIllustratedWebCourse({container,lesson,db,student,uid,mount
  try{const saved=Number(sessionStorage.getItem(positionKey));if(saved>=1&&saved<=5)page=saved;}catch{}
  if(Number.isInteger(initialPage)&&initialPage>=1&&initialPage<=5)page=initialPage;
  container.dataset.lessonId=lesson.id;
- container.innerHTML=`<nav class="course-visual-nav" aria-label="図解教材のページ送り"><div class="course-nav-context"><strong id="courseNavLesson" title="LEVEL${lesson.level} ${esc(lesson.title)}">LEVEL${lesson.level} ${esc(lesson.title)}</strong><output id="coursePageCount" aria-live="polite">1 / 5</output></div><button type="button" id="coursePagePrev" aria-label="前の教材ページ">←</button><select id="coursePageSelect" aria-label="教材ページを選ぶ">${titles.map((t,i)=>`<option value="${i+1}">${i+1}. ${esc(t)}</option>`).join('')}</select><button type="button" id="coursePageNext" aria-label="次の教材ページ">→</button></nav>
+ container.innerHTML=`<nav class="course-visual-nav" aria-label="図解教材のページ送り"><div class="course-nav-context"><strong id="courseNavLesson" title="LEVEL${lesson.level} ${esc(lesson.title)}">LEVEL${lesson.level} ${esc(lesson.title)}</strong><output id="coursePageCount" aria-live="polite">1 / 5</output></div><button type="button" id="coursePagePrev"><span class="course-page-direction"><span aria-hidden="true">←</span><span>前のページ</span></span></button><select id="coursePageSelect" aria-label="教材ページを選ぶ">${titles.map((t,i)=>`<option value="${i+1}">${i+1}. ${esc(t)}</option>`).join('')}</select><button type="button" id="coursePageNext"><span class="course-page-direction"><span>次のページ</span><span aria-hidden="true">→</span></span></button></nav>
   <div class="course-visual-tools"><label>図の表示倍率 <select id="courseImageZoom"><option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select></label><button type="button" id="coursePrint" class="ghost">教材を印刷・PDF保存</button><span class="muted tiny">全5ページ / 目安60〜90分</span></div>
   ${custom?'<p class="notice">先生が編集した原稿を使用しています。画像・図・変更例は標準教材の見本です。現在のコードと先生の説明も確認してください。</p>':''}
   <section id="courseCurrentPage" class="course-current-page" aria-live="polite"></section><p id="coursePageLoadStatus" class="course-page-load-status" role="status"></p>
@@ -62,8 +62,8 @@ export function mountIllustratedWebCourse({container,lesson,db,student,uid,mount
   $('#coursePageSelect').value=String(state.page);
   for(const id of ['#coursePagePrev','#courseBottomPrev'])$(id).disabled=state.page===1;
   for(const id of ['#coursePageNext','#courseBottomNext'])$(id).disabled=state.page===5;
-  $('#courseBottomPrev').textContent=state.page>1?`← ${state.page-1}. ${titles[state.page-2]}`:'← 前のページ';
-  $('#courseBottomNext').textContent=state.page<5?`${state.page+1}. ${titles[state.page]} →`:'この教材の最後のページ';
+  $('#courseBottomPrev').innerHTML=`<span class="course-page-direction"><span aria-hidden="true">←</span><span>前のページ</span></span><small>${state.page>1?`${state.page-1}. ${titles[state.page-2]}`:'最初のページです'}</small>`;
+  $('#courseBottomNext').innerHTML=`<span class="course-page-direction"><span>次のページ</span><span aria-hidden="true">→</span></span><small>${state.page<5?`${state.page+1}. ${titles[state.page]}`:'最後のページです'}</small>`;
   navigation.setAttribute('aria-label',`LEVEL${lesson.level} ${lesson.title}の教材内ページ送り`);
   $('#courseCurrentPage').innerHTML=`<span class="pill">LEVEL${lesson.level} ${esc(lesson.title)} / 教材内 ${state.page}ページ</span><h2>${esc(state.title)}</h2><p>${esc(state.description)}</p>`;
   $('#courseVisualCheck').innerHTML=`<span class="pill">教材 ${state.page}ページに対応</span><h2>このページの学習・進捗チェック</h2><p class="course-check-theme">${esc(state.title)}</p><ul>${state.checks.map(s=>`<li>${esc(s)}</li>`).join('')}</ul><button type="button" data-open-course-editor>エディターを開いて試す</button>`;
