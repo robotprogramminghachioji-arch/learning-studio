@@ -1110,7 +1110,7 @@ for(const mobile of [false,true])test(`Course floating editor preserves draft an
  assert.equal(await page.locator('.course-image-viewport').evaluate(e=>e.scrollWidth>e.clientWidth),true);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.locator('#webCourseEditorOpen').click();assert.equal(await page.locator('#webHtmlEditor').inputValue(),code);assert.equal(await frame.locator('#score').textContent(),'2');
- await page.locator('#lsHelp').click();await page.locator('#lsHelpClose').click();assert.equal(await frame.locator('#score').textContent(),'2');
+ await page.locator('#lsHelp').click();await page.locator('#lsHelpClose').click();await page.waitForFunction(()=>document.activeElement===document.querySelector('#lsHelp'));assert.equal(await frame.locator('#score').textContent(),'2');
  if(mobile)await win.locator('[data-window-minimize]').click();else{await win.locator('[data-window-move]').focus();await page.keyboard.press('Escape');}
  assert.equal(await win.isVisible(),false);await page.locator('#webCourseEditorOpen').click();
  assert.equal(await page.locator('#webHtmlEditor').inputValue(),code);
@@ -1184,4 +1184,88 @@ test('Every illustrated lesson exports exactly five complete printable pages',as
   const pdf=await page.pdf(options);assert.equal((await PDFDocument.load(pdf)).getPageCount(),5,lesson.id+' prints five pages');
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
  }
+});
+
+async function assertCourseNavigationSync(page,lesson,n,{visible=true}={}){
+ await page.waitForFunction(({id,n})=>{const book=document.getElementById('webVisualWorkbook');return book?.dataset.lessonId===id&&book.dataset.page===String(n);},{id:lesson.id,n});
+ assert.equal(await page.locator('main h1').textContent(),lesson.title);
+ assert.equal(await page.locator('#courseNavLesson').textContent(),`LEVEL${lesson.level} ${lesson.title}`);
+ assert.equal(await page.locator('#coursePageCount').textContent(),`${n} / 5`);
+ assert.equal(await page.locator('#courseBottomPageCount').textContent(),`教材内 ${n} / 5ページ`);
+ assert.equal(await page.locator('#coursePageSelect').inputValue(),String(n));
+ assert.ok((await page.locator('#courseCurrentPage').textContent()).includes(lesson.title));
+ assert.ok((await page.locator('#courseCurrentPage').textContent()).includes(`教材内 ${n}ページ`));
+ assert.equal(await page.locator('#courseVisualPage h2').textContent(),await page.locator('.course-check-theme').textContent());
+ assert.equal(await page.locator('#lsFinalSubmission').isVisible(),n===5);
+ await page.waitForFunction(()=>document.querySelector('#courseVisualPage')?.getAttribute('aria-busy')==='false');
+ if(n!==4){
+  await page.waitForFunction(()=>[...document.querySelectorAll('#courseVisualPage img')].every(i=>i.complete&&i.naturalWidth>0));
+  const suffix={1:'preview.webp',2:'diagram.svg',3:'code.svg',5:'preview.webp'}[n];
+  assert.ok((await page.locator('#courseVisualPage img').first().getAttribute('src')).includes(lesson.id+'-'+suffix));
+ }
+ assert.equal(await page.locator('.lesson-text').first().textContent(),lesson.explanation);
+ if(visible){
+  await page.waitForFunction(()=>{const y=document.querySelector('#courseCurrentPage').getBoundingClientRect().top,h=document.querySelector('#lsHeader').getBoundingClientRect().bottom;return y>=h-1&&y<h+110;});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.ok((await page.locator('#courseVisualPage h2').boundingBox()).y<page.viewportSize().height);
+ }
+}
+
+for(const mobile of [false,true])test(`Top and bottom page arrows and next-lesson buttons synchronize all thirty lessons (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await courseData(),published=course.lessons.map(l=>({...l,published:true}));
+ const page=await openStudio(t,{mobile,startAtHome:true,extraLessons:published});
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${published[0].id}"]`).click();
+ for(let i=0;i<published.length;i++){
+  const lesson=published[i];await assertCourseNavigationSync(page,lesson,1,{visible:i>0});
+  for(let n=2;n<=5;n++){
+   await page.locator(n%2===0?'#coursePageNext':'#courseBottomNext').click();await assertCourseNavigationSync(page,lesson,n);
+   if(n===2&&lesson.id==='web1-l1-lesson03')await page.screenshot({path:`/tmp/web-navigation-sync-${mobile?'mobile':'desktop'}.png`});
+  }
+  for(let n=4;n>=1;n--){await page.locator(n%2===0?'#courseBottomPrev':'#coursePagePrev').click();await assertCourseNavigationSync(page,lesson,n);}
+  if(i<published.length-1){
+   // A prior visit must not turn an explicit next-lesson action into a jump to page 5.
+   await page.evaluate(id=>sessionStorage.setItem('learning-studio-visual-page:student-uid:'+id,'5'),published[i+1].id);
+   await page.locator(`[data-open-lesson="${published[i+1].id}"]`).click();
+  }
+ }
+});
+
+for(const mobile of [false,true])test(`Next lesson always starts at page one and Back restores the previous page (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await courseData(),a={...course.lessons[2],published:true},b={...course.lessons[3],published:true};
+ const page=await openStudio(t,{mobile,startAtHome:true,extraLessons:[a,b]});
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${a.id}"]`).click();
+ await page.locator('#coursePageNext').click();await page.locator('#coursePageNext').click();await assertCourseNavigationSync(page,a,3);
+ await page.evaluate(id=>sessionStorage.setItem('learning-studio-visual-page:student-uid:'+id,'5'),b.id);
+ await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertCourseNavigationSync(page,b,1);
+ await page.locator('#coursePageSelect').selectOption('4');await assertCourseNavigationSync(page,b,4);
+ await page.locator('#lsPageBack').click();await assertCourseNavigationSync(page,a,3);
+ await page.reload();await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${a.id}"]`).click();await assertCourseNavigationSync(page,a,3);
+});
+
+test('Late images from an old page cannot overwrite the current lesson or explanation',async t=>{
+ const course=await courseData(),a={...course.lessons[2],published:true},b={...course.lessons[3],published:true};
+ const page=await openStudio(t,{startAtHome:true,extraLessons:[a,b]});
+ let release,started;const gate=new Promise(r=>release=r),requested=new Promise(r=>started=r);
+ await page.route('**/web1-l1-lesson03-code.svg*',async route=>{started();await gate;try{await route.fulfill({contentType:'image/svg+xml',body:await fs.readFile(path.join(root,'assets/web-course-visuals/web1-l1-lesson03-code.svg'))});}catch{/* Chromium may cancel an image no longer in the document. */}});
+ t.after(()=>release());
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${a.id}"]`).click();
+ await page.locator('#coursePageNext').click();await page.locator('#coursePageNext').click();await requested;
+ assert.ok((await page.locator('#coursePageLoadStatus').textContent()).includes('3ページ'));
+ await page.locator('#coursePageNext').click();await page.locator('#coursePageNext').click();await page.locator(`[data-open-lesson="${b.id}"]`).click();
+ await assertCourseNavigationSync(page,b,1);release();
+ await page.locator('#coursePageNext').click();await assertCourseNavigationSync(page,b,2);
+ assert.equal(await page.locator('#coursePageLoadStatus').textContent(),'');
+ assert.ok(!(await page.locator('#courseCurrentPage').textContent()).includes(a.title));
+});
+
+test('Page changes keep an unfinished answer, and cancelling a lesson change keeps every panel in sync',async t=>{
+ const course=await courseData(),a={...course.lessons[2],published:true},b={...course.lessons[3],published:true};
+ const page=await openStudio(t,{startAtHome:true,extraLessons:[a,b]});
+ await page.locator('[data-course=web][data-level="1"]').click();await page.locator(`[data-id="${a.id}"]`).click();await page.locator('#coursePageSelect').selectOption('5');
+ await page.locator('#submitTest textarea').fill('まだ提出していない振り返り');
+ await page.locator('#coursePagePrev').click();await assertCourseNavigationSync(page,a,4);
+ await page.locator('#coursePageNext').click();await assertCourseNavigationSync(page,a,5);assert.equal(await page.locator('#submitTest textarea').inputValue(),'まだ提出していない振り返り');
+ page.once('dialog',d=>d.dismiss());await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertCourseNavigationSync(page,a,5,{visible:false});
+ assert.equal(await page.locator('#submitTest textarea').inputValue(),'まだ提出していない振り返り');
+ page.once('dialog',d=>d.accept());await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertCourseNavigationSync(page,b,1);
 });
