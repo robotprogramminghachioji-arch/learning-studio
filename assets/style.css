@@ -244,3 +244,11 @@ body:has(.hl1-editor-window) .ls-top-floating{bottom:calc(76px + env(safe-area-i
 .help-page{padding:0}.help-page main{max-width:900px;margin:auto;padding:24px 16px}.help-page header{background:#243B70;color:white;padding:20px max(16px,calc((100% - 868px)/2))}.help-page h1{font-size:clamp(22px,5vw,32px)}.help-page h2{scroll-margin-top:16px}.help-page li{margin:10px 0;line-height:1.8}.help-page p{line-height:1.8}.help-page nav a{display:inline-block;padding:10px}.help-page a:focus-visible{outline:3px solid #365C96}.help-page section{margin:24px 0}.help-page code{overflow-wrap:anywhere}
 @media(max-width:600px){.ls-header-actions{flex:1;gap:6px}.ls-help-button{min-width:56px;font-size:12px}.ls-header-top>.brand{flex-shrink:1;min-width:0}.ls-brand-title{font-size:12px}.ls-session-name{max-width:8ch}}
 @media(max-width:360px){.ls-header-top .ls-session-name{max-width:3ch}.brand small{font-size:9px}}
+.ls-help-open{overflow:hidden}
+.ls-help-dialog{width:min(960px,100%);max-width:100%;height:92dvh;max-height:100dvh;margin:auto;padding:0;border:0;border-radius:12px;color:#22314d}
+.ls-help-dialog[open]{display:flex;flex-direction:column}.ls-help-dialog::backdrop{background:#14233bc9}
+.ls-help-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;background:#243B70;color:white;padding:8px max(12px,env(safe-area-inset-right))}
+.ls-help-toolbar button{min-height:44px;background:#f1f6ff;color:#173560}
+#lsHelpContent{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.hl1-page-guide{background:white;padding:16px;line-height:1.8;overflow-wrap:anywhere}.hl1-page-guide li{margin-bottom:16px}.hl1-page-guide p{white-space:pre-wrap}
+@media(max-width:600px){.ls-help-dialog{height:100dvh;border-radius:0}.ls-help-toolbar{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:8px}}

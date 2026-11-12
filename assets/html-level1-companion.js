@@ -4,7 +4,7 @@ import {mountFloatingEditor} from './floating-editor.js?v=273ce021826a';
 import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
-import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=1c39834a68db';
+import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=95ab371178ef';
 import {validateWorkbook,questionKey} from './workbook-model.js?v=1fbf7052033a';
 import {mountWorkbookEditor} from './workbook-editor.js?v=349b5a9ea003';
 import {renderDocumentPage,downloadWorkbookPdf} from './workbook-pdf.js?v=3dd22dc0b3e0';
@@ -68,9 +68,9 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
       <aside class="hl1-reader" aria-label="教材のページ">
         <div class="hl1-reader-bar"><strong>📘 HTML入門 レベル1</strong><span class="pill">全12ページ</span></div>
         <div class="hl1-zoom-controls"><label for="hl1Scale">表示倍率</label><select id="hl1Scale"><option value="50">50%</option><option value="75">75%</option><option value="90">90%</option><option value="100" selected>幅に合わせる（100%）</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select><span class="muted tiny">拡大後は教材内をスクロールできます</span></div>
-        <div id="hl1PageViewport" class="hl1-page-viewport" tabindex="0" role="region" aria-label="PDF教材（拡大時は縦横にスクロール）"><img id="hl1Image" src="${escapeHtml(assetUrl('assets/pdf-pages/html-level1-01.webp'))}" alt="HTML教材の1ページ目"></div>
+        <div id="hl1PageViewport" class="hl1-page-viewport" tabindex="0" role="region" aria-label="PDF教材（拡大時は縦横にスクロール）"><img id="hl1Image" src="${escapeHtml(assetUrl('assets/pdf-pages/html-level1-01.webp'))}" alt="HTML教材の1ページ目"><section id="hl1PageGuide" class="hl1-page-guide" aria-label="この教材ページで取り組むこと"></section></div>
         <p id="hl1PdfStatus" class="muted small" role="status"></p><div class="hl1-pdf-actions"><a class="btn ghost small" href="${escapeHtml(assetUrl(pdfUrl))}" target="_blank" rel="noopener noreferrer">原本PDFを開く・印刷</a></div>
-        <p class="muted tiny">表示しているのは、PDFの各ページを画像化したものです。印刷は「原本PDF」からできます。</p>
+        <p class="muted tiny">教材は枠内でスクロールできます。印刷するときは下のPDFボタンから保存して開いてください。</p>
       </aside>
       <div class="hl1-practice" tabindex="0" role="region" aria-label="このページのミッション・確認問題">
         <div class="hl1-page-info"><span class="pill" id="hl1Current">PDF 1ページ</span><h3 id="hl1SectionHeading">このページの学習・進捗チェック</h3><p class="hl1-theme">学習テーマ：<span id="hl1Title"></span></p><p id="hl1Intro"></p></div>
@@ -208,8 +208,10 @@ export async function mountHtmlLevel1Companion({container,lesson,pdfUrl,db,stude
     $('#hl1PdfStatus').textContent='';
     if(data.document.edited){
       $('#hl1Image').removeAttribute('src');$('#hl1PdfStatus').textContent='編集した教材を表示中…';
-      renderDocumentPage(data.document,page).then(image=>{if(token===documentRender&&container.isConnected){$('#hl1Image').src=image;$('#hl1PdfStatus').textContent='先生が編集した教材本文を表示しています。';}}).catch(err=>{if(token===documentRender)$('#hl1PdfStatus').textContent=`編集した教材を表示できません：${err.message}`;});
+      renderDocumentPage(data.document,page).then(image=>{if(token===documentRender&&container.isConnected){$('#hl1Image').src=image;$('#hl1PdfStatus').textContent='このページの教材本文を表示しています。';}}).catch(err=>{if(token===documentRender)$('#hl1PdfStatus').textContent=`編集した教材を表示できません：${err.message}`;});
     }else $('#hl1Image').src=assetUrl(`assets/pdf-pages/html-level1-${pad(page)}.webp`);
+    $('#hl1PageGuide').hidden=!data.tasks.length;
+    $('#hl1PageGuide').innerHTML='<h3>この教材ページで取り組むこと</h3><p>教材を読んだら、次の項目を実習・問題で確かめましょう。</p><ol>'+data.tasks.map(q=>`<li><strong>${escapeHtml(q.text)}</strong>${page!==11&&(q.why||q.hint)?`<p>${escapeHtml(q.why||q.hint)}</p>`:''}</li>`).join('')+'</ol>';
     $('#hl1Image').alt=`HTML入門レベル1 PDFの${page}ページ目：${data.title}`;
     $('#hl1Current').textContent=`PDF ${page}ページ`;$('#hl1Title').textContent=data.title;
     const introduction=data.mode==='introduction';
