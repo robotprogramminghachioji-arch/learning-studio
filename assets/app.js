@@ -1,5 +1,5 @@
-import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=d2a061efd196';
-import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=8f1b29569cd0';
+import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=2fb02c5ba01e';
+import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,refreshCourseText,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=2663251d6dca';
 import {mountFinalAssessment} from './final-assessment.js?v=7265478edfa1';
 import {initializeHeader} from './page-navigation.js?v=067885ce2b97';
 import {mountWebWorkspace} from './web-workspace.js?v=44846a9cdd83';
@@ -142,7 +142,7 @@ async function refresh(){screenHistory.length=0;currentScreen={kind:'home'};view
   const allowedCourses=(accessSnap.data().allowedCourses||[]).filter(x=>Object.prototype.hasOwnProperty.call(courses,x));
   student={id:sid,...p.data(),allowedCourses};
   const lessonQueries=await Promise.all(allowedCourses.map(course=>getDocs(query(collection(db,'lessons'),where('published','==',true),where('course','==',course)))));
-  lessons=lessonQueries.flatMap(snap=>snap.docs.map(x=>({id:x.id,...x.data()})));
+  lessons=lessonQueries.flatMap(snap=>snap.docs.map(x=>refreshCourseText({id:x.id,...x.data()})));
   submissions=(await getDocs(query(collection(db,'submissions'),where('studentId','==',sid)))).docs.map(x=>({id:x.id,...x.data()}));}
  userbar.innerHTML=`<div class="row"><span class="ls-session-name" title="${esc(teacher?'先生':student.displayName)}">${esc(teacher?'先生':student.displayName)}</span><button id="logout" class="ghost small">ログアウト</button></div>`;document.getElementById('logout').onclick=()=>signOut(auth);render();}
 function noProfile(){userbar.innerHTML='<button id="logout" class="ghost small">ログアウト</button>';document.getElementById('logout').onclick=()=>signOut(auth);appEl.innerHTML='<section class="panel"><h2>有効な生徒情報がありません</h2><p>先生に生徒IDとアカウントの状態を確認してください。</p></section>'}

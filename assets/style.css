@@ -321,3 +321,32 @@ body:has(#webVisualWorkbook) #app{max-width:1480px}
 .course-page-load-status{font-size:14px;line-height:1.7;color:#36567b;background:#fff7df;border-radius:8px;padding:10px;margin:0 0 12px}.course-page-load-status:empty{display:none}
 .course-page-footer{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center;margin:20px 0}.course-page-footer button{min-height:44px;line-height:1.7}.course-page-footer small{display:block;font-size:12px;line-height:1.6;margin-top:4px}.course-page-footer output{font-size:13px;color:#536c86;text-align:center}.course-lesson-navigation h2{font-size:18px}.course-lesson-navigation p{line-height:1.8;font-size:14px;color:#536c86}.course-lesson-navigation button{text-align:left;line-height:1.8}
 @media(max-width:600px){.course-visual-nav{grid-template-columns:88px minmax(0,1fr) 88px;gap:4px 5px}.course-visual-nav button{font-size:12px;padding:4px}.course-nav-context{grid-column:1/-1;gap:8px}.course-nav-context strong{font-size:12px}.course-nav-context output{font-size:13px;min-width:42px}.course-current-page{padding:12px}.course-current-page h2{font-size:19px}.course-page-footer{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.course-page-footer output{grid-column:1/-1;grid-row:1}.course-page-footer button{font-size:13px;padding:9px}}
+/* Beginner guidance stays beside the teaching image, with examples and steps. */
+.course-beginner-guide{margin:24px 0 0;line-height:1.9;font-size:15px;overflow-wrap:anywhere}.course-beginner-guide h3{font-size:18px;margin:16px 0 12px}.course-beginner-guide p{margin:9px 0}.course-guide-steps{padding-left:25px;margin:12px 0}.course-guide-steps li{padding:4px 0 4px 4px;margin:8px 0}.course-guide-steps li::marker{font-weight:750;color:#204578}
+.course-guide-terms{margin:0;display:grid;gap:12px}.course-guide-terms>div{border:1px solid #d0dfed;border-radius:10px;padding:14px;background:#f6faff}.course-guide-terms dt{font-weight:750;color:#204578;margin-bottom:6px}.course-guide-terms dd{margin:0;line-height:1.9}.course-guide-experiment{border:1px solid #c7dbe9;border-radius:10px;background:#f7fbff;margin:14px 0}.course-guide-experiment summary{padding:14px;cursor:pointer;font-weight:750;color:#204578;min-height:44px}.course-guide-experiment>div{padding:0 14px 14px}.course-guide-experiment h4{font-size:15px;margin:16px 0 6px;color:#204578}.course-guide-code{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;background:#162b49;color:#fff;border-radius:8px;font-size:14px;line-height:1.8}.course-example-label{font-size:13px;font-weight:700}.course-guide-report{background:#fff6d9;padding:12px;border-radius:8px}
+@media(max-width:600px){.course-beginner-guide{font-size:15px}.course-guide-terms>div{padding:12px}.course-guide-experiment summary{padding:12px}.course-guide-experiment>div{padding:0 12px 12px}.course-guide-code{padding:10px;font-size:13px}}
+@media print{
+ #coursePrintPages .course-beginner-guide{font-size:10pt;line-height:1.7;margin-top:10px}
+ #coursePrintPages .course-beginner-guide h3{font-size:11pt;margin:9px 0 6px}
+ #coursePrintPages .course-beginner-guide p{margin:4px 0}
+ #coursePrintPages .course-guide-terms{gap:5px}
+ #coursePrintPages .course-guide-terms>div{padding:6px;break-inside:avoid}
+ #coursePrintPages .course-guide-terms dt{margin-bottom:2px}
+ #coursePrintPages .course-guide-terms dd{line-height:1.7}
+ #coursePrintPages .course-guide-steps{margin:5px 0;padding-left:20px}
+ #coursePrintPages .course-guide-steps li{margin:3px 0;padding:0}
+ #coursePrintPages .course-guide-experiment{margin:7px 0}
+ #coursePrintPages .course-guide-experiment summary{min-height:0;padding:7px;font-size:10pt}
+ #coursePrintPages .course-guide-experiment>div{padding:0 7px 7px}
+ #coursePrintPages .course-guide-experiment h4{font-size:9.5pt;margin:7px 0 3px}
+ #coursePrintPages .course-guide-code{font-size:9pt;line-height:1.5;padding:7px;margin:6px 0}
+ #coursePrintPages .course-image-viewport img{max-height:90mm}
+ #coursePrintPages .course-recap>img{max-height:30mm}
+ #coursePrintPages .course-print-answer{height:22mm}
+ #coursePrintPages .course-guide-terms{display:block}
+ #coursePrintPages .course-guide-terms>div{margin:5px 0}
+ #coursePrintPages .course-illustrated-sheet{overflow:visible}
+ #coursePrintPages .course-illustrated-sheet>footer{padding:5px 0;break-before:avoid}
+ #coursePrintPages h3,#coursePrintPages h4,#coursePrintPages .course-guide-experiment summary{break-after:avoid}
+ #coursePrintPages .course-print-question{break-inside:avoid}
+}

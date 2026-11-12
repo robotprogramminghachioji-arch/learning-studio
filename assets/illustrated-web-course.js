@@ -1,8 +1,9 @@
 import {WEB_VISUALS} from './web-visual-data.js?v=75b0ec66910e';
 import {assetUrl} from './asset-versions.js?v=032329f509d6';
-import {foundationLesson} from './web-course.js?v=8f1b29569cd0';
+import {foundationLesson} from './web-course.js?v=2663251d6dca';
 import {mountFloatingEditor} from './floating-editor.js?v=5b7434c51c8f';
 import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
+import {guidePageHtml} from './web-course-guide.js?v=946d2e956ac4';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const titles=['完成見本を見てみよう','しくみを図で見よう','この部分を変えてみよう','つくって、確かめよう','振り返りと確認問題'];
 function practiceItems(lesson){
@@ -21,7 +22,7 @@ function sheet(lesson,visual,page,zoom=100){
   ()=>`<div class="course-step-cards">${practiceItems(lesson).map((s,i)=>`<section><span>${i+1}</span><div><h3>操作 ${i+1}</h3><p>${esc(s)}</p></div></section>`).join('')}</div><h3>予想 → 操作 → 結果を比べる</h3><div class="course-test-example"><div><b>予想</b><p>${esc(visual.change.expected)}</p></div><span aria-hidden="true">→</span><div><b>実際</b><p>同じ結果になった？<br>違った場所を1つずつ調べよう。</p></div></div><div class="course-expected"><strong>動作のチェック</strong>${checks(lesson).map(s=>`<p>□ ${esc(s)}</p>`).join('')}</div>`,
   ()=>`<div class="course-recap"><img src="${esc(assetUrl(visual.poster))}" alt="完成見本を振り返る"><div><span class="pill">自分の作品を見ながら説明</span><h3>どこを変えた？ どう動いた？</h3><p>変えた場所、確かめた結果、次に直したいことを自分の言葉で書こう。</p></div></div><h3>この教材の大切なポイント</h3><div class="course-concept-notes">${visual.notes.map((s,i)=>`<p><b>${i+1}</b>${esc(s)}</p>`).join('')}</div><p class="course-short-note">確認問題は右側、スマホではこの下にあります。詳しい用語は下の「用語と詳しい解説」で読み直せます。</p>`
  ][page-1]();
- return `<article class="course-illustrated-sheet"><header class="course-page-head"><div><span>WEB開発コース① / LEVEL${lesson.level}</span><h2>${esc(titles[page-1])}</h2></div><strong>${String(page).padStart(2,'0')}<small> / 05</small></strong></header><div class="course-sheet-body">${body}</div><footer>Learning Studio ／ ${esc(lesson.title)} ／ ${page} / 5</footer></article>`;
+ return `<article class="course-illustrated-sheet"><header class="course-page-head"><div><span>WEB開発コース① / LEVEL${lesson.level}</span><h2>${esc(titles[page-1])}</h2></div><strong>${String(page).padStart(2,'0')}<small> / 05</small></strong></header><div class="course-sheet-body">${body}${guidePageHtml(lesson,page,visual)}</div><footer>Learning Studio ／ ${esc(lesson.title)} ／ ${page} / 5</footer></article>`;
 }
 export function mountIllustratedWebCourse({container,lesson,db,student,uid,mountWebWorkspace,initialPage,scrollOnEntry=false,onPageChange=()=>{}}){
  const visual=WEB_VISUALS[lesson.id];if(!container||!visual)return;
@@ -32,7 +33,7 @@ export function mountIllustratedWebCourse({container,lesson,db,student,uid,mount
  if(Number.isInteger(initialPage)&&initialPage>=1&&initialPage<=5)page=initialPage;
  container.dataset.lessonId=lesson.id;
  container.innerHTML=`<nav class="course-visual-nav" aria-label="図解教材のページ送り"><div class="course-nav-context"><strong id="courseNavLesson" title="LEVEL${lesson.level} ${esc(lesson.title)}">LEVEL${lesson.level} ${esc(lesson.title)}</strong><output id="coursePageCount" aria-live="polite">1 / 5</output></div><button type="button" id="coursePagePrev"><span class="course-page-direction"><span aria-hidden="true">←</span><span>前のページ</span></span></button><select id="coursePageSelect" aria-label="教材ページを選ぶ">${titles.map((t,i)=>`<option value="${i+1}">${i+1}. ${esc(t)}</option>`).join('')}</select><button type="button" id="coursePageNext"><span class="course-page-direction"><span>次のページ</span><span aria-hidden="true">→</span></span></button></nav>
-  <div class="course-visual-tools"><label>図の表示倍率 <select id="courseImageZoom"><option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select></label><button type="button" id="coursePrint" class="ghost">教材を印刷・PDF保存</button><span class="muted tiny">全5ページ / 目安60〜90分</span></div>
+  <div class="course-visual-tools"><label>図の表示倍率 <select id="courseImageZoom"><option value="100">100%</option><option value="125">125%</option><option value="150">150%</option><option value="200">200%</option></select></label><button type="button" id="coursePrint" class="ghost">教材を印刷・PDF保存</button><span class="muted tiny">画面は全5ページ / 目安60〜90分 / 印刷は説明量に応じて複数枚</span></div>
   ${custom?'<p class="notice">先生が編集した原稿を使用しています。画像・図・変更例は標準教材の見本です。現在のコードと先生の説明も確認してください。</p>':''}
   <section id="courseCurrentPage" class="course-current-page" aria-live="polite"></section><p id="coursePageLoadStatus" class="course-page-load-status" role="status"></p>
   <div class="course-visual-layout"><div class="course-visual-reader" tabindex="0" role="region" aria-label="図解と完成見本の教材"><div id="courseVisualPage"></div><details class="course-reference" ${editedExplanation?'open':''}><summary>用語と詳しい解説を読む${custom?'（先生の原稿）':''}</summary><div class="lesson-text">${esc(lesson.explanation)}</div></details><details class="course-reference"><summary>追加の改造・実験・不具合の調べ方</summary><div class="lesson-text">${esc(lesson.practice)}</div></details></div>
@@ -97,6 +98,7 @@ export function mountIllustratedWebCourse({container,lesson,db,student,uid,mount
   if(printing)return;printing=true;$('#coursePrint').disabled=true;
   const layer=document.createElement('div');layer.id='coursePrintPages';
   layer.innerHTML=Array.from({length:5},(_,i)=>`<section class="course-print-page">${i===0&&custom?'<p class="course-print-notice">図と変更例は標準教材の見本です。先生が編集した原稿と問題も確認してください。</p>':''}${sheet(lesson,visual,i+1)}${i===4?`<div class="course-print-question"><h3>確認問題</h3><p>${esc(lesson.question)}</p><div class="course-print-answer">回答・振り返り</div></div>`:''}</section>`).join('');
+  layer.querySelectorAll('details').forEach(details=>details.open=true);
   document.getElementById('coursePrintPages')?.remove();document.body.append(layer);
   const printButton=$('#coursePrint');const cleanup=()=>{layer.remove();printing=false;printButton.disabled=false;};window.addEventListener('afterprint',cleanup,{once:true,signal:events.signal});
   try{await Promise.all([...layer.querySelectorAll('img')].map(i=>i.decode()));if(!container.isConnected){cleanup();return;}window.print();}catch{cleanup();printButton.textContent='画像を読み込めません。再度印刷してください';}

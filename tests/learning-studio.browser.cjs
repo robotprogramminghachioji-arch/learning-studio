@@ -1066,7 +1066,7 @@ test('Bulk course publication skips unregistered templates and teacher-authored 
 
 for(const mobile of [false,true])test(`All thirty illustrated workbooks load five pages with images and matching checks (${mobile?'mobile':'desktop'})`,async t=>{
  const page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
- const course=await courseData();
+ const course=await courseData(),guides=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-guides.json'),'utf8'));
  for(const lesson of course.lessons){
   await page.locator('#home').click();await page.locator(`[data-course=web][data-level="${lesson.level}"]`).click();await page.locator(`[data-id="${lesson.id}"]`).click();
   await page.locator('#coursePageSelect').waitFor();assert.equal(await page.locator('#webCourseEditorWindow').isVisible(),false);
@@ -1077,6 +1077,24 @@ for(const mobile of [false,true])test(`All thirty illustrated workbooks load fiv
    assert.ok((await page.locator('#courseVisualCheck').textContent()).includes(`教材 ${n}ページに対応`));
    assert.equal(await page.locator('#lsFinalSubmission').isVisible(),n===5);
    if(n!==4)assert.ok(await page.locator('#courseVisualPage img').count()>0,lesson.id+' page '+n+' has visual material');
+   const guide=guides[lesson.id],body=await page.locator('#courseVisualPage').textContent();
+   if(n===1)assert.ok(body.includes(guide.start)&&body.includes('最小化'),lesson.id+' has concrete first-use instructions');
+   if(n===2){
+    assert.equal(await page.locator('#courseVisualPage .course-guide-terms dt').count(),guide.terms.length);
+    for(const term of guide.terms)assert.ok(body.includes(term.meaning),lesson.id+' explains '+term.word+' in the current page');
+   }
+   if(n===3)assert.ok(body.includes(guide.locate)&&body.includes(guide.reason),lesson.id+' specifies where and why to change code');
+   if(n===4){
+    assert.ok(guide.steps.every(step=>body.includes(step)),lesson.id+' shows complete practice instructions');
+    const experiments=page.locator('#courseVisualPage .course-guide-experiment');assert.equal(await experiments.count(),guide.experiments.length);
+    for(let i=0;i<guide.experiments.length;i++){
+     if(!await experiments.nth(i).getAttribute('open')&&i>0)await experiments.nth(i).locator('summary').click();
+     assert.equal(await experiments.nth(i).locator('h4').first().isVisible(),true);
+     const content=await experiments.nth(i).textContent(),example=guide.experiments[i];
+     assert.ok(content.includes(example.predict)&&content.includes(example.result)&&example.steps.every(step=>content.includes(step)));
+    }
+   }
+   if(n===5)assert.ok(body.includes(guide.trouble.check)&&body.includes(guide.report)&&body.includes('回答を提出する'));
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' page '+n+' fits');
   }
   if(Number(lesson.id.slice(-2))===1){
@@ -1163,25 +1181,32 @@ test('Illustrated code changes produce the pictured outcomes across five levels'
  }
 });
 
-test('Illustrated lesson prints five image-rich pages including the current teacher question',async t=>{
+test('Illustrated lesson prints five sections with complete beginner explanations and the current teacher question',async t=>{
  const course=await courseData(),lesson={...course.lessons[0],published:true,question:'先生が設定した作品の確認問題です。'};
  const page=await openStudio(t,{startAtHome:true,extraLessons:[lesson]});await openCourseLesson(page,lesson);await page.locator('[data-window-minimize]').click();
  await page.evaluate(()=>window.print=()=>{});await page.locator('#coursePrint').click();await page.waitForSelector('#coursePrintPages',{state:'attached'});
  await page.waitForFunction(()=>[...document.querySelectorAll('#coursePrintPages img')].every(i=>i.complete&&i.naturalWidth>0));
  assert.equal(await page.locator('#coursePrintPages .course-print-page').count(),5);assert.ok((await page.locator('#coursePrintPages').textContent()).includes(lesson.question));
+ assert.ok((await page.locator('#coursePrintPages').textContent()).includes('pタグは文章のひとまとまり'));
+ assert.equal(await page.locator('#coursePrintPages details:not([open])').count(),0,'All experiment instructions print, including initially collapsed details');
  const pdf=await page.pdf({path:'/tmp/illustrated-web-workbook.pdf',format:'A4',printBackground:true});const {PDFDocument}=require('pdf-lib');
- assert.equal((await PDFDocument.load(pdf)).getPageCount(),5);
+ assert.ok((await PDFDocument.load(pdf)).getPageCount()>=5);
  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));assert.equal(await page.locator('#coursePrintPages').count(),0);
 });
 
-test('Every illustrated lesson exports exactly five complete printable pages',async t=>{
+test('Every illustrated lesson exports all five sections and complete beginner instructions without clipping',async t=>{
  const course=await courseData(),page=await openStudio(t,{role:'teacher',startAtHome:true});
  await page.evaluate(()=>window.print=()=>{});const {PDFDocument}=require('pdf-lib');
  for(const lesson of course.lessons){
   await openCourseLesson(page,lesson);await page.locator('[data-window-minimize]').click();await page.locator('#coursePrint').click();
   await page.waitForFunction(()=>document.querySelector('#coursePrintPages')&&[...document.querySelectorAll('#coursePrintPages img')].every(i=>i.complete&&i.naturalWidth>0));
-  const options={format:'A4',printBackground:true};if(lesson.id.endsWith('06'))options.path=`/tmp/illustrated-web-level${lesson.level}-workbook.pdf`;
-  const pdf=await page.pdf(options);assert.equal((await PDFDocument.load(pdf)).getPageCount(),5,lesson.id+' prints five pages');
+  const options={format:'A4',printBackground:true,path:`/tmp/web-beginner-${lesson.id}.pdf`};
+  assert.equal(await page.locator('#coursePrintPages .course-print-page').count(),5);
+  const guide=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-guides.json'),'utf8'))[lesson.id];
+  const printed=await page.locator('#coursePrintPages').textContent();
+  for(const term of guide.terms)assert.ok(printed.includes(term.meaning),lesson.id+' prints term explanations');
+  for(const experiment of guide.experiments)assert.ok(printed.includes(experiment.result),lesson.id+' prints every experiment outcome');
+  const pdf=await page.pdf(options);assert.ok((await PDFDocument.load(pdf)).getPageCount()>=5,lesson.id+' prints every learning section');
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
  }
 });
@@ -1313,4 +1338,57 @@ for(const mobile of [false,true])test(`Explicit previous and next page labels fi
   assert.equal(await page.locator('#coursePageNext').isDisabled(),true);assert.equal(await page.locator('#courseBottomNext').isDisabled(),true);
   assert.ok((await page.locator('#courseBottomNext').textContent()).includes('次のページ'));
  }
+});
+
+for(const mobile of [false,true])test(`A beginner can follow the paragraph example without changing JavaScript (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await courseData(),lesson={...course.lessons[0],published:true};
+ const guides=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-guides.json'),'utf8')),guide=guides[lesson.id];
+ const page=await openStudio(t,{mobile,startAtHome:true,extraLessons:[lesson]}),frame=await openCourseLesson(page,lesson);
+ await page.locator('[data-window-minimize]').click();await page.locator('#coursePageSelect').selectOption('2');
+ assert.ok((await page.locator('.course-guide-terms').textContent()).includes('最初の<p>と最後の</p>'));
+ await page.locator('#coursePageSelect').selectOption('4');const experiment=page.locator('.course-guide-experiment').nth(1);
+ await experiment.locator('summary').click();assert.equal(await experiment.locator('code').textContent(),guide.experiments[1].example);
+ assert.equal(await experiment.locator('code p').count(),0,'HTML examples display as code and never become executable markup');
+ await experiment.scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/web-beginner-paragraph-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('#webCourseEditorOpen').click();await page.locator('[data-lang=html]').click();
+ const html=lesson.starterHtml.replace('<h1>まずは星集めゲームを動かそう</h1>','<h1>わたしの星集め</h1>').replace('>星を集める</button>','>星をゲット</button>').replace('</h1>','</h1>\n'+guide.experiments[1].example);
+ await page.locator('#webHtmlEditor').fill(html);await page.locator('#webRun').click();
+ assert.equal(await frame.locator('h1').textContent(),'わたしの星集め');
+ assert.equal(await frame.locator('p').filter({hasText:'「星をゲット」ボタンを押すと、星が1つ増えます。'}).count(),1);
+ assert.equal(await frame.locator('#collect').textContent(),'星をゲット');
+ for(let i=0;i<3;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'3');
+ assert.equal(await page.locator('#webJsEditor').inputValue(),lesson.starterJs);
+ await page.locator('[data-window-minimize]').click();await page.locator('#coursePagePrev').click();await page.locator('#coursePageNext').click();
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),html);
+});
+
+for(const role of ['student','teacher'])test(`Registered stock text updates without writes while teacher edits survive (${role})`,async t=>{
+ const course=await courseData(),previous=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-legacy-text.json'),'utf8'));
+ const registered=course.lessons.map((lesson,i)=>({...lesson,...previous[lesson.id],published:true,
+  ...(i%3===1?{explanation:'先生が独自に説明した文章 '+lesson.id}:{}),
+  ...(i%5===2?{practice:'【基本課題】\n1. 先生独自の課題です。\n\n【動作の確認】\n□ 先生と確認する。'}:{}),
+  ...(i%7===3?{question:'先生が独自に出した問題 '+lesson.id,starterHtml:lesson.starterHtml+'\n<!-- 先生が保存した作品 -->'}:{})}));
+ const page=await openStudio(t,{role,startAtHome:true,extraLessons:registered});
+ for(let i=0;i<registered.length;i++){
+  const saved=registered[i],current=course.lessons[i];
+  await page.locator('#home').click();await page.locator(`[data-course=web][data-level="${saved.level}"]`).click();await page.locator(`[data-id="${saved.id}"]`).click();
+  await page.locator('#webHtmlEditor').waitFor({state:'attached'});
+  assert.equal(await page.locator('.lesson-text').first().textContent(),i%3===1?saved.explanation:current.explanation);
+  assert.equal(await page.locator('.lesson-text').nth(1).textContent(),i%5===2?saved.practice:current.practice);
+  assert.equal(await page.locator('#webHtmlEditor').inputValue(),saved.starterHtml);
+  assert.ok((await page.locator('#courseVisualPage').textContent()).includes('エディターと教材の使い方'));
+  await page.locator('#coursePageSelect').selectOption('5');assert.ok((await page.locator('#lsFinalSubmission').textContent()).includes(saved.question));
+ }
+ const state=await page.evaluate(()=>({lessons:window.__firebase.data.lessons,writes:window.__firebase.writes}));
+ for(const saved of registered){assert.equal(state.lessons[saved.id].explanation,saved.explanation);assert.equal(state.lessons[saved.id].practice,saved.practice);assert.equal(state.lessons[saved.id].published,true);}
+ assert.equal(state.writes.filter(write=>write.collection==='lessons').length,0,'Opening revised text never rewrites stored lessons');
+});
+
+test('The beginner project instructions keep displayed rules consistent with changed JavaScript',async t=>{
+ const course=await courseData(),lesson=course.lessons.find(l=>l.id==='web1-l5-lesson01'),page=await openStudio(t,{role:'teacher',startAtHome:true});
+ const frame=await openCourseLesson(page,lesson);await page.locator('[data-lang=html]').click();
+ await page.locator('#webHtmlEditor').fill(lesson.starterHtml.replace('1回押すと1点','1回押すと2点'));
+ await page.locator('[data-lang=js]').click();await page.locator('#webJsEditor').fill(lesson.starterJs.replace('{ goal: 5, point: 1 }','{ goal: 8, point: 2 }'));await page.locator('#webRun').click();
+ assert.ok((await frame.locator('main').textContent()).includes('1回押すと2点'));assert.equal(await frame.locator('#goal').textContent(),'8');
+ for(let i=0;i<4;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'8');assert.equal(await frame.locator('#collect').isDisabled(),true);
 });

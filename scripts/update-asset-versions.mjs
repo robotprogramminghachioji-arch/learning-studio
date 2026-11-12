@@ -30,6 +30,18 @@ for(const lesson of course.lessons){
   if(lesson.published!==false||lesson.options.length)throw Error('Course templates must be draft, teacher-graded lessons');
 }
 outputs.set('assets/web-course-data.js','// Generated from web-course.json. Edit the JSON source.\nexport const WEB_COURSE='+JSON.stringify(course,null,2)+';\n');
+const beginnerGuides=JSON.parse(await readFile(path.join(root,'assets/web-course-guides.json'),'utf8'));
+const previousText=JSON.parse(await readFile(path.join(root,'assets/web-course-legacy-text.json'),'utf8'));
+for(const lesson of course.lessons){
+  const guide=beginnerGuides[lesson.id],previous=previousText[lesson.id];
+  if(!guide||!previous||guide.terms.length<4||guide.steps.length<4||!guide.experiments.length)throw Error('Missing beginner guidance: '+lesson.id);
+  for(const field of ['start','locate','reason','report'])if(!guide[field]?.trim())throw Error('Missing beginner '+field+': '+lesson.id);
+  for(const term of guide.terms)if(!term.word?.trim()||!term.meaning?.trim())throw Error('Missing term explanation: '+lesson.id);
+  for(const experiment of guide.experiments)if(!experiment.title?.trim()||!experiment.predict?.trim()||experiment.steps.length<2||!experiment.result?.trim())throw Error('Incomplete experiment: '+lesson.id);
+  if(!guide.trouble?.symptom?.trim()||!guide.trouble?.check?.trim())throw Error('Missing troubleshooting: '+lesson.id);
+  if(!guide.steps.every(step=>lesson.practice.includes(step)))throw Error('Lesson and beginner steps differ: '+lesson.id);
+}
+outputs.set('assets/web-course-guide-data.js','// Generated from web-course-guides.json and web-course-legacy-text.json.\nexport const WEB_GUIDES='+JSON.stringify(beginnerGuides,null,2)+';\nexport const PREVIOUS_WEB_TEXT='+JSON.stringify(previousText,null,2)+';\n');
 const visualPlans=JSON.parse(await readFile(path.join(root,'assets/web-course-visuals.json'),'utf8'));
 const visualManifest=JSON.parse(await readFile(path.join(root,'assets/web-visual-manifest.json'),'utf8'));
 const visualData={};
