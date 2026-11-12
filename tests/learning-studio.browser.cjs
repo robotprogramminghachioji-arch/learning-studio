@@ -85,7 +85,7 @@ before(async()=>{
      content=Buffer.from(source);
     }else if(path.extname(file)==='.html'&&serveOldRelease)content=Buffer.from(content.toString().replace(/\?v=[a-f0-9]{12}/g,''));
    }
-   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.webp':'image/webp','.pdf':'application/pdf'}[path.extname(file)];
+   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.webp':'image/webp','.svg':'image/svg+xml','.pdf':'application/pdf'}[path.extname(file)];
    res.writeHead(200,{'Content-Type':type||'application/octet-stream','Cache-Control':cacheScenario&&path.extname(file)!=='.html'?'public, max-age=31536000, immutable':'no-store'}).end(content);
   }catch{res.writeHead(404).end();}
  });
@@ -893,7 +893,7 @@ for(const mobile of [false,true])test(`Every workbook page includes matching lea
 async function courseData(){return JSON.parse(await fs.readFile(path.join(root,'assets/web-course.json'),'utf8'));}
 async function openCourseLesson(page,lesson){
  await page.locator('#home').click();await page.locator(`[data-course=web][data-level="${lesson.level}"]`).click();
- await page.locator(`[data-id="${lesson.id}"]`).click();await page.locator('#webHtmlEditor').waitFor();
+ await page.locator(`[data-id="${lesson.id}"]`).click();await page.locator('#webHtmlEditor').waitFor({state:'attached'});
  await page.locator('[data-course-practice]').click();
  const frame=page.frameLocator('#webPreview');await frame.locator('main[data-game]').waitFor();return frame;
 }
@@ -1040,8 +1040,10 @@ test('Student saves a new course work, submits reflection and downloads a playab
  assert.ok(saved.html.includes('作品の星を集める'));assert.equal(saved.missions,undefined);
  assert.ok((await page.locator('#webFeedback').textContent()).includes('学習内容を保存しました。'));
  const response='最高得点は端末保存、学習コードはクラウド保存です。プレビューでは最高得点を永続保存できなくてもゲームが動くことを確認しました。';
+ await page.locator('[data-course-check]').click();
  await page.locator('#submitTest textarea').fill(response);await page.locator('#submitTest button').click();await page.waitForFunction(()=>document.querySelector('#submitMsg').textContent.includes('先生の採点'));
  assert.equal(await page.evaluate(()=>window.__firebase.data.submissions['test-created'].response),response);
+ await page.locator('[data-course-practice]').click();
  const downloadPromise=page.waitForEvent('download');await page.locator('#webDownload').click();const download=await downloadPromise;
  assert.equal(download.suggestedFilename(),'index.html');const html=await fs.readFile(await download.path(),'utf8');assert.ok(html.includes(lesson.starterJs));
  const exported=await page.context().newPage();t.after(()=>exported.close());
@@ -1060,4 +1062,126 @@ test('Bulk course publication skips unregistered templates and teacher-authored 
  const state=await page.evaluate(()=>window.__firebase.data.lessons);
  assert.equal(state[text.id].published,true);assert.equal(state[choice.id].published,false);
  assert.equal(Object.keys(state).filter(id=>id.startsWith('web1-')).length,2);
+});
+
+for(const mobile of [false,true])test(`All thirty illustrated workbooks load five pages with images and matching checks (${mobile?'mobile':'desktop'})`,async t=>{
+ const page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ const course=await courseData();
+ for(const lesson of course.lessons){
+  await page.locator('#home').click();await page.locator(`[data-course=web][data-level="${lesson.level}"]`).click();await page.locator(`[data-id="${lesson.id}"]`).click();
+  await page.locator('#coursePageSelect').waitFor();assert.equal(await page.locator('#webCourseEditorWindow').isVisible(),false);
+  for(let n=1;n<=5;n++){
+   await page.locator('#coursePageSelect').selectOption(String(n));
+   await page.waitForFunction(()=>[...document.querySelectorAll('#courseVisualPage img')].every(i=>i.complete&&i.naturalWidth>0));
+   assert.equal(await page.locator('#coursePageCount').textContent(),`${n} / 5`);
+   assert.ok((await page.locator('#courseVisualCheck').textContent()).includes(`教材 ${n}ページに対応`));
+   assert.equal(await page.locator('#lsFinalSubmission').isVisible(),n===5);
+   if(n!==4)assert.ok(await page.locator('#courseVisualPage img').count()>0,lesson.id+' page '+n+' has visual material');
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,lesson.id+' page '+n+' fits');
+  }
+  if(Number(lesson.id.slice(-2))===1){
+   await page.locator('#coursePageSelect').selectOption('2');
+   await page.waitForFunction(()=>document.querySelector('#courseVisualPage img')?.complete&&document.querySelector('#courseVisualPage img').naturalWidth>0);
+   await page.evaluate(()=>window.scrollTo(0,document.querySelector('#webVisualWorkbook').getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ls-header-height'))));
+   await page.screenshot({path:`/tmp/illustrated-web-level${lesson.level}-${mobile?'mobile':'desktop'}.png`});
+  }
+ }
+});
+
+for(const mobile of [false,true])test(`Course floating editor preserves draft and running game across page, move, resize and help (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await courseData(),lesson={...course.lessons[0],published:true};
+ const page=await openStudio(t,{mobile,startAtHome:true,extraLessons:[lesson]});const frame=await openCourseLesson(page,lesson);
+ const win=page.locator('#webCourseEditorWindow');assert.equal(await win.isVisible(),true);
+ const code=lesson.starterHtml+'\n<!-- 入力途中の作品 -->';await page.locator('#webHtmlEditor').fill(code);await page.locator('#webRun').click();
+ await frame.locator('#collect').click();await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'2');
+ const before=await win.boundingBox(),bar=await win.locator('[data-window-move]').boundingBox();
+ if(mobile){
+  const cdp=await page.context().newCDPSession(page);
+  const drag=async(x,y,dx,dy)=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx,y:y+dy}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
+  await drag(bar.x+50,bar.y+20,0,-40);
+  const handle=await win.locator('[data-window-resize]').boundingBox();await drag(handle.x+18,handle.y+15,-18,-30);
+ }else{
+  await page.mouse.move(bar.x+70,bar.y+20);await page.mouse.down();await page.mouse.move(bar.x-30,bar.y-30,{steps:5});await page.mouse.up();
+  await win.locator('[data-window-resize]').focus();await page.keyboard.press('ArrowLeft');
+ }
+ const moved=await win.boundingBox();assert.ok(moved.y<before.y||moved.x<before.x);assert.ok(moved.width<before.width);
+ await win.locator('[data-window-minimize]').click();await page.locator('#coursePageSelect').selectOption('3');
+ await page.locator('#courseImageZoom').selectOption('200');
+ assert.equal(await page.locator('.course-image-viewport').evaluate(e=>e.scrollWidth>e.clientWidth),true);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.locator('#webCourseEditorOpen').click();assert.equal(await page.locator('#webHtmlEditor').inputValue(),code);assert.equal(await frame.locator('#score').textContent(),'2');
+ await page.locator('#lsHelp').click();await page.locator('#lsHelpClose').click();assert.equal(await frame.locator('#score').textContent(),'2');
+ if(mobile)await win.locator('[data-window-minimize]').click();else{await win.locator('[data-window-move]').focus();await page.keyboard.press('Escape');}
+ assert.equal(await win.isVisible(),false);await page.locator('#webCourseEditorOpen').click();
+ assert.equal(await page.locator('#webHtmlEditor').inputValue(),code);
+ for(const size of mobile?[{width:320,height:568},{width:844,height:390},{width:375,height:360}]:[{width:1280,height:720}]){
+  await page.setViewportSize(size);await settleLayout(page);const rect=await win.boundingBox(),header=await page.locator('#lsHeader').boundingBox();
+  assert.ok(rect.x>=0&&rect.x+rect.width<=size.width+1);assert.ok(rect.y>=header.y+header.height);assert.ok(rect.y+rect.height<=size.height+1);
+ }
+ await page.screenshot({path:`/tmp/illustrated-web-floating-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('#webSave').click();await page.waitForFunction(()=>document.querySelector('#webSaveState').textContent==='Firebaseに保存済み');
+ await win.locator('[data-window-minimize]').click();await page.locator('#home').click();assert.equal(await page.locator('#webCourseEditorWindow').count(),0);assert.equal(await page.locator('.course-visual-nav').count(),0);
+ await openCourseLesson(page,lesson);assert.equal(await page.locator('#webHtmlEditor').inputValue(),code);
+});
+
+test('Teaching SVG text fits its canvas and all changed examples remain valid runnable source',async t=>{
+ const course=await courseData(),plans=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-visuals.json'),'utf8'));
+ const context=await browser.newContext();t.after(()=>context.close());const svgPage=await context.newPage();
+ for(const lesson of course.lessons){
+  const change=plans[lesson.id].change,key={HTML:'starterHtml',CSS:'starterCss',JavaScript:'starterJs'}[change.language];
+  assert.ok(lesson[key].includes(change.before),lesson.id+' snippet matches starter');
+  if(key==='starterJs')assert.doesNotThrow(()=>new Function(lesson[key].replace(change.before,change.after)),lesson.id+' changed JS parses');
+  for(const suffix of ['diagram','code']){
+   await svgPage.goto(`${base}/assets/web-course-visuals/${lesson.id}-${suffix}.svg`);
+   const outside=await svgPage.evaluate(async()=>{await document.fonts.ready;const s=document.documentElement.viewBox.baseVal;return [...document.querySelectorAll('text')].map(t=>({text:t.textContent,box:t.getBBox()})).filter(({box:b})=>b.x<0||b.y<0||b.x+b.width>s.width+1||b.y+b.height>s.height+1).map(t=>t.text);});
+   assert.deepEqual(outside,[],lesson.id+' '+suffix+' has no clipped text');
+  }
+ }
+});
+
+test('Illustrated code changes produce the pictured outcomes across five levels',async t=>{
+ const page=await openStudio(t,{role:'teacher',startAtHome:true}),course=await courseData(),plans=JSON.parse(await fs.readFile(path.join(root,'assets/web-course-visuals.json'),'utf8'));
+ for(const id of ['web1-l1-lesson03','web1-l2-lesson01','web1-l3-lesson01','web1-l4-lesson03','web1-l5-lesson01']){
+  const lesson=course.lessons.find(l=>l.id===id),change=plans[id].change,frame=await openCourseLesson(page,lesson);
+  const lang={HTML:'html',CSS:'css',JavaScript:'js'}[change.language];await page.locator(`[data-lang=${lang}]`).click();
+  const field=page.locator({html:'#webHtmlEditor',css:'#webCssEditor',js:'#webJsEditor'}[lang]);await field.fill((await field.inputValue()).replace(change.before,change.after));await page.locator('#webRun').click();
+  if(lesson.level===1){for(let i=0;i<3;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'3');assert.equal(await frame.locator('#collect').isDisabled(),true);}
+  if(lesson.level===1){
+   await page.setViewportSize({width:1680,height:1000});await page.locator('#coursePageSelect').selectOption('3');await page.locator('[data-window-reset]').click();
+   await page.locator('[data-window-resize]').focus();for(let i=0;i<10;i++)await page.keyboard.press('ArrowLeft');for(let i=0;i<8;i++)await page.keyboard.press('ArrowDown');
+   await page.locator('[data-window-move]').focus();for(let i=0;i<10;i++)await page.keyboard.press('ArrowRight');
+   await page.waitForFunction(()=>document.querySelector('#courseVisualPage img')?.complete&&document.querySelector('#courseVisualPage img').naturalWidth>0);
+   await page.evaluate(()=>window.scrollTo(0,document.querySelector('#webVisualWorkbook').getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ls-header-height'))));
+   await page.locator('#webJsEditor').evaluate(el=>el.scrollTop=0);
+   await page.screenshot({path:'/tmp/illustrated-web-course-review.png'});assert.equal(await frame.locator('#score').textContent(),'3');
+   await page.setViewportSize({width:1440,height:1000});
+  }
+  if(lesson.level===2)assert.equal(await frame.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(255, 249, 232)');
+  if(lesson.level===3){for(let i=0;i<4;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'12');assert.equal(await frame.locator('#collect').isDisabled(),true);}
+  if(lesson.level===4){for(let i=0;i<3;i++)await frame.locator('[data-move=right]').click();await frame.locator('[data-move=down]').click();assert.equal(await frame.locator('#score').textContent(),'1');}
+  if(lesson.level===5){for(let i=0;i<4;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'8');assert.equal(await frame.locator('#collect').isDisabled(),true);}
+ }
+});
+
+test('Illustrated lesson prints five image-rich pages including the current teacher question',async t=>{
+ const course=await courseData(),lesson={...course.lessons[0],published:true,question:'先生が設定した作品の確認問題です。'};
+ const page=await openStudio(t,{startAtHome:true,extraLessons:[lesson]});await openCourseLesson(page,lesson);await page.locator('[data-window-minimize]').click();
+ await page.evaluate(()=>window.print=()=>{});await page.locator('#coursePrint').click();await page.waitForSelector('#coursePrintPages',{state:'attached'});
+ await page.waitForFunction(()=>[...document.querySelectorAll('#coursePrintPages img')].every(i=>i.complete&&i.naturalWidth>0));
+ assert.equal(await page.locator('#coursePrintPages .course-print-page').count(),5);assert.ok((await page.locator('#coursePrintPages').textContent()).includes(lesson.question));
+ const pdf=await page.pdf({path:'/tmp/illustrated-web-workbook.pdf',format:'A4',printBackground:true});const {PDFDocument}=require('pdf-lib');
+ assert.equal((await PDFDocument.load(pdf)).getPageCount(),5);
+ await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));assert.equal(await page.locator('#coursePrintPages').count(),0);
+});
+
+test('Every illustrated lesson exports exactly five complete printable pages',async t=>{
+ const course=await courseData(),page=await openStudio(t,{role:'teacher',startAtHome:true});
+ await page.evaluate(()=>window.print=()=>{});const {PDFDocument}=require('pdf-lib');
+ for(const lesson of course.lessons){
+  await openCourseLesson(page,lesson);await page.locator('[data-window-minimize]').click();await page.locator('#coursePrint').click();
+  await page.waitForFunction(()=>document.querySelector('#coursePrintPages')&&[...document.querySelectorAll('#coursePrintPages img')].every(i=>i.complete&&i.naturalWidth>0));
+  const options={format:'A4',printBackground:true};if(lesson.id.endsWith('06'))options.path=`/tmp/illustrated-web-level${lesson.level}-workbook.pdf`;
+  const pdf=await page.pdf(options);assert.equal((await PDFDocument.load(pdf)).getPageCount(),5,lesson.id+' prints five pages');
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+ }
 });

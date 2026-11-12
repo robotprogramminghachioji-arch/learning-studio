@@ -86,5 +86,5 @@ export function mountFloatingEditor({container, windowEl, openButton, header=doc
     if(!container.isConnected){finishGesture();events.abort();headerObserver.disconnect();appObserver.disconnect();}
   });
   appObserver.observe(document.getElementById('app'),{childList:true,subtree:true});
-  return {show};
+  return {show,hide};
 }
