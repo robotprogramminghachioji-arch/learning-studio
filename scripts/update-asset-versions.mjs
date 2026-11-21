@@ -42,6 +42,25 @@ for(const lesson of course.lessons){
   if(!guide.steps.every(step=>lesson.practice.includes(step)))throw Error('Lesson and beginner steps differ: '+lesson.id);
 }
 outputs.set('assets/web-course-guide-data.js','// Generated from web-course-guides.json and web-course-legacy-text.json.\nexport const WEB_GUIDES='+JSON.stringify(beginnerGuides,null,2)+';\nexport const PREVIOUS_WEB_TEXT='+JSON.stringify(previousText,null,2)+';\n');
+const roblox=JSON.parse(await readFile(path.join(root,'assets/roblox-course.json'),'utf8'));
+const robloxMedia=JSON.parse(await readFile(path.join(root,'assets/roblox-media.json'),'utf8'));
+if(roblox.lessons.length!==8)throw Error('Roblox LEVEL1 needs eight lessons');
+const robloxIds=new Set();
+for(const lesson of roblox.lessons){
+  if(robloxIds.has(lesson.id)||lesson.course!=='roblox'||lesson.level!==1||lesson.duration!=='75分'||lesson.published!==false||lesson.options.length||lesson.steps.length!==8)throw Error('Invalid Roblox lesson: '+lesson.id);
+  robloxIds.add(lesson.id);
+  for(const field of ['title','goal','explanation','practice','question','teacherGuide','startFile','project'])if(!lesson[field]?.trim())throw Error('Missing Roblox '+field+': '+lesson.id);
+  for(const id of [lesson.hero,...lesson.images,lesson.video,...lesson.steps.map(step=>step.media)].filter(Boolean))if(!robloxMedia[id])throw Error('Missing official media: '+id);
+  for(const step of lesson.steps)if(!step.title?.trim()||!step.instruction?.trim()||!step.expected?.trim())throw Error('Incomplete Studio operation: '+lesson.id);
+  if(lesson.terms.length<4||lesson.tests.length<3||lesson.trouble.length<2||lesson.experiment.steps.length<2)throw Error('Incomplete beginner guidance: '+lesson.id);
+}
+for(const media of Object.values(robloxMedia)){
+  const file=path.posix.normalize(media.file);
+  if(!file.startsWith('assets/roblox-level1-media/')||media.file!==file||!new URL(media.originalUrl).hostname.endsWith('docsiteassets.roblox.com')||new URL(media.sourceUrl).hostname!=='create.roblox.com')throw Error('Invalid official Roblox source: '+media.file);
+  const bytes=await readFile(path.join(root,file));
+  if(bytes.length!==media.bytes||createHash('sha256').update(bytes).digest('hex')!==media.sha256)throw Error('Official media differs from its recorded original: '+file);
+}
+outputs.set('assets/roblox-course-data.js','// Generated from roblox-course.json and roblox-media.json.\nexport const ROBLOX_COURSE='+JSON.stringify(roblox,null,2)+';\nexport const ROBLOX_MEDIA='+JSON.stringify(robloxMedia,null,2)+';\n');
 const visualPlans=JSON.parse(await readFile(path.join(root,'assets/web-course-visuals.json'),'utf8'));
 const visualManifest=JSON.parse(await readFile(path.join(root,'assets/web-visual-manifest.json'),'utf8'));
 const visualData={};
@@ -51,9 +70,9 @@ for(const lesson of course.lessons){
   visualData[lesson.id]={...plan,...meta,poster:`assets/web-course-visuals/${lesson.id}-preview.png`,diagram:`assets/web-course-visuals/${lesson.id}-diagram.svg`,code:`assets/web-course-visuals/${lesson.id}-code.svg`};
 }
 outputs.set('assets/web-visual-data.js','// Generated from web-course-visuals.json and web-visual-manifest.json.\nexport const WEB_VISUALS='+JSON.stringify(visualData,null,2)+';\n');
-for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts','assets/web-course-visuals']){
+for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts','assets/web-course-visuals','assets/roblox-level1-media']){
   for(const name of (await readdir(path.join(root,dir))).sort()){
-    if(!/\.(pdf|png|webp|svg|js|ttf|otf)$/.test(name))continue;
+    if(!/\.(pdf|png|jpe?g|mp4|webp|svg|js|ttf|otf)$/.test(name))continue;
     const file=`${dir}/${name}`;versions[file]=hash(await readFile(path.join(root,file)));
   }
 }

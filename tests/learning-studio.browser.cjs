@@ -85,7 +85,7 @@ before(async()=>{
      content=Buffer.from(source);
     }else if(path.extname(file)==='.html'&&serveOldRelease)content=Buffer.from(content.toString().replace(/\?v=[a-f0-9]{12}/g,''));
    }
-   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.pdf':'application/pdf'}[path.extname(file)];
+   const type={'.js':'text/javascript','.css':'text/css','.json':'application/json','.html':'text/html','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.mp4':'video/mp4','.txt':'text/plain','.webp':'image/webp','.svg':'image/svg+xml','.pdf':'application/pdf'}[path.extname(file)];
    res.writeHead(200,{'Content-Type':type||'application/octet-stream','Cache-Control':cacheScenario&&path.extname(file)!=='.html'?'public, max-age=31536000, immutable':'no-store'}).end(content);
   }catch{res.writeHead(404).end();}
  });
@@ -1391,4 +1391,183 @@ test('The beginner project instructions keep displayed rules consistent with cha
  await page.locator('[data-lang=js]').click();await page.locator('#webJsEditor').fill(lesson.starterJs.replace('{ goal: 5, point: 1 }','{ goal: 8, point: 2 }'));await page.locator('#webRun').click();
  assert.ok((await frame.locator('main').textContent()).includes('1回押すと2点'));assert.equal(await frame.locator('#goal').textContent(),'8');
  for(let i=0;i<4;i++)await frame.locator('#collect').click();assert.equal(await frame.locator('#score').textContent(),'8');assert.equal(await frame.locator('#collect').isDisabled(),true);
+});
+
+// Roblox lessons use the actual native Studio on a Windows/Mac PC. These tests
+// exercise Learning Studio's instructions and genuine bundled media, not Studio.
+async function robloxData(){return JSON.parse(await fs.readFile(path.join(root,'assets/roblox-course.json'),'utf8'));}
+async function openRobloxLesson(page,lesson){
+ await page.locator('#home').click();await page.locator('[data-course=roblox][data-level="1"]').click();
+ await page.locator(`[data-id="${lesson.id}"]`).click();await page.waitForSelector('#robloxWorkbook');
+}
+async function assertRobloxPage(page,lesson,n){
+ await page.waitForFunction(({id,n})=>document.querySelector('#robloxWorkbook')?.dataset.lessonId===id&&document.querySelector('#robloxWorkbook')?.dataset.page===String(n),{id:lesson.id,n});
+ assert.equal(await page.locator('main h1').textContent(),lesson.title);
+ assert.equal(await page.locator('#robloxPageSelect').inputValue(),String(n));
+ assert.equal(await page.locator('#robloxPageCount').textContent(),`${n} / 5`);
+ assert.equal(await page.locator('#robloxBottomCount').textContent(),`教材内 ${n} / 5ページ`);
+ assert.ok((await page.locator('#robloxCurrentPage').textContent()).includes(lesson.title));
+ assert.ok((await page.locator('#robloxCurrentCheck').textContent()).includes(`教材 ${n}ページに対応`));
+ await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet').getAttribute('aria-busy')==='false');
+ const body=await page.locator('#robloxCurrentSheet').textContent(),checks=await page.locator('#robloxCurrentCheck').textContent();
+ const matching=n===2?lesson.terms.map(x=>x.meaning):n===3?lesson.steps.slice(0,4).map(x=>x.expected):n===4?[...lesson.steps.slice(4).map(x=>x.expected),lesson.experiment.result]:n===5?lesson.tests:[];
+ for(const text of matching)assert.ok(body.includes(text),`${lesson.id} page ${n} explains ${text}`);
+ if(n===3||n===4||n===5)for(const text of matching)assert.ok(checks.includes(text),'Current checks are taught on this page');
+ if(n===4)for(const step of lesson.experiment.steps)assert.ok(body.includes(step));
+ assert.equal(await page.locator('#lsFinalSubmission').isVisible(),n===5);
+ assert.equal(await page.locator('#webHtmlEditor').count(),0,'Creation happens in real Studio');
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page-level horizontal overflow');
+ if(n<5){
+  const images=await page.locator('#robloxCurrentSheet img').evaluateAll(imgs=>imgs.map(i=>({complete:i.complete,w:i.naturalWidth,src:i.src})));
+  assert.ok(images.length>0);assert.ok(images.every(i=>i.complete&&i.w>0&&i.src.includes('/roblox-level1-media/')));
+  assert.ok(body.includes('Roblox Corporation')&&body.includes('CC BY 4.0'));
+ }
+}
+
+for(const mobile of [false,true])test(`Roblox all eight genuine-media lessons explain and synchronize all five pages (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await robloxData(),page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ await page.locator('[data-course=roblox][data-level="1"]').click();
+ assert.equal(await page.locator('[data-id^="roblox-studio-l1-"]').count(),8);assert.equal(await page.locator('[data-id="roblox-1"]').count(),1);
+ for(const lesson of course.lessons){
+  await openRobloxLesson(page,lesson);await page.locator('#robloxPageSelect').selectOption('1');
+  for(let n=1;n<=5;n++){
+   await assertRobloxPage(page,lesson,n);
+   if(n===3){await page.locator('#robloxCurrentPage').scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/roblox-${lesson.id}-${mobile?'mobile':'desktop'}.png`});}
+   if(n<5)await page.locator(n%2?'#robloxPageNext':'#robloxBottomNext').click();
+  }
+  assert.equal(await page.locator('#robloxPageNext').isDisabled(),true);
+  for(let n=4;n>=1;n--){await page.locator(n%2?'#robloxBottomPrev':'#robloxPagePrev').click();await assertRobloxPage(page,lesson,n);}
+  assert.equal(await page.locator('#robloxPagePrev').isDisabled(),true);
+ }
+ assert.equal(await page.evaluate(()=>window.__firebase.writes.length),0,'Previewing templates does not write Firestore');
+});
+
+for(const mobile of [false,true])test(`Roblox lesson transitions, help return and answer drafts stay synchronized (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await robloxData(),lessons=course.lessons.map(l=>({...l,published:true})),[a,b]=lessons;
+ const page=await openStudio(t,{mobile,startAtHome:true,extraLessons:lessons});await openRobloxLesson(page,a);
+ await page.locator('#robloxPageSelect').selectOption('5');await assertRobloxPage(page,a,5);
+ const response='再生と停止を試し、L1-01-見本.rbxlを保存して開き直しました。';
+ await page.locator('#submitTest textarea').fill(response);
+ await page.locator('#robloxPagePrev').click();await page.locator('#robloxPageNext').click();
+ assert.equal(await page.locator('#submitTest textarea').inputValue(),response);
+ await page.locator('#lsHelp').click();await page.waitForSelector('#lsHelpClose');await page.locator('#lsHelpClose').click();
+ await assertRobloxPage(page,a,5);assert.equal(await page.locator('#submitTest textarea').inputValue(),response);
+ page.once('dialog',d=>d.dismiss());await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertRobloxPage(page,a,5);
+ await page.locator('#submitTest button').click();await page.waitForFunction(()=>document.querySelector('#submitMsg').textContent.includes('先生の採点'));
+ const saved=await page.evaluate(()=>window.__firebase.data.submissions['test-created']);
+ assert.equal(saved.lessonId,a.id);assert.equal(saved.response,response);assert.equal(saved.status,'pending');
+ await page.evaluate(id=>sessionStorage.setItem('learning-studio-roblox-page:student-uid:'+id,'5'),b.id);
+ await page.locator(`[data-open-lesson="${b.id}"]`).click();await assertRobloxPage(page,b,1);
+ await page.locator('#robloxPageNext').click();await assertRobloxPage(page,b,2);
+ await page.locator('#lsPageBack').click();await assertRobloxPage(page,a,5);
+ await page.locator('#home').click();assert.equal(await page.locator('#robloxPageSelect').count(),0);
+});
+
+for(const mobile of [false,true])test(`Roblox images, explicit navigation and real video work at narrow sizes (${mobile?'mobile':'desktop'})`,async t=>{
+ const course=await robloxData(),lesson=course.lessons[4],page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
+ await openRobloxLesson(page,lesson);
+ const sizes=mobile?[{width:375,height:812},{width:320,height:812},{width:812,height:375}]:[{width:1440,height:1000},{width:768,height:1000}];
+ for(const size of sizes){
+  await page.setViewportSize(size);await page.locator('#robloxPageSelect').selectOption('3');await assertRobloxPage(page,lesson,3);
+  for(const id of ['#robloxPagePrev','#robloxPageNext']){
+   assert.ok((await page.locator(id).textContent()).includes('ページ'));
+   const dims=await page.locator(id).evaluate(el=>({w:el.clientWidth,sw:el.scrollWidth,h:el.clientHeight}));
+   assert.ok(dims.h>=44&&dims.sw<=dims.w+1,'Page labels fit a touch target');
+  }
+  await page.locator('#robloxImageZoom').selectOption('200');
+  await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet').getAttribute('aria-busy')==='false');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Zoom scrolls within image only');
+  await page.screenshot({path:`/tmp/roblox-controls-${mobile?'mobile':'desktop'}-${size.width}.png`});
+ }
+ const video=page.locator('#robloxCurrentSheet video');
+ await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet video').readyState>=1);
+ const info=await video.evaluate(v=>({duration:v.duration,w:v.videoWidth,h:v.videoHeight,controls:v.controls,inline:v.playsInline}));
+ assert.ok(info.duration>3&&info.duration<4);assert.deepEqual([info.w,info.h],[1002,602]);assert.ok(info.controls&&info.inline);
+ await video.evaluate(v=>v.play());await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet video').currentTime>0.1);
+ await video.evaluate(v=>v.pause());assert.equal(await video.evaluate(v=>v.paused),true);
+ await page.locator('#robloxPageNext').click();assert.equal(await page.locator('#robloxCurrentSheet video').count(),0);
+});
+
+test('Roblox draft registration preserves old lessons and edits, retries safely and publishes only registered written lessons',async t=>{
+ const course=await robloxData(),first={...course.lessons[0],title:'先生独自のStudio入門',explanation:'先生の補足説明',question:'独自の確認問題',published:false};
+ const page=await openStudio(t,{role:'teacher',startAtHome:true,extraLessons:[first],failWrites:true});page.on('dialog',d=>d.accept());
+ await page.evaluate(id=>window.__firebase.data.answer_keys[id]={answerExplanation:'先生の採点基準を保持'},first.id);
+ const old=await page.evaluate(()=>structuredClone(window.__firebase.data.lessons['roblox-1']));
+ await page.locator('#manage').click();await page.locator('#importRoblox').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('完了できませんでした'));
+ await page.evaluate(()=>window.__firebase.failWrites=false);await page.locator('#importRoblox').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('登録処理が完了'));
+ const drafts=await page.evaluate(()=>Object.values(window.__firebase.data.lessons).filter(l=>l.id.startsWith('roblox-studio-l1-')));
+ assert.equal(drafts.length,8);assert.ok(drafts.every(l=>l.published===false));assert.equal(drafts[0].explanation,first.explanation);
+ assert.deepEqual(await page.evaluate(()=>window.__firebase.data.lessons['roblox-1']),old);
+ for(const lesson of drafts.filter(l=>l.id!==first.id)){assert.equal(lesson.teacherGuide,undefined);assert.equal(lesson.steps,undefined);assert.equal(lesson._template,undefined);}
+ assert.equal(await page.evaluate(id=>window.__firebase.data.answer_keys[id].answerExplanation,first.id),'先生の採点基準を保持');
+ const writes=await page.evaluate(()=>window.__firebase.writes.length);await page.locator('#importRoblox').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('全教材が登録済み'));assert.equal(await page.evaluate(()=>window.__firebase.writes.length),writes);
+ const studentDraft=await openStudio(t,{startAtHome:true,extraLessons:drafts});await studentDraft.locator('[data-course=roblox][data-level="1"]').click();assert.equal(await studentDraft.locator('[data-id^="roblox-studio-l1-"]').count(),0);
+ await page.locator('#publishRoblox').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('公開処理が完了'));
+ const published=await page.evaluate(()=>Object.values(window.__firebase.data.lessons).filter(l=>l.id.startsWith('roblox-studio-l1-')));assert.ok(published.every(l=>l.published));
+ const student=await openStudio(t,{startAtHome:true,extraLessons:published});await openRobloxLesson(student,first);await student.locator('#robloxPageSelect').selectOption('5');
+ assert.ok((await student.locator('#robloxWorkbook').textContent()).includes(first.explanation));assert.ok((await student.locator('#lsFinalSubmission').textContent()).includes(first.question));
+ assert.ok((await student.locator('#robloxWorkbook .notice').textContent()).includes('先生が編集'));
+});
+
+test('Roblox publication skips missing and multiple-choice templates and respects course assignment',async t=>{
+ const course=await robloxData(),text={...course.lessons[0],published:false},choice={...course.lessons[1],options:['A','B','C','D'],published:false};
+ const page=await openStudio(t,{role:'teacher',startAtHome:true,extraLessons:[text,choice]});page.on('dialog',d=>d.accept());
+ await page.locator('#manage').click();await page.locator('#publishRoblox').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('公開処理が完了'));
+ const state=await page.evaluate(()=>window.__firebase.data.lessons);assert.equal(state[text.id].published,true);assert.equal(state[choice.id].published,false);
+ assert.equal(Object.keys(state).filter(id=>id.startsWith('roblox-studio-l1-')).length,2);
+ const student=await openStudio(t,{startAtHome:true,courseAccess:['python'],extraLessons:[{...text,published:true}]});assert.equal(await student.locator('[data-course=roblox]').count(),0);
+});
+
+test('Roblox missing images and video explain how to open the genuine source',async t=>{
+ const course=await robloxData(),lesson=course.lessons[4],page=await openStudio(t,{role:'teacher',startAtHome:true});
+ await page.route('**/roblox-level1-media/**',r=>r.fulfill({status:404,body:''}));await openRobloxLesson(page,lesson);
+ await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent.includes('画像を読み込めません'));
+ await page.locator('#robloxPageSelect').selectOption('3');
+ await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent.includes('動画を再生できません'));
+ const original=page.locator('[data-media="anchor-video"] .roblox-origin a').first();assert.ok((await original.getAttribute('href')).endsWith('/anchor-demo.mp4'));assert.equal(await original.getAttribute('target'),'_blank');
+});
+
+test('Roblox all eight lessons print complete instructions, authentic credits and current questions',async t=>{
+ const course=await robloxData(),custom={...course.lessons[0],question:'先生の最新の確認問題',published:true},page=await openStudio(t,{role:'teacher',startAtHome:true,extraLessons:[custom]});
+ await page.evaluate(()=>window.print=()=>{});const {PDFDocument}=require('pdf-lib');
+ for(const source of course.lessons){
+  const lesson=source.id===custom.id?custom:source;await openRobloxLesson(page,lesson);await page.locator('#robloxPrint').click();
+  await page.waitForFunction(()=>document.querySelector('#robloxPrintPages')&&[...document.querySelectorAll('#robloxPrintPages img')].every(i=>i.complete&&i.naturalWidth>0));
+  assert.equal(await page.locator('#robloxPrintPages .roblox-print-page').count(),5);
+  const printed=await page.locator('#robloxPrintPages').textContent();
+  for(const step of source.steps){assert.ok(printed.includes(step.instruction));assert.ok(printed.includes(step.expected));}
+  for(const term of source.terms)assert.ok(printed.includes(term.meaning));
+  assert.ok(printed.includes(source.experiment.result)&&printed.includes(lesson.question)&&printed.includes('CC BY 4.0'));
+  assert.equal(await page.locator('#robloxPrintPages details:not([open])').count(),0);
+  const pdf=await page.pdf({path:`/tmp/roblox-${lesson.id}.pdf`,format:'A4',printBackground:true});assert.ok((await PDFDocument.load(pdf)).getPageCount()>=5);
+  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));assert.equal(await page.locator('#robloxPrintPages').count(),0);
+ }
+});
+
+test('Roblox bundled media retain original bytes, dimensions, source URLs and reuse rights',async()=>{
+ const crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
+ const media=JSON.parse(await fs.readFile(path.join(root,'assets/roblox-media.json'),'utf8'));
+ assert.equal(Object.values(media).filter(m=>m.kind==='image').length,18);assert.equal(Object.values(media).filter(m=>m.kind==='video').length,1);
+ for(const m of Object.values(media)){
+  const file=path.join(root,m.file),bytes=await fs.readFile(file);
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),m.sha256);assert.equal(bytes.length,m.bytes);
+  assert.equal(new URL(m.originalUrl).hostname,'prod.docsiteassets.roblox.com');assert.equal(new URL(m.sourceUrl).hostname,'create.roblox.com');assert.equal(m.license,'CC BY 4.0');
+  if(m.kind==='video')assert.equal(bytes.toString('ascii',4,8),'ftyp');else if(m.file.endsWith('.png'))assert.deepEqual(bytes.subarray(0,8),Buffer.from([137,80,78,71,13,10,26,10]));else assert.deepEqual(bytes.subarray(0,3),Buffer.from([255,216,255]));
+  const info=JSON.parse(execFileSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','json',file],{encoding:'utf8'})).streams[0];
+  assert.equal(info.width,m.width);assert.equal(info.height,m.height);
+ }
+});
+
+test('Roblox video failure remains visible after its page images finish loading',async t=>{
+ const course=await robloxData(),page=await openStudio(t,{role:'teacher',startAtHome:true});
+ await page.route('**/anchor-video.mp4*',r=>r.fulfill({status:404,body:''}));await openRobloxLesson(page,course.lessons[4]);
+ await page.locator('#robloxPageSelect').selectOption('3');
+ await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent.includes('動画を再生できません'));
+ await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet').getAttribute('aria-busy')==='false');
+ assert.ok((await page.locator('#robloxMediaStatus').textContent()).includes('動画を再生できません'));
+ assert.equal(await page.locator('#robloxCurrentSheet img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth>0)),true);
+ await page.locator('#robloxPageSelect').selectOption('5');assert.equal(await page.locator('#robloxMediaStatus').textContent(),'');
 });

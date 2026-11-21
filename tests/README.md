@@ -1,5 +1,7 @@
 # ブラウザ回帰テスト
 
+Roblox LEVEL1の追加テストは `node --test --test-name-pattern='Roblox' tests/learning-studio.browser.cjs` で実行できます。元の公式素材の実寸確認に `ffprobe` を使います。PC・モバイルで8教材×5ページの本文・チェック・前後移動、画像読込、実動画のメタデータと再生、320px・375px・横向き・200%拡大、ヘルプ往復、記述式提出・未提出回答、教材の切り替えと戻る、先生の非公開登録・既存原稿保持・失敗後の再試行・公開・受講権限を検証します。全8教材をPDFへ出力し、公式素材のSHA-256・形式・寸法も確認します。スクリーンショットとPDFは `/tmp/roblox-*` へ出力します。スマホはChromiumのタッチエミュレーションです。Windows／Mac専用のRoblox Studio本体はLinuxでは実行しておらず、ネイティブ制作の確認事項は [授業前のチェック](../docs/roblox-level1-course.md#更新検証) を参照してください。
+
 Node.js 20以上とChromiumを使用します。アプリ自体にはnpm依存もビルドも不要です。npm依存はテスト専用です。
 
 ```sh
