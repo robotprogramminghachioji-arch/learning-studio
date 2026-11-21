@@ -1,9 +1,11 @@
-import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=2fb02c5ba01e';
+import {ROBLOX_COURSE,robloxLesson,robloxLessonData,withRobloxTemplates,robloxLevelIntro,robloxLessonIntro} from './roblox-course.js?v=91bd6fb6766c';
+import {mountRobloxReader} from './roblox-reader.js?v=729a595d4219';
+import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=1e948d73a5a6';
 import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,refreshCourseText,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=2663251d6dca';
 import {mountFinalAssessment} from './final-assessment.js?v=7265478edfa1';
 import {initializeHeader} from './page-navigation.js?v=067885ce2b97';
 import {mountWebWorkspace} from './web-workspace.js?v=44846a9cdd83';
-import {mountHtmlLevel1Companion} from './html-level1-companion.js?v=850d459f12d5';
+import {mountHtmlLevel1Companion} from './html-level1-companion.js?v=ea74ef49d8ff';
 import {initializeApp,deleteApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,updatePassword} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,getDocs,collection,query,where,setDoc,updateDoc,addDoc,deleteDoc,serverTimestamp,runTransaction} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
@@ -133,8 +135,8 @@ initializeNavigation();
 
 const configured=cfg.apiKey&&!cfg.apiKey.startsWith('YOUR_')&&cfg.projectId&&!cfg.projectId.startsWith('YOUR_');
 if(!configured){appEl.innerHTML='<section class="panel"><h1>Firebase設定が必要です</h1><p>config.js を設定してください。README.md に手順があります。</p></section>'}else{let a=initializeApp(cfg);auth=getAuth(a);db=getFirestore(a);onAuthStateChanged(auth,async u=>{me=u;try{await refresh()}catch(e){console.error(e);appEl.innerHTML=msg('読み込みに失敗しました：'+e.message,true)}})}
-async function loadTeacherLessons(){return withCourseTemplates(await list('lessons'));}
-async function loadTeacherKeys(){return Object.fromEntries([...WEB_COURSE.lessons.map(l=>[l.id,{answerExplanation:l.teacherGuide,hint:''}]),...(await list('answer_keys')).map(k=>[k.id,k])]);}
+async function loadTeacherLessons(){return withRobloxTemplates(withCourseTemplates(await list('lessons')));}
+async function loadTeacherKeys(){return Object.fromEntries([...[...WEB_COURSE.lessons,...ROBLOX_COURSE.lessons].map(l=>[l.id,{answerExplanation:l.teacherGuide,hint:''}]),...(await list('answer_keys')).map(k=>[k.id,k])]);}
 async function refresh(){screenHistory.length=0;currentScreen={kind:'home'};view='home';selected=null;closeBrowserBackDialog();teacher=false;student=null;lessons=[];submissions=[];students=[];keys={};autoKeys={};if(!me){userbar.innerHTML='';return login()};const t=await getDoc(doc(db,'teachers',me.uid));teacher=t.exists()&&t.data().enabled===true;
  if(teacher){students=await list('students');lessons=await loadTeacherLessons();submissions=await list('submissions');keys=await loadTeacherKeys();}
  else{const sid=localStorage.getItem('ls_student_id');if(!sid){return noProfile()};const p=await getDoc(doc(db,'students',sid));if(!p.exists()||p.data().activeUid!==me.uid||p.data().enabled!==true)return noProfile();const accessSnap=await getDoc(doc(db,'student_access',me.uid));
@@ -168,31 +170,34 @@ function home(){let h=`${nav()}<section class="panel"><h1>${teacher?'教材プ�
 function webRoadmapScreen(){if(!teacher&&!student?.allowedCourses.includes('web')){view='home';return home();}appEl.innerHTML=nav()+roadmapHtml();wireNav();}
 function levelScreen(course,level){
  const arr=lessons.filter(x=>x.course===course&&Number(x.level)===level).sort((a,b)=>(a.order||0)-(b.order||0));
- const tiles=list=>list.map(x=>`<button class="ghost lesson-tile" data-id="${esc(x.id)}">${esc(x.title)}<span class="meta">${x._template?'先生用見本・未登録':x.published?'公開中':'先生プレビュー'}${foundationLesson(x.id)?' / '+esc(x.duration||foundationLesson(x.id).duration):''}</span></button>`).join('');
- const primary=arr.filter(x=>foundationLesson(x.id)),other=arr.filter(x=>!foundationLesson(x.id));
- const content=course==='web'?`${primary.length?'<h2>コース①の教材</h2><div class="lesson-list">'+tiles(primary)+'</div>':'<p class="notice">コース①の教材は先生の確認後に公開されます。</p>'}${other.length?'<details class="web-legacy-lessons" open><summary>以前の教材・補助教材（'+other.length+'件）</summary><div class="lesson-list">'+tiles(other)+'</div></details>':''}`:`<div class="lesson-list">${tiles(arr)}</div>`;
- appEl.innerHTML=`${nav()}<section class="panel"><h1>${esc(courses[course])} / レベル${level}</h1>${course==='web'?levelIntro(level)+'<button class="ghost" data-web-roadmap>コース①〜③の構成を見る</button>':''}<p>学習する教材を選んでください。</p>${content}</section>`;
+ const isRoblox=course==='roblox'&&Number(level)===1;
+ const bundled=id=>isRoblox?robloxLesson(id):foundationLesson(id);
+ const tiles=list=>list.map(x=>`<button class="ghost lesson-tile" data-id="${esc(x.id)}">${esc(x.title)}<span class="meta">${x._template?'先生用見本・未登録':x.published?'公開中':'先生プレビュー'}${bundled(x.id)?' / '+esc(x.duration||bundled(x.id).duration):''}</span></button>`).join('');
+ const primary=arr.filter(x=>bundled(x.id)),other=arr.filter(x=>!bundled(x.id));
+ const content=course==='web'||isRoblox?`${primary.length?'<h2>'+(isRoblox?'画像・動画付きのLEVEL1教材':'コース①の教材')+'</h2><div class="lesson-list">'+tiles(primary)+'</div>':'<p class="notice">'+(isRoblox?'Roblox LEVEL1':'コース①')+'の教材は先生の確認後に公開されます。</p>'}${other.length?'<details class="web-legacy-lessons" open><summary>以前の教材・補助教材（'+other.length+'件）</summary><div class="lesson-list">'+tiles(other)+'</div></details>':''}`:`<div class="lesson-list">${tiles(arr)}</div>`;
+ appEl.innerHTML=`${nav()}<section class="panel"><h1>${esc(courses[course])} / レベル${level}</h1>${course==='web'?levelIntro(level)+'<button class="ghost" data-web-roadmap>コース①〜③の構成を見る</button>':isRoblox?robloxLevelIntro():''}<p>学習する教材を選んでください。</p>${content}</section>`;
  wireNav();appEl.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>moveTo({kind:'lesson',lessonId:b.dataset.id}));
 }
 function lessonScreen(l){
   let workbookTestSubmitted=false;
+  const isRoblox=!!robloxLesson(l.id);
   const img=safeImage(l.imageUrl),vid=videoId(l.videoUrl),pdf=safePdf(l.pdfUrl);
   const integrated=l.course==='web' && Number(l.level)===1 &&
     (l.id==='web-html-l1-lesson01' || /HTML_Level1_Guide\.pdf$/i.test(l.pdfUrl||''));
   const mine=submissions.filter(s=>s.lessonId===l.id&&(!student||s.studentId===student.id));
   // The linked PDF+mission experience replaces the redundant external web links.
   const pdfBlock=pdf&&!integrated?`<section class="panel"><h2>📖 先に読むPDF教材</h2><p>まずこちらを読みましょう。印刷しなくても画面内で閲覧できます。</p><a class="btn ghost" href="${esc(pdf)}" target="_blank" rel="noopener noreferrer">PDFを別タブで開く・印刷する</a><details open><summary>この画面でPDFを表示</summary><iframe class="pdf-frame" src="${esc(pdf)}" title="PDF教材" loading="lazy"></iframe></details></section>`:'';
-  const explanationBlock=integrated||foundationLesson(l.id)?'':`<section class="panel"><h2>STEP 1｜解説を読もう</h2><div class="lesson-text">${esc(l.explanation)}</div>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'操作画面')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:foundationLesson(l.id)?'':'<div class="notice">操作画面画像はまだ登録されていません。</div>'}${vid?`<iframe class="media-frame" loading="lazy" title="動画教材" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</section>`;
+  const explanationBlock=integrated||foundationLesson(l.id)||isRoblox?'':`<section class="panel"><h2>STEP 1｜解説を読もう</h2><div class="lesson-text">${esc(l.explanation)}</div>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'操作画面')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:foundationLesson(l.id)?'':'<div class="notice">操作画面画像はまだ登録されていません。</div>'}${vid?`<iframe class="media-frame" loading="lazy" title="動画教材" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</section>`;
   // Web development exercises run entirely in Learning Studio; no confusing MDN link.
-  const practiceBlock=integrated||foundationLesson(l.id)?'':`<section class="panel"><h2>STEP 2｜練習してみよう</h2><div class="lesson-text">${esc(l.practice)}</div>${l.course==='web'?'<p class="notice">下のLearning Studioエディターでコードを入力し、「プレビューを更新」を押してください。</p>':`<p><a class="btn ghost" href="${tools[l.course]}" target="_blank" rel="noopener noreferrer">公式ツールを開く</a></p>`}</section>`;
+  const practiceBlock=integrated||foundationLesson(l.id)||isRoblox?'':`<section class="panel"><h2>STEP 2｜練習してみよう</h2><div class="lesson-text">${esc(l.practice)}</div>${l.course==='web'?'<p class="notice">下のLearning Studioエディターでコードを入力し、「プレビューを更新」を押してください。</p>':`<p><a class="btn ghost" href="${tools[l.course]}" target="_blank" rel="noopener noreferrer">公式ツールを開く</a></p>`}</section>`;
   const companionBlock=integrated?'<section class="panel hl1-outer"><div id="htmlLevel1Studio"></div></section>':'';
-  const additionalMedia=foundationLesson(l.id)&&(img||vid)?`<section class="panel"><details open><summary>先生の追加画像・動画</summary>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'先生の追加画像')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:''}${vid?`<iframe class="media-frame" loading="lazy" title="先生の追加動画" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</details></section>`:'';
+  const additionalMedia=(foundationLesson(l.id)||isRoblox)&&(img||vid)?`<section class="panel"><details open><summary>先生の追加画像・動画</summary>${img?`<figure><img class="lesson-image" src="${esc(img)}" alt="${esc(l.imageCaption||'先生の追加画像')}"><figcaption>${esc(l.imageCaption||'')}</figcaption></figure>`:''}${vid?`<iframe class="media-frame" loading="lazy" title="先生の追加動画" src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:''}</details></section>`:'';
   const standaloneEditor=l.course==='web'&&!integrated&&!foundationLesson(l.id)?'<section class="panel"><h2>🧑‍💻 Web開発エディターとプレビュー</h2><p class="muted">HTML・CSS・JavaScriptを入力し、結果を確かめましょう。</p><div id="webWorkspace"></div></section>':'';
-  appEl.innerHTML=`${nav()}<section class="panel"><span class="pill">${esc(courses[l.course])} / レベル${l.level}</span><h1>${esc(l.title)}</h1><p>${foundationLesson(l.id)?'<strong>この教材全体の目標：</strong>':''}${esc(l.goal)}</p>${lessonIntro(l)}</section>${foundationLesson(l.id)?'<section id="webVisualWorkbook"></section>':''}${companionBlock}${pdfBlock}${additionalMedia}${explanationBlock}${practiceBlock}${standaloneEditor}
+  appEl.innerHTML=`${nav()}<section class="panel"><span class="pill">${esc(courses[l.course])} / レベル${l.level}</span><h1>${esc(l.title)}</h1><p>${foundationLesson(l.id)?'<strong>この教材全体の目標：</strong>':''}${esc(l.goal)}</p>${lessonIntro(l)}${robloxLessonIntro(l)}</section>${isRoblox?'<section id="robloxWorkbook"></section>':''}${foundationLesson(l.id)?'<section id="webVisualWorkbook"></section>':''}${companionBlock}${pdfBlock}${additionalMedia}${explanationBlock}${practiceBlock}${standaloneEditor}
   ${integrated&&student?'<p id="lsFinalSubmissionLock" class="notice">レッスン全体の最終提出は、第11ページの最終確認テスト提出後に利用できます。</p>':''}<section class="panel" id="lsFinalSubmission" ${integrated&&student?'hidden':''}><h2>${integrated?'レッスン全体の最終提出':'STEP 3｜確認問題'}</h2>${integrated?'<p class="muted">上の各PDFページのミッションとは別に、先生へレッスン全体の回答を提出できます。</p>':''}<p>${esc(l.question||'学習したことを説明してください。')}</p>${(l.options||[]).length?`<form id="submitTest"><div class="question">${l.options.map((o,i)=>`<label><input type="radio" name="answer" value="${i}" required>${esc(o)}</label>`).join('')}</div><button>回答を提出する</button></form>`:`<form id="submitTest"><label>回答<textarea name="answer" maxlength="4000" required></textarea></label><button>回答を提出する</button></form>`}<div id="submitMsg"></div><p class="muted tiny">4択問題はその場で自動採点します。正解情報はブラウザに送られるため、教室内の練習・確認用です。記述式・制作課題は先生が採点します。</p></section>
   <section class="panel"><h2>提出履歴</h2>${mine.length?mine.map(s=>`<p>${s.kind==='test'?'テスト':'練習'}：${['graded','self_graded'].includes(s.status)?`${Number(s.score)}点 ／ ${esc(s.feedback||'')}${s.status==='self_graded'?'（自己採点）':''}`:'採点待ち'}</p>`).join(''):'<p>まだ提出はありません。</p>'}</section>`;
-  if(foundationLesson(l.id)){
-    const available=WEB_COURSE.lessons.filter(item=>lessons.some(x=>x.id===item.id));
+  if(foundationLesson(l.id)||isRoblox){
+    const available=(isRoblox?ROBLOX_COURSE.lessons:WEB_COURSE.lessons).filter(item=>lessons.some(x=>x.id===item.id));
     const index=available.findIndex(item=>item.id===l.id);
     const links=[available[index-1],available[index+1]];
     appEl.insertAdjacentHTML('beforeend','<section class="panel course-lesson-navigation"><h2>別の教材へ</h2><p>上部の矢印は今の教材内のページ移動です。次の回へ進むときは、下のボタンで1ページ目から開きます。</p><div class="actions">'+links.map((item,i)=>item?`<button class="ghost" data-open-lesson="${esc(item.id)}">${i?'次の教材の1ページ目へ':'前の教材の1ページ目へ'}：LEVEL${item.level} ${esc(item.title)}</button>`:'').join('')+'</div></section>');
@@ -208,6 +213,8 @@ function lessonScreen(l){
     }}).catch(err=>{
       console.error(err);const node=document.getElementById('htmlLevel1Studio');if(node)node.innerHTML=msg('教材連動画面を読み込めません：'+err.message,true);
     });
+  }else if(isRoblox){
+    mountRobloxReader({container:document.getElementById('robloxWorkbook'),lesson:l,uid:me.uid,initialPage:currentScreen.workbookPage,scrollOnEntry:currentScreen.focusWorkbook===true,onPageChange:page=>{if(currentScreen.kind==='lesson'&&currentScreen.lessonId===l.id){currentScreen.workbookPage=page;currentScreen.focusWorkbook=true;}}});
   }else if(foundationLesson(l.id)){
     mountIllustratedWebCourse({container:document.getElementById('webVisualWorkbook'),lesson:l,db,student,uid:me.uid,mountWebWorkspace,initialPage:currentScreen.workbookPage,scrollOnEntry:currentScreen.focusWorkbook===true,onPageChange:page=>{if(currentScreen.kind==='lesson'&&currentScreen.lessonId===l.id){currentScreen.workbookPage=page;currentScreen.focusWorkbook=true;}}});
   }else if(l.course==='web'){
@@ -224,7 +231,7 @@ function teacherBody(){
  for(const [name,id] of Object.entries(tabs))document.getElementById(id)?.classList.toggle('active-tab',tab===name);
  if(tab==='lessons')return lessonManage();if(tab==='students')return studentManage();grades();
 }
-function lessonManage(){let el=document.getElementById('teacherBody');el.innerHTML=`<h2>教材一覧</h2><p class="muted">文章・課題・問題はFirestoreに保存します。画像はGitHubのimagesフォルダへ置き、相対パスを指定してください。</p><div class="actions"><button id="newLesson">新規作成</button><button id="importFoundations" class="ghost">コース① ${WEB_COURSE.lessons.length}教材を非公開で登録</button><button id="publishFoundations" class="ghost">確認済みのコース①をまとめて公開</button><button id="seed" class="ghost">初期教材30件を登録</button><button id="importWeb" class="ghost">HTML第1回教材を登録</button></div><div id="notice"></div><div class="tablewrap"><table><thead><tr><th>コース</th><th>レベル</th><th>順序</th><th>教材</th><th>公開</th><th>操作</th></tr></thead><tbody>${[...lessons].sort((a,b)=>a.course.localeCompare(b.course)||a.level-b.level||(a.order||0)-(b.order||0)).map(l=>`<tr><td>${esc(courses[l.course])}</td><td>${l.level}</td><td>${l.order||0}</td><td>${esc(l.title)}</td><td>${l._template?'見本・未登録':l.published?'公開':'非公開'}</td><td><button class="ghost small" data-edit="${esc(l.id)}">編集</button> ${l._template?'':`<button class="danger small" data-del="${esc(l.id)}">削除</button>`}</td></tr>`).join('')}</tbody></table></div><div id="editor"></div>`;document.getElementById('newLesson').onclick=()=>editLesson();document.getElementById('importFoundations').onclick=()=>manageFoundations('register');document.getElementById('publishFoundations').onclick=()=>manageFoundations('publish');el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editLesson(lessons.find(l=>l.id===b.dataset.edit)));el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{let id=b.dataset.del;if(!confirm('教材と正解データを削除しますか？過去の提出履歴は残ります。'))return;try{await deleteDoc(doc(db,'lessons',id));await deleteDoc(doc(db,'answer_keys',id));await deleteDoc(doc(db,'auto_keys',id));lessons=await loadTeacherLessons();delete keys[id];lessonManage()}catch(e){alert(e.message)}});document.getElementById('seed').onclick=async()=>{if(!confirm('初期教材を未公開で登録しますか？'))return;let out=document.getElementById('notice');out.textContent='登録中…';try{let data=await (await fetch('assets/seed-lessons.json')).json(),n=0;for(let x of data){if(lessons.some(l=>l.id===x.id))continue;let pub={id:x.id,course:x.course,level:x.level,order:10,title:x.title,goal:x.goal,explanation:x.explanation,practice:x.practice,question:x.question,options:x.options||[],imageUrl:'',imageCaption:'',videoUrl:'',published:false};await setDoc(doc(db,'lessons',x.id),pub);await setDoc(doc(db,'answer_keys',x.id),{correct:x.correct,answerExplanation:x.answerExplanation||'',hint:x.hint||''});n++}lessons=await loadTeacherLessons();keys=await loadTeacherKeys();lessonManage();document.getElementById('notice').innerHTML=msg(n+'件を追加しました')}catch(e){out.innerHTML=msg(e.message,true)}}}
+function lessonManage(){let el=document.getElementById('teacherBody');el.innerHTML=`<h2>教材一覧</h2><p class="muted">文章・課題・問題はFirestoreに保存します。画像はGitHubのimagesフォルダへ置き、相対パスを指定してください。</p><div class="actions"><button id="newLesson">新規作成</button><button id="importFoundations" class="ghost">コース① ${WEB_COURSE.lessons.length}教材を非公開で登録</button><button id="publishFoundations" class="ghost">確認済みのコース①をまとめて公開</button><button id="importRoblox" class="ghost">Roblox LEVEL1の8教材を非公開で登録</button><button id="publishRoblox" class="ghost">確認済みのRoblox LEVEL1をまとめて公開</button><button id="seed" class="ghost">初期教材30件を登録</button><button id="importWeb" class="ghost">HTML第1回教材を登録</button></div><div id="notice"></div><div class="tablewrap"><table><thead><tr><th>コース</th><th>レベル</th><th>順序</th><th>教材</th><th>公開</th><th>操作</th></tr></thead><tbody>${[...lessons].sort((a,b)=>a.course.localeCompare(b.course)||a.level-b.level||(a.order||0)-(b.order||0)).map(l=>`<tr><td>${esc(courses[l.course])}</td><td>${l.level}</td><td>${l.order||0}</td><td>${esc(l.title)}</td><td>${l._template?'見本・未登録':l.published?'公開':'非公開'}</td><td><button class="ghost small" data-edit="${esc(l.id)}">編集</button> ${l._template?'':`<button class="danger small" data-del="${esc(l.id)}">削除</button>`}</td></tr>`).join('')}</tbody></table></div><div id="editor"></div>`;document.getElementById('newLesson').onclick=()=>editLesson();document.getElementById('importFoundations').onclick=()=>manageFoundations('register');document.getElementById('publishFoundations').onclick=()=>manageFoundations('publish');document.getElementById('importRoblox').onclick=()=>manageFoundations('register','roblox');document.getElementById('publishRoblox').onclick=()=>manageFoundations('publish','roblox');el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editLesson(lessons.find(l=>l.id===b.dataset.edit)));el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{let id=b.dataset.del;if(!confirm('教材と正解データを削除しますか？過去の提出履歴は残ります。'))return;try{await deleteDoc(doc(db,'lessons',id));await deleteDoc(doc(db,'answer_keys',id));await deleteDoc(doc(db,'auto_keys',id));lessons=await loadTeacherLessons();delete keys[id];lessonManage()}catch(e){alert(e.message)}});document.getElementById('seed').onclick=async()=>{if(!confirm('初期教材を未公開で登録しますか？'))return;let out=document.getElementById('notice');out.textContent='登録中…';try{let data=await (await fetch('assets/seed-lessons.json')).json(),n=0;for(let x of data){if(lessons.some(l=>l.id===x.id))continue;let pub={id:x.id,course:x.course,level:x.level,order:10,title:x.title,goal:x.goal,explanation:x.explanation,practice:x.practice,question:x.question,options:x.options||[],imageUrl:'',imageCaption:'',videoUrl:'',published:false};await setDoc(doc(db,'lessons',x.id),pub);await setDoc(doc(db,'answer_keys',x.id),{correct:x.correct,answerExplanation:x.answerExplanation||'',hint:x.hint||''});n++}lessons=await loadTeacherLessons();keys=await loadTeacherKeys();lessonManage();document.getElementById('notice').innerHTML=msg(n+'件を追加しました')}catch(e){out.innerHTML=msg(e.message,true)}}}
 function editLesson(l=null){
  document.getElementById('notice').after(document.getElementById('editor'));
  requestAnimationFrame(()=>document.getElementById('editor')?.scrollIntoView({behavior:'smooth',block:'start'}));
@@ -371,14 +378,15 @@ async function loadWebWorkspaces(){
  }catch(e){if(target.isConnected)target.innerHTML='<h3>Web制作の学習履歴</h3>'+msg('履歴を取得できません: '+e.message,true)}
 }
 
-async function manageFoundations(action){
+async function manageFoundations(action,course='web'){
  if(!teacher)return;
+ const isRoblox=course==='roblox',catalog=isRoblox?ROBLOX_COURSE:WEB_COURSE,isBundled=isRoblox?robloxLesson:foundationLesson;
  let remote;
  try{remote=await list('lessons');}catch(err){document.getElementById('notice').innerHTML=msg('教材一覧を取得できませんでした：'+err.message,true);return;}
- const candidates=action==='register'?WEB_COURSE.lessons.filter(x=>!remote.some(l=>l.id===x.id)):remote.filter(l=>foundationLesson(l.id)&&!l.published&&!(l.options||[]).length);
+ const candidates=action==='register'?catalog.lessons.filter(x=>!remote.some(l=>l.id===x.id)):remote.filter(l=>isBundled(l.id)&&!l.published&&!(l.options||[]).length);
  if(!candidates.length){document.getElementById('notice').innerHTML=msg(action==='register'?'全教材が登録済みです。既存の内容は変更していません。':'公開する登録済みの記述式教材がありません。選択問題へ変更した教材は個別に編集・保存してください。');return;}
- if(!confirm(action==='register'?`${candidates.length}教材を非公開で登録しますか？既存の教材と学習記録は変更しません。`:`確認済みの${candidates.length}教材を公開しますか？Web開発を受講できる生徒の画面に表示されます。`))return;
- const buttons=[document.getElementById('importFoundations'),document.getElementById('publishFoundations')];buttons.forEach(b=>b.disabled=true);
+ if(!confirm(action==='register'?`${candidates.length}教材を非公開で登録しますか？既存の教材と学習記録は変更しません。`:`確認済みの${candidates.length}教材を公開しますか？${isRoblox?'Roblox':'Web開発'}を受講できる生徒の画面に表示されます。`))return;
+ const buttons=isRoblox?[document.getElementById('importRoblox'),document.getElementById('publishRoblox')]:[document.getElementById('importFoundations'),document.getElementById('publishFoundations')];buttons.forEach(b=>b.disabled=true);
  const out=document.getElementById('notice');let count=0;
  try{
   for(const entry of candidates){
@@ -387,7 +395,7 @@ async function manageFoundations(action){
     if(action==='register'){
      const keyRef=doc(db,'answer_keys',entry.id),keySnap=await tx.get(keyRef);
      if(snap.exists())return;
-     tx.set(ref,courseLessonData(entry));
+     tx.set(ref,isRoblox?robloxLessonData(entry):courseLessonData(entry));
      if(!keySnap.exists())tx.set(keyRef,{answerExplanation:entry.teacherGuide,hint:''});
     }else{
      if(!snap.exists()||snap.data().published||(snap.data().options||[]).length)return;

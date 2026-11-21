@@ -106,7 +106,26 @@ const versions={
   "assets/web-course-visuals/web1-l5-lesson05-preview.png": "e71d0c16ddb6",
   "assets/web-course-visuals/web1-l5-lesson06-code.svg": "078bbeeaad18",
   "assets/web-course-visuals/web1-l5-lesson06-diagram.svg": "ccbd0e8783e2",
-  "assets/web-course-visuals/web1-l5-lesson06-preview.png": "edd06fa2822a"
+  "assets/web-course-visuals/web1-l5-lesson06-preview.png": "edd06fa2822a",
+  "assets/roblox-level1-media/anchor-video.mp4": "0e89401cc0b6",
+  "assets/roblox-level1-media/anchor.png": "de4080d10799",
+  "assets/roblox-level1-media/appearance.png": "8add4bb75ebc",
+  "assets/roblox-level1-media/color.png": "c39d6b9b4a9c",
+  "assets/roblox-level1-media/explorer.jpg": "4c68ffd15e6a",
+  "assets/roblox-level1-media/group.png": "3a726b4133ca",
+  "assets/roblox-level1-media/hierarchy.png": "5004f990a250",
+  "assets/roblox-level1-media/insert.png": "50a3577c3d78",
+  "assets/roblox-level1-media/material.png": "5226e3a9fd24",
+  "assets/roblox-level1-media/move.png": "8d8ca3c475fe",
+  "assets/roblox-level1-media/obby.png": "66f11b7ba0a4",
+  "assets/roblox-level1-media/play.png": "5b72a5ea0841",
+  "assets/roblox-level1-media/properties.jpg": "6a331fec5247",
+  "assets/roblox-level1-media/rotate.png": "c79967d99f1e",
+  "assets/roblox-level1-media/scale.png": "5e2a41389c77",
+  "assets/roblox-level1-media/stop.png": "063aeb4225ff",
+  "assets/roblox-level1-media/studio.jpg": "58a4888c1b0e",
+  "assets/roblox-level1-media/values.png": "2ce4036c0e0f",
+  "assets/roblox-level1-media/viewport.jpg": "f18d45d567f4"
 };
 
 export function assetUrl(value){
