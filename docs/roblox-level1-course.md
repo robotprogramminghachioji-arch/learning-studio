@@ -1,59 +1,70 @@
-# Roblox Studio LEVEL1：最初のオビーを作る
+# Roblox Studio LEVEL1：公式Classic Obbyを改造する
 
-Learning Studioの「Roblox Studio → Lv.1」に、初心者向けの全8教材を追加しています。1教材75分、合計10時間は授業設計上の目安です。導入10分・用語10分・制作35分・比較10分・保存と振り返り10分を想定し、インストールや操作の習熟に応じて分割してください。
+全8教材・各75分・合計10時間の目安です。公式のBuilding curriculumの全4章（Get started／Work with parts／AI Assistant／Test and save）と、Studio・Parts・Explorer・Propertiesの公式解説を、日本語の実習へ組み直しています。画像だけを借りる構成から、公式で扱う操作と制作物を実際に試す構成へ改訂しました。
 
-| 回 | 内容 | 保存する作品 | 時間 |
+## 8回の制作と公式教材の対応
+
+| 回 | 実際に行う制作・実験 | 対応する公式の章 | 保存ファイル |
 | --- | --- | --- | --- |
-| 1 | Studioの準備、公式Classic Obby、カメラ、Explorer、Properties、Play／Stop、保存・再読込 | L1-01-見本.rbxl | 75分 |
-| 2 | 新しいBaseplate、SpawnLocation、Block3個、位置・大きさ・固定・衝突 | L1-02-マイオビー.rbxl | 75分 |
-| 3 | Move／Scale／Rotate、位置・幅・向きを1つずつ変更して比較 | L1-03-マイオビー.rbxl | 75分 |
-| 4 | Color／Material／Transparency、遊びやすい見た目を比較 | L1-04-マイオビー.rbxl | 75分 |
-| 5 | 公式の落下動画、AnchoredとCanCollideを別々に試す | L1-05-マイオビー.rbxl | 75分 |
-| 6 | Duplicate、部品名、足場6個、Modelと子の選択 | L1-06-マイオビー.rbxl | 75分 |
-| 7 | Goal、床を外す前のバックアップ、開始・到着・落下・復活の確認 | L1-07-マイオビー.rbxl | 75分 |
-| 8 | 遊び方、4項目のテスト表、友だちの感想、1か所改善、保存・再読込・発表 | L1-08-完成オビー.rbxl | 75分 |
+| 1 | Classic Obbyを開く、画面配置、カメラ、選択、Play／Stop、仕掛けの観察、保存・再読込 | Get started / Explore UI / Place files | L1-01-公式オビー.rbxl |
+| 2 | 5種類の形、START付近への追加、名前、複数の選択、SizeのX・Y・Zを比較 | Work with parts: Insert parts / Properties | L1-02-公式オビー.rbxl |
+| 3 | Move・Scale・Rotate、3回ずつの着地比較、30°と15°のスナップ、別の角度から確認 | Work with parts: Customize course / Parts: Transform | L1-03-公式オビー.rbxl |
+| 4 | 公式の落下動画、固定と衝突の3条件、Stop後の状態、Test・Test Here・Run | Work with parts: Anchor platforms / Testing modes | L1-04-公式オビー.rbxl |
+| 5 | Color一覧、画像と同じRGB、同じ色・形でSmoothPlastic／Neon比較、透明度と衝突 | Parts: Color / Material / Properties | L1-05-公式オビー.rbxl |
+| 6 | Duplicate、3つの足場の周回、Modelの親子、検索と解除、全体テスト | Explorer / Models / Test and save | L1-06-公式オビー.rbxl |
+| 7 | GlitterPart、公式と同じAssistantの依頼、変更先確認、接触の3状態、手動Scriptの補助 | AI Assistant / Sparkles API | L1-07-公式オビー.rbxl |
+| 8 | 5項目のテスト表、他者のプレイ、1か所改善、保存と再読込、Publishの位置付け、発表 | Test and save / Place files | L1-08-完成オビー.rbxl |
 
-第1回は公式見本を使い、第2回から別の新規作品を制作します。以降は前回ファイルを開いて続きを作ります。`.rbxlx`で保存した場合も、その形式のまま使えます。PCの保存先を先生と決め、授業前に前回の作品を開けるか確認してください。
+公式見本の既存コースは残し、STARTの近くへ自分の枝道を作ります。第6回にSTART→足場01→02→03→STARTの周回へ整え、第7回に足場01をGlitterPartへ改名して光る仕掛けを付けます。最終回は見本から追加・改造した箇所と、元からあった仕掛けを区別して発表します。
 
-## 授業と登録・公開
+各回4つの実習ページ、合計32ページです。用語だけ・導入だけのページは置かず、各ページに2つ以上の具体的な制作課題、番号付き操作、操作後の結果、記録することを掲載しています。全体で193の番号付き操作があります。1回75分は授業設計上の想定で、実際の生徒の所要時間を測った値ではありません。インストールや操作習熟に応じて分割してください。
 
-先生がホームから8教材をプレビューできます。「先生用管理 → 教材・問題管理 → Roblox LEVEL1の8教材を非公開で登録」で不足分を登録し、確認後に「確認済みのRoblox LEVEL1をまとめて公開」で生徒の一覧へ表示します。新しいID `roblox-studio-l1-lesson01`〜`08` を使い、既存の `roblox-1` 等は補助教材として残します。既存原稿・問題・公開設定・採点基準を登録処理で上書きしません。生徒には既存の受講権限と公開設定が適用されます。
+## 画像と手順を対応させる方針
 
-各教材は「ゴールと準備 → 用語 → 操作① → 操作②・比較 → テスト・保存・振り返り」の5ページです。同じページの本文からチェック項目を作り、上部と下部のページ送りを同期します。公式画像は100〜200%に拡大でき、原本を超える解像度の補間は行いません。印刷では全5学習セクションを説明量に応じた枚数で出力します。
+- 同じ画像・動画を複数のページへ再掲しません。全体画面は第1回で一度だけ使い、その後は操作に必要なボタン・入力欄・操作結果の画像を使います。
+- 各画像は該当する制作課題の中に置き、「画像で見る場所」で何を見る画像かを説明します。ページの飾りや共通のアイキャッチとしては使用しません。
+- Sizeの画像の4,10,2、RGBの画像の255,0,40は実際に同じ値を入力する実験にしています。変更後の値は別の試行として区別します。
+- Partやテストの画像がメニューを開く前の状態なら、その状態とボタン位置を説明します。表示されていない選択肢を画像にあるかのようには案内しません。
+- 広いツールバーは原本を変更せず、ブラウザの表示枠で操作部分へ寄せて拡大します。横へ動かすと周囲も見られます。表示倍率変更時も操作箇所を初期表示します。
+- 公式画像のサンプル名と自分の作品名が異なる構造の説明では、両方の名前と対応を明記します。架空のStudio画面や生成画像は使用しません。
 
-WindowsまたはMacのRoblox Studioで制作します。スマホは教材閲覧用です。LEVEL1はコードを必須にせず、Goalへの到着を遊び方で定義します。自動クリア判定・チェックポイントのスクリプトはまだありません。LEVEL2〜5の内容は学習予定として明示し、今回の実装には含めません。
+改訂で27点の公式原本画像を追加し、再掲や用途が合わなかった10点を外しました。現在は35画像・1MP4動画（約3秒）を同梱し、第7回には公式章に掲載されたYouTube実演へのリンクも置いています。これは現在公開されている公式資料の原本で、制作環境でStudioを新規に撮影した画像ではありません。
 
-作品保存はStudioのFile → Save to File／Download a Copyで行います。Learning Studioの回答提出は操作結果・予想との比較・保存ファイル名を先生へ送る記述式です。作品の自動取得・アップロードは行いません。先生は実作品を見て、保存済みの採点基準で回答を確認してください。インターネットへの公開はLEVEL1の必須課題に含めません。
+## 公式出典と権利表示
 
-先生が通常編集画面で変えた説明・課題は「先生の原稿」に表示します。番号付きの標準手順・画像・チェックを編集する場合は、`assets/roblox-course.json` の各ステップを変更します。確認問題は現在保存されている問題を表示・印刷します。
+- [Get started：見本・画面・再生と停止](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/get-started)
+- [Work with parts：形・位置・大きさ・回転・固定](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/work-with-parts)
+- [AI Assistant：GlitterPartへ光る仕掛けを追加・検証](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/code-with-assistant)
+- [Test and save：テスト・Robloxへの保存](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/test-and-save)
+- [Studioの画面](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/studio/explore-ui)・[Parts](https://create.roblox.com/docs/parts)・[Explorer](https://create.roblox.com/docs/studio/explorer)・[Properties](https://create.roblox.com/docs/studio/properties)・[Models](https://create.roblox.com/docs/parts/models)
+- [Testing modes](https://create.roblox.com/docs/studio/testing-modes)・[Place files](https://create.roblox.com/docs/projects/place-files)・[Sparkles API](https://create.roblox.com/docs/reference/engine/classes/Sparkles)
+- [公式章掲載のAssistant実演動画](https://www.youtube.com/watch?v=PqB6DC_kxHM)
 
-## 本物の画像・動画と出典
+Roblox Corporationの公開資料を参照しています。素材ごとの原本URL・出典ページ・取得日・参照リビジョン・実寸・バイト数・SHA-256を [roblox-media.json](../assets/roblox-media.json) に記録しています。「Roblox公式の原本・出典」から作者、CC BY 4.0、原本リンクを開け、印刷時は権利表示も展開します。元の画像・映像のバイト列は変更していません。公式のリポジトリは [Roblox/creator-docs](https://github.com/Roblox/creator-docs) です。
 
-画像18点・MP4動画1点（約3秒）は、Roblox Corporationが公開するCreator Hubの実画面・操作画像・実演の原本です。生成画像や架空のStudio画面を使わず、画素・音声・映像の加工をしていません。公式操作例と自分の制作物の配置・色・設定値は異なるため、入力には本文の指定値を使うと教材内に案内しています。
+[CC BY 4.0の本文](../assets/roblox-level1-media/LICENSE-CC-BY-4.0.txt) と [公式コードのMITライセンス](../assets/roblox-level1-media/LICENSE-CODE-MIT.txt) を収録しています。第7回の手動コードは公式の課題を基に、親の部品・SparkleColor・接触中の体の部品の記録を使って再現する教材用コードです。コード欄で公式APIとライセンスを参照できます。公式教材そのものの翻訳版・認定コースを名乗るものではありません。
 
-- [Studioの画面を知る](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/studio/explore-ui)
-- [Classic Obbyから始める](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/get-started)
-- [パーツで作る・固定の落下実演](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/work-with-parts)
-- [テストと保存](https://create.roblox.com/docs/ja-jp/tutorials/curriculums/building/test-and-save)
-- [パーツと移動・拡大・回転](https://create.roblox.com/docs/parts)
-- [Propertiesの入力欄・色の設定](https://create.roblox.com/docs/studio/properties)
-- [材質](https://create.roblox.com/docs/parts/materials)・[Model](https://create.roblox.com/docs/parts/models)
-- [ファイルとして保存する](https://create.roblox.com/docs/projects/place-files)
+## 登録済み教材の更新と先生の運用
 
-素材ごとの原本URL・掲載ページ・作者・権利表示・変更なしの表示・SHA-256・実寸・バイト数は [roblox-media.json](../assets/roblox-media.json) に記録しています。画面と印刷物でも出典、Roblox Corporation、CC BY 4.0、原本リンクを表示します。[配布元リポジトリ](https://github.com/Roblox/creator-docs) の [CC BY 4.0](https://github.com/Roblox/creator-docs/blob/main/LICENSE) に基づき引用・再配布し、ライセンス本文を [素材フォルダー](../assets/roblox-level1-media/LICENSE-CC-BY-4.0.txt) に収録しています。Robloxの公式教材そのものの翻訳・認定コースを名乗るものではなく、公式資料を参照した独自の日本語授業手順です。
+教材ID `roblox-studio-l1-lesson01`〜`08` を維持します。先生のホームから見本を開き、未登録なら管理画面の「Roblox LEVEL1の8教材を非公開で登録」、確認後に「確認済みのRoblox LEVEL1をまとめて公開」を使います。受講権限と公開設定は従来どおりです。既存の `roblox-1` なども補助教材として残します。
 
-## 更新・検証
+登録済みなら再登録は不要です。以前の標準文を `assets/roblox-course-legacy-text.json` に保存し、タイトル・目標・解説・課題・問題・時間がその標準文と一致する場合だけ、表示時に新版へ切り替えます。項目ごとに照合し、先生が独自に変えた文章・問題を保持します。読み替えだけでFirestoreへは書き込みません。先生の文章は「先生の原稿」に表示し、番号付きの実習は新版の標準手順として示します。
 
-本文原稿は `assets/roblox-course.json`、素材台帳は `assets/roblox-media.json`、生成モジュールは `assets/roblox-course-data.js` です。標準の説明・実践課題の文章にも同じ手順を掲載します。更新後は `npm run version:assets`、`npm test` を実行します。素材の原本ハッシュ・バイト数とローカルファイルが違う場合は生成チェックで失敗します。
+以前のBaseplate作品は別名で保存し、第1回の公式見本から今回の制作ファイルを作ってください。旧5ページ版の閲覧位置はそのまま新4ページへ流用せず、新版の最初から始めます。新版の位置は同じ端末で復元できます。過去の提出は削除しません。
 
-ブラウザテストではPC・スマホの全8教材×5ページ、画像の実読込、動画の実再生、ページとチェックの対応、320px・375px・横向きの操作と拡大、ヘルプ往復、提出・下書き保持、登録・公開・権限、全8教材の実PDF出力を検証します。Firebase通信だけを代替し、本番データへ書き込みません。
+上部と下部の矢印は教材内の移動、下の「次の教材の1ページ目へ」は次の回です。最終ページで記述式の回答を提出します。Studioの作品はPCへ保存し、Learning Studioには操作結果と考察を送ります。作品ファイルのアップロード機能はありません。クラウドへのPublishと、誰が遊べるかを決める一般公開の設定は別で、先生が授業に合わせて扱います。
 
-このLinux検証環境ではWindows／Mac専用のRoblox Studioを実行できないため、本文の設定値による実作品の制作・ジャンプ距離・復活・ファイル保存はネイティブStudioでの確認が必要です。授業前に先生のPCで次を確かめてください。
+## 検証範囲と授業前の確認
 
-1. 公式見本をEdit in Studioで開き、Explorer／Properties、Test／Stop、保存・再読込が使える。
-2. 第2〜7回の値で新規Baseplateから制作し、足場01〜06とGoalへ渡れる。難しい場合は教材の手順に沿って幅・間隔を1か所ずつ調整する。
-3. 第5回の固定／衝突の実験を行い、Stopで位置が戻ることと、最後に両方オンへ戻すことを確認する。
-4. 第7回でBaseplateだけを外し、落下・復活と最初からの再テストを確認する。
-5. 完成ファイルを再読込して遊び、先生・友だちが説明だけで操作できるか確かめる。
+ブラウザではPC・スマホの全8教材×4ページ、画像の実読込・操作ごとの対応・再掲なし、ページ送り、320px・375px・横向き、拡大時の操作箇所、動画再生と退出時停止、ヘルプ往復、提出・下書き、登録公開、旧標準文の読み替えと独自編集・提出の保持を検証します。全8教材をPDFへ出力し、比較表・コード・説明・権利表示が含まれることも確認します。Firebase通信境界はテストで代替し、本番データへ書き込みません。スマホはChromiumのエミュレーションです。
 
-設定値は授業用の出発点で、全アバター・Studio版でのプレイを保証する値ではありません。ネイティブ操作の実測とブラウザ側の検証範囲を区別します。
+このLinux環境ではWindows／Mac専用のRoblox Studioを起動できないため、以下は先生のPCで授業前に確認してください。
+
+1. 公式見本のEdit in Studio、Explorer／Properties、Play／Stop、PCへの保存と再読込。
+2. 自分の追加部品と、元の見本の部品を選び分けられること。ジャンプは実際のアバターで試し、幅と間隔を調整すること。
+3. AnchoredとCanCollideの別々の実験、Stopでの復帰、最後の設定の復元。
+4. 3つの足場の周回、MyCourseの親子、検索の解除。
+5. Assistantの利用可否。使えない場合の手動Scriptの挿入先と、光の3状態・2周の結果。コードの全暗記は求めず、対象・条件・検証を重視すること。
+6. 完成ファイルの再読込、他の人によるプレイ、改善後の再テスト、教室でのクラウド保存と公開範囲の扱い。
+
+本文原稿は `assets/roblox-course.json`、素材台帳は `assets/roblox-media.json`、表示は `assets/roblox-reader.js` です。更新後に `npm run version:assets` と `npm test` を実行します。生成チェックは原本ハッシュ、素材の重複、画像の注目箇所、手順と標準文、授業時間、記録表の構造も確認します。生成物もコミットするため、GitHub Pagesで追加ビルドは不要です。

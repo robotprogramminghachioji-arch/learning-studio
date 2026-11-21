@@ -1,19 +1,31 @@
-import {ROBLOX_COURSE} from './roblox-course-data.js?v=2accacdfab74';
+import {ROBLOX_COURSE,ROBLOX_PREVIOUS_TEXT} from './roblox-course-data.js?v=2ce03f7ced7f';
 export {ROBLOX_COURSE};
 export const robloxLesson=id=>ROBLOX_COURSE.lessons.find(lesson=>lesson.id===id);
+// Upgrade only exact previous standard fields, at read time. Teacher edits,
+// publication flags, IDs and existing submissions stay in Firestore unchanged.
+export function refreshRobloxText(remote){
+ const current=robloxLesson(remote.id),previous=ROBLOX_PREVIOUS_TEXT[remote.id];
+ if(!current||!previous)return remote;
+ const next={...remote};
+ for(const field of ['title','goal','explanation','practice','question','duration']){
+  if(field==='question'&&(remote.options||[]).length)continue;
+  if(remote[field]===previous[field])next[field]=current[field];
+ }
+ return next;
+}
 export function robloxLessonData(entry){
  const {id,course,level,order,title,goal,explanation,practice,question,duration,options,imageUrl,imageCaption,videoUrl,pdfUrl}=entry;
  return {id,course,level,order,title,goal,explanation,practice,question,duration,options,imageUrl,imageCaption,videoUrl,pdfUrl,published:false};
 }
 export function withRobloxTemplates(remote){
  const ids=new Set(remote.map(lesson=>lesson.id));
- return [...remote,...ROBLOX_COURSE.lessons.filter(lesson=>!ids.has(lesson.id)).map(lesson=>({...robloxLessonData(lesson),_template:true}))];
+ return [...remote.map(refreshRobloxText),...ROBLOX_COURSE.lessons.filter(lesson=>!ids.has(lesson.id)).map(lesson=>({...robloxLessonData(lesson),_template:true}))];
 }
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function robloxLevelIntro(){
- return `<div class="web-level-intro"><span class="pill">全8教材 / 各75分 / 合計10時間</span><h2>Studioを操作して、最初のゲームを作る</h2><p>第1回は公式の見本で操作を試し、第2回から自分のオビー（足場をジャンプして進むゲーム）を作ります。第3〜8回は保存した作品を開いて続きを制作します。</p><p>制作にはWindowsまたはMacのRoblox Studioを使います。この画面は画像・動画付きの手順書です。スマホでは教材を読み、制作はPCで進めてください。</p><details><summary>LEVEL1の8回と、次の学習予定</summary><ol>${ROBLOX_COURSE.lessons.map(l=>`<li>${esc(l.title)}（75分）</li>`).join('')}</ol><p>LEVEL2：短いLuauコード、LEVEL3：触れる・動く仕掛け、LEVEL4：コイン・GUI・通信、LEVEL5：オリジナルゲームの制作と発表へ進む予定です。今回はLEVEL1の8教材を用意しています。</p></details></div>`;
+ return `<div class="web-level-intro"><span class="pill">公式Classic Obbyを改造 / 全8教材 / 各75分・合計10時間</span><h2>見本を遊び、足場と仕掛けを作って確かめる</h2><p>公式の「Get started → Work with parts → AI Assistant → Test and save」に沿って進めます。自分で追加した周回コースを作り、触れると光る仕掛けを付け、テストと改善を行います。</p><p>各教材は4つの実習ページです。各ページでStudioを操作し、画像の見る場所、操作後の結果、比較実験、記録することを確認します。制作はWindows／MacのRoblox Studio、スマホは手順の閲覧に使います。</p><p class="notice">教材を改訂しました。以前のBaseplate作品は別名で保管し、第1回の公式見本から新しい制作ファイルを用意してください。登録済みの標準文は新版で表示し、先生の独自編集と提出履歴は保持します。</p><details><summary>LEVEL1の8回と次の学習予定</summary><ol>${ROBLOX_COURSE.lessons.map(l=>`<li>${esc(l.title)}（75分）</li>`).join('')}</ol><p>LEVEL2：Luauの読み書き、LEVEL3：動く仕掛け、LEVEL4：GUI・通信、LEVEL5：オリジナルゲームと発表へ進む予定です。今回はLEVEL1の8教材です。</p></details></div>`;
 }
 export function robloxLessonIntro(lesson){
- if(!robloxLesson(lesson.id))return '';
- return `<div class="web-lesson-meta"><p><strong>目安時間：</strong>${esc(lesson.duration||'75分')} ／ <strong>制作場所：</strong>PCのRoblox Studio</p><p>完成目標を読む → 道具を知る → Studioで操作する → 予想と結果を比べる → 保存・振り返り、の順に進めます。</p>${lesson._template?'<p class="notice">先生用の教材見本です。管理画面から非公開で登録し、確認後に公開すると、Robloxを受講できる生徒の一覧に表示されます。</p>':''}</div>`;
+ const source=robloxLesson(lesson.id);if(!source)return '';
+ return `<div class="web-lesson-meta"><p><strong>目安：</strong>${esc(lesson.duration||'75分')} ／ 全${source.pages.length}実習ページ ／ 制作はPCのRoblox Studio</p><p><strong>今回の制作：</strong>${esc(source.project)}</p>${lesson._template?'<p class="notice">先生用見本です。管理画面から非公開登録し、確認後に公開すると、Robloxを受講できる生徒の一覧に表示されます。</p>':''}</div>`;
 }
