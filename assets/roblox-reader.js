@@ -1,6 +1,6 @@
-import {ROBLOX_MEDIA,ROBLOX_COURSE} from './roblox-course-data.js?v=b9519c53799c';
-import {robloxLesson} from './roblox-course.js?v=2676c2c189af';
-import {assetUrl} from './asset-versions.js?v=ec490c3eda08';
+import {ROBLOX_MEDIA,ROBLOX_COURSE} from './roblox-course-data.js?v=37b0fd0dfe39';
+import {robloxLesson} from './roblox-course.js?v=ab0064519788';
+import {assetUrl} from './asset-versions.js?v=fc2d4c08e156';
 import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const list=items=>`<ol class="roblox-instructions">${items.map(text=>`<li>${esc(text)}</li>`).join('')}</ol>`;

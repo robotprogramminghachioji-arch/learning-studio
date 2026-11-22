@@ -1,4 +1,4 @@
-import {ROBLOX_COURSE,ROBLOX_PREVIOUS_TEXT} from './roblox-course-data.js?v=b9519c53799c';
+import {ROBLOX_COURSE,ROBLOX_PREVIOUS_TEXT} from './roblox-course-data.js?v=37b0fd0dfe39';
 export {ROBLOX_COURSE};
 export const robloxLesson=id=>ROBLOX_COURSE.lessons.find(lesson=>lesson.id===id);
 // Upgrade only exact previous standard fields, at read time. Teacher edits,

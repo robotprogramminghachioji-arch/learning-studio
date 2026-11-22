@@ -1546,7 +1546,7 @@ test('Roblox unavailable media provide genuine source links and do not block pag
  const course=await robloxData(),page=await openStudio(t,{role:'teacher',startAtHome:true});
  await page.route('**/roblox-level1-media/**',r=>r.fulfill({status:404,body:''}));await openRobloxLesson(page,course.lessons[0]);
  await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent.includes('画像を読み込めません'));
- await page.locator('#robloxPageSelect').selectOption('4');assert.equal(await page.locator('#robloxMediaStatus').textContent(),'');
+ await page.locator('#robloxPageSelect').selectOption('4');await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent==='');
  await openRobloxLesson(page,course.lessons[3]);
  await page.waitForFunction(()=>document.querySelector('#robloxMediaStatus').textContent.includes('動画を再生できません'));
  const original=page.locator('[data-media="anchor-video"] .roblox-origin a').nth(2);

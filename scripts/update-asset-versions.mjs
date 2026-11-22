@@ -6,6 +6,24 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const check=process.argv.includes('--check');
 const hash=content=>createHash('sha256').update(content).digest('hex').slice(0,12);
+function imageDimensions(bytes){
+  if(bytes.readUInt32BE(0)===0x89504e47)return {width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)};
+  if(bytes[0]===0xff&&bytes[1]===0xd8){
+    const frameMarkers=new Set([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf]);
+    let offset=2;
+    while(offset+9<bytes.length){
+      if(bytes[offset]!==0xff){offset++;continue;}
+      const marker=bytes[offset+1];offset+=2;
+      if(marker===0xd8||marker===0xd9||marker===0x01||(marker>=0xd0&&marker<=0xd7))continue;
+      if(offset+2>bytes.length)break;
+      const length=bytes.readUInt16BE(offset);
+      if(length<2||offset+length>bytes.length)break;
+      if(frameMarkers.has(marker))return {width:bytes.readUInt16BE(offset+5),height:bytes.readUInt16BE(offset+3)};
+      offset+=length;
+    }
+  }
+  throw Error('Unsupported screenshot image format');
+}
 const outputs=new Map(),completed=new Map();
 const versions={};
 const modelSource=await readFile(path.join(root,'assets/workbook-model.js'),'utf8');
@@ -86,7 +104,8 @@ for(const [id,media] of Object.entries(studioRobloxMedia)){
   if(!usedStudioMedia.has(id)||media.kind!=='studio'||!file.startsWith('assets/roblox-studio-media/')||media.file!==file||!media.caption?.trim())throw Error('Invalid Studio screenshot source: '+media.file);
   const bytes=await readFile(path.join(root,file));
   const sha256=createHash('sha256').update(bytes).digest('hex');
-  if(bytes.length!==media.bytes||sha256!==media.sha256||bytes.readUInt32BE(16)!==media.width||bytes.readUInt32BE(20)!==media.height)throw Error('Studio screenshot differs from its recorded image: '+file);
+  const dimensions=imageDimensions(bytes);
+  if(bytes.length!==media.bytes||sha256!==media.sha256||dimensions.width!==media.width||dimensions.height!==media.height)throw Error('Studio screenshot differs from its recorded image: '+file);
   if(mediaHashes.has(sha256))throw Error('Repeated image in Roblox lessons: '+file);
   mediaHashes.add(sha256);
 }

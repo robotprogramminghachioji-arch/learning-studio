@@ -143,6 +143,15 @@ const versions={
   "assets/roblox-level1-media/test-modes.png": "65f5590da073",
   "assets/roblox-level1-media/transform-toolbar.png": "e4992d20c891",
   "assets/roblox-level1-media/values.png": "2ce4036c0e0f",
+  "assets/roblox-studio-media/l1-01-save-menu.jpg": "c54f62a560ec",
+  "assets/roblox-studio-media/l1-02-size-values.jpg": "d3ac46492a3f",
+  "assets/roblox-studio-media/l1-03-move-gizmo.jpg": "b5de9eed7d07",
+  "assets/roblox-studio-media/l1-03-rotate-gizmo.jpg": "4082494f25c2",
+  "assets/roblox-studio-media/l1-03-scale-gizmo.jpg": "ce70732cf24e",
+  "assets/roblox-studio-media/l1-04-cancollide-off.jpg": "f53d9df23659",
+  "assets/roblox-studio-media/l1-04-test-play-character.jpg": "cf9e7235ce34",
+  "assets/roblox-studio-media/l1-05-transparency-05.jpg": "8ced14a8c0c9",
+  "assets/roblox-studio-media/l1-06-duplicate-overlap.jpg": "2a140faa8136",
   "assets/roblox-studio-media/l1-06-footing02-properties.png": "4a0d5ec0ce46"
 };
 
