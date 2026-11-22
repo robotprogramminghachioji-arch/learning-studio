@@ -1,0 +1,92 @@
+{
+  "studio-l1-06-footing02-properties": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-06-footing02-properties.png",
+    "caption": "Roblox StudioのデモPlace1で足場01と足場02を作成し、Explorerで足場02を選んだ画面。PropertiesのAnchoredがオンになっています。",
+    "width": 1920,
+    "height": 1020,
+    "bytes": 1035010,
+    "sha256": "4a0d5ec0ce465df7951710e95301a3bd5b449361c126d4a57e8f9ba7e31d5141"
+  },
+  "studio-l1-01-save-menu": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-01-save-menu.jpg",
+    "caption": "Studioの「ファイル」メニューを開いた画面。「名前をつけてファイルに保存」を選ぶ場所を示しています。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 134707,
+    "sha256": "c54f62a560ecc55e6a51036ca90bf2262c9c123b867e689ffb0664789129a9bf"
+  },
+  "studio-l1-02-size-values": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-02-size-values.jpg",
+    "caption": "別デモPlace1の選択中PartでPropertiesのSizeを展開した画面。右側にX=10、Y=1、Z=10が見えます。サイズ入力欄の場所と入力後の形の例です。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 123324,
+    "sha256": "d3ac46492a3fdf49e80672caf04a9f94775b9f7fed461c2f0024cad30a1778c7"
+  },
+  "studio-l1-03-move-gizmo": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-03-move-gizmo.jpg",
+    "caption": "別デモPlace1で足場02を選び、上部のMoveを押した画面。3Dビューに赤・緑・青の移動矢印が出ています。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 122500,
+    "sha256": "b5de9eed7d0787231485299baedff57db0f5737dde4b741462cf2f832e5a9619"
+  },
+  "studio-l1-03-scale-gizmo": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-03-scale-gizmo.jpg",
+    "caption": "別デモPlace1で足場02を選び、上部のScaleを押した画面。部品の周囲に大きさを変える色付きハンドルが出ています。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 118972,
+    "sha256": "ce70732cf24e5bf1494511c611428e84c577fb575bc792b1b5cd0ed3697dd5d3"
+  },
+  "studio-l1-03-rotate-gizmo": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-03-rotate-gizmo.jpg",
+    "caption": "別デモPlace1で足場02を選び、上部のRotateを押した画面。部品の周囲に赤・緑・青の回転リングが出ています。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 121854,
+    "sha256": "4082494f25c2190bffb3648c589db4824c00fc97f71e1e6169f56077a6ff42f8"
+  },
+  "studio-l1-04-cancollide-off": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-04-cancollide-off.jpg",
+    "caption": "別デモPlace1で足場02を選び、Properties検索欄にCanCollideと入力した画面。CanCollideのチェックを外した状態です。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 119085,
+    "sha256": "f53d9df23659a1a52a8ab414671ca10a8cddd4e92c44b905e6133598b46aa912"
+  },
+  "studio-l1-04-test-play-character": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-04-test-play-character.jpg",
+    "caption": "別デモPlace1でPlayを押し、ゲーム画面にキャラクターが出た実画面です。Play後にキャラクターを操作する状態の例で、Classic Obby本体の画面ではありません。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 111342,
+    "sha256": "cf9e7235ce34c99b2c00cfeeeb808bd22ad183837552f7ade7ca0e8c40e9e1ad"
+  },
+  "studio-l1-05-transparency-05": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-05-transparency-05.jpg",
+    "caption": "別デモPlace1で足場02を選び、Properties検索欄にTransparencyと入力して0.5を表示した画面です。選択した足場が半透明になっています。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 119547,
+    "sha256": "8ced14a8c0c9ead018571a5e9fd9ba3cb737b63a930a32d790b0194c3ccc8079"
+  },
+  "studio-l1-06-duplicate-overlap": {
+    "kind": "studio",
+    "file": "assets/roblox-studio-media/l1-06-duplicate-overlap.jpg",
+    "caption": "別デモPlace1で足場02を複製した直後の画面です。Explorerでは同名の複製行が選択され、3Dビューでは複製が元の足場に重なっています。次に名前を変えてから移動します。",
+    "width": 1536,
+    "height": 816,
+    "bytes": 118602,
+    "sha256": "2a140faa81360eaea60ca86e9046cc094a7cfa20ee9fc164ca21842aa78a01f2"
+  }
+}

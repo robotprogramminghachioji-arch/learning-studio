@@ -1,6 +1,6 @@
 # ブラウザ回帰テスト
 
-Roblox LEVEL1の追加テストは `node --test --test-name-pattern='Roblox' tests/learning-studio.browser.cjs` で実行できます。元の公式素材の実寸確認に `ffprobe` を使います。PC・モバイルで8教材×5ページの本文・チェック・前後移動、画像読込、実動画のメタデータと再生、320px・375px・横向き・200%拡大、ヘルプ往復、記述式提出・未提出回答、教材の切り替えと戻る、先生の非公開登録・既存原稿保持・失敗後の再試行・公開・受講権限を検証します。全8教材をPDFへ出力し、公式素材のSHA-256・形式・寸法も確認します。スクリーンショットとPDFは `/tmp/roblox-*` へ出力します。スマホはChromiumのタッチエミュレーションです。Windows／Mac専用のRoblox Studio本体はLinuxでは実行しておらず、ネイティブ制作の確認事項は [授業前のチェック](../docs/roblox-level1-course.md#更新検証) を参照してください。
+Roblox LEVEL1は `node --test --test-name-pattern='Roblox' tests/learning-studio.browser.cjs` で検証できます。原本の実寸確認に `ffprobe` を使います。PC・スマホで8教材×4実習ページの操作・画像の見る場所・チェック・前後移動・原本の一度だけの使用を確認し、320px・375px・横向き・200%拡大・操作箇所への初期表示・動画の実再生と退出時停止・ヘルプ往復・提出・下書き・登録公開・失敗再試行・権限・全8教材のPDF出力を検証します。先生と生徒の双方で、以前の標準文だけが新版へ切り替わり、先生の独自編集・公開状態・既存提出・Firestoreの原稿が変わらないことも確認します。形のギャラリー・記録表・Luau全文とコピー、遅延画像、旧5ページ版の位置キャッシュも対象です。画像とPDFは `/tmp/roblox-v2-*` に出力します。スマホはChromiumのエミュレーションで、Windows／Mac専用のStudio本体の操作はLinuxで実行していません。授業前のネイティブ確認は [教材案内](../docs/roblox-level1-course.md#検証範囲と授業前の確認) を参照してください。
 
 Node.js 20以上とChromiumを使用します。アプリ自体にはnpm依存もビルドも不要です。npm依存はテスト専用です。
 

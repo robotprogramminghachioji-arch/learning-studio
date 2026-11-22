@@ -1,9 +1,9 @@
 import {WEB_VISUALS} from './web-visual-data.js?v=75b0ec66910e';
-import {assetUrl} from './asset-versions.js?v=81ac5b5dc66c';
-import {foundationLesson} from './web-course.js?v=2663251d6dca';
-import {mountFloatingEditor} from './floating-editor.js?v=5b7434c51c8f';
-import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
-import {guidePageHtml} from './web-course-guide.js?v=946d2e956ac4';
+import {assetUrl} from './asset-versions.js?v=fc2d4c08e156';
+import {foundationLesson} from './web-course.js?v=be177bdf308e';
+import {mountFloatingEditor} from './floating-editor.js?v=b65cb3698b73';
+import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';
+import {guidePageHtml} from './web-course-guide.js?v=28eaa79d59ed';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const titles=['完成見本を見てみよう','しくみを図で見よう','この部分を変えてみよう','つくって、確かめよう','振り返りと確認問題'];
 function practiceItems(lesson){
