@@ -43,9 +43,12 @@ for(const lesson of course.lessons){
 }
 outputs.set('assets/web-course-guide-data.js','// Generated from web-course-guides.json and web-course-legacy-text.json.\nexport const WEB_GUIDES='+JSON.stringify(beginnerGuides,null,2)+';\nexport const PREVIOUS_WEB_TEXT='+JSON.stringify(previousText,null,2)+';\n');
 const roblox=JSON.parse(await readFile(path.join(root,'assets/roblox-course.json'),'utf8'));
-const robloxMedia=JSON.parse(await readFile(path.join(root,'assets/roblox-media.json'),'utf8'));
+const officialRobloxMedia=JSON.parse(await readFile(path.join(root,'assets/roblox-media.json'),'utf8'));
+const studioRobloxMedia=JSON.parse(await readFile(path.join(root,'assets/roblox-studio-media.json'),'utf8'));
+if(Object.keys(studioRobloxMedia).some(id=>officialRobloxMedia[id]))throw Error('Studio screenshot IDs must be unique');
+const robloxMedia={...officialRobloxMedia,...studioRobloxMedia};
 if(roblox.lessons.length!==8)throw Error('Roblox LEVEL1 needs eight lessons');
-const robloxIds=new Set(),usedRobloxMedia=new Set();
+const robloxIds=new Set(),usedRobloxMedia=new Set(),usedStudioMedia=new Set();
 const previousRobloxText=JSON.parse(await readFile(path.join(root,'assets/roblox-course-legacy-text.json'),'utf8'));
 for(const lesson of roblox.lessons){
   if(robloxIds.has(lesson.id)||lesson.course!=='roblox'||lesson.level!==1||lesson.duration!=='75分'||lesson.published!==false||lesson.options.length||lesson.revision!==2||lesson.pages.length<4)throw Error('Invalid Roblox lesson: '+lesson.id);
@@ -61,6 +64,7 @@ for(const lesson of roblox.lessons){
         if(!robloxMedia[media.id]||!media.look?.trim())throw Error('Missing image or viewing guide: '+media.id);
         if(usedRobloxMedia.has(media.id))throw Error('Repeated media in Roblox lessons: '+media.id);
         usedRobloxMedia.add(media.id);
+        if(studioRobloxMedia[media.id])usedStudioMedia.add(media.id);
       }
     }
     if(page.table?.rows.some(row=>row.length!==page.table.headers.length))throw Error('Invalid observation table: '+lesson.id);
@@ -68,7 +72,7 @@ for(const lesson of roblox.lessons){
   }
 }
 const mediaHashes=new Set();
-for(const [id,media] of Object.entries(robloxMedia)){
+for(const [id,media] of Object.entries(officialRobloxMedia)){
   const file=path.posix.normalize(media.file);
   if(!usedRobloxMedia.has(id)||!file.startsWith('assets/roblox-level1-media/')||media.file!==file||new URL(media.originalUrl).hostname!=='prod.docsiteassets.roblox.com'||new URL(media.sourceUrl).hostname!=='create.roblox.com'||!/^[a-f0-9]{40}$/.test(media.sourceRevision))throw Error('Invalid official Roblox source: '+media.file);
   if(media.viewWidth&&(!(media.viewWidth>0)||media.viewWidth>media.width||!(media.focusX>=0&&media.focusX<=1)))throw Error('Invalid initial image focus: '+file);
@@ -76,6 +80,15 @@ for(const [id,media] of Object.entries(robloxMedia)){
   if(bytes.length!==media.bytes||createHash('sha256').update(bytes).digest('hex')!==media.sha256)throw Error('Official media differs from its recorded original: '+file);
   if(mediaHashes.has(media.sha256))throw Error('Same original stored twice: '+file);
   mediaHashes.add(media.sha256);
+}
+for(const [id,media] of Object.entries(studioRobloxMedia)){
+  const file=path.posix.normalize(media.file);
+  if(!usedStudioMedia.has(id)||media.kind!=='studio'||!file.startsWith('assets/roblox-studio-media/')||media.file!==file||!media.caption?.trim())throw Error('Invalid Studio screenshot source: '+media.file);
+  const bytes=await readFile(path.join(root,file));
+  const sha256=createHash('sha256').update(bytes).digest('hex');
+  if(bytes.length!==media.bytes||sha256!==media.sha256||bytes.readUInt32BE(16)!==media.width||bytes.readUInt32BE(20)!==media.height)throw Error('Studio screenshot differs from its recorded image: '+file);
+  if(mediaHashes.has(sha256))throw Error('Repeated image in Roblox lessons: '+file);
+  mediaHashes.add(sha256);
 }
 outputs.set('assets/roblox-course-data.js','// Generated from roblox-course.json, roblox-media.json and previous standard text.\nexport const ROBLOX_COURSE='+JSON.stringify(roblox,null,2)+';\nexport const ROBLOX_MEDIA='+JSON.stringify(robloxMedia,null,2)+';\nexport const ROBLOX_PREVIOUS_TEXT='+JSON.stringify(previousRobloxText,null,2)+';\n');
 const visualPlans=JSON.parse(await readFile(path.join(root,'assets/web-course-visuals.json'),'utf8'));
@@ -87,7 +100,7 @@ for(const lesson of course.lessons){
   visualData[lesson.id]={...plan,...meta,poster:`assets/web-course-visuals/${lesson.id}-preview.png`,diagram:`assets/web-course-visuals/${lesson.id}-diagram.svg`,code:`assets/web-course-visuals/${lesson.id}-code.svg`};
 }
 outputs.set('assets/web-visual-data.js','// Generated from web-course-visuals.json and web-visual-manifest.json.\nexport const WEB_VISUALS='+JSON.stringify(visualData,null,2)+';\n');
-for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts','assets/web-course-visuals','assets/roblox-level1-media']){
+for(const dir of ['assets/pdf-pages','assets/pdfs','assets/vendor','assets/fonts','assets/web-course-visuals','assets/roblox-level1-media','assets/roblox-studio-media']){
   for(const name of (await readdir(path.join(root,dir))).sort()){
     if(!/\.(pdf|png|jpe?g|mp4|webp|svg|js|ttf|otf)$/.test(name))continue;
     const file=`${dir}/${name}`;versions[file]=hash(await readFile(path.join(root,file)));

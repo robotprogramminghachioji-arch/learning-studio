@@ -1,15 +1,15 @@
-import {ROBLOX_MEDIA,ROBLOX_COURSE} from './roblox-course-data.js?v=2ce03f7ced7f';
-import {robloxLesson} from './roblox-course.js?v=89db59ec53e8';
-import {assetUrl} from './asset-versions.js?v=e423564f0ba4';
+import {ROBLOX_MEDIA,ROBLOX_COURSE} from './roblox-course-data.js?v=b9519c53799c';
+import {robloxLesson} from './roblox-course.js?v=2676c2c189af';
+import {assetUrl} from './asset-versions.js?v=ec490c3eda08';
 import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const list=items=>`<ol class="roblox-instructions">${items.map(text=>`<li>${esc(text)}</li>`).join('')}</ol>`;
 function sourceLink(source){return `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.title)} ↗</a>`;}
 function mediaHtml(item,zoom,printing){
  const m=ROBLOX_MEDIA[item.id];
- const credit=`<details class="roblox-origin" ${printing?'open':''}><summary>Roblox公式の原本・出典</summary><p>${sourceLink({title:'掲載元の公式ページ',url:m.sourceUrl})} ／ ${esc(m.creator)} ／ <a href="${esc(m.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(m.license)}</a> ／ 原本・加工なし</p><p><a href="${esc(m.originalUrl)}" target="_blank" rel="noopener noreferrer">${m.kind==='video'?'動画':'画像'}の原本を開く</a> ／ <a href="${esc(m.sourceRepository+'/blob/'+m.sourceRevision+'/LICENSE')}" target="_blank" rel="noopener noreferrer">配布元のライセンス</a></p></details>`;
+ const credit=m.kind==='studio'?`<details class="roblox-origin" ${printing?'open':''}><summary>撮影情報</summary><p>学習用のデモPlace1をRoblox Studioで操作して撮影した画面です。個人の復元ファイルは使用していません。</p></details>`:`<details class="roblox-origin" ${printing?'open':''}><summary>Roblox公式の原本・出典</summary><p>${sourceLink({title:'掲載元の公式ページ',url:m.sourceUrl})} ／ ${esc(m.creator)} ／ <a href="${esc(m.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(m.license)}</a> ／ 原本・加工なし</p><p><a href="${esc(m.originalUrl)}" target="_blank" rel="noopener noreferrer">${m.kind==='video'?'動画':'画像'}の原本を開く</a> ／ <a href="${esc(m.sourceRepository+'/blob/'+m.sourceRevision+'/LICENSE')}" target="_blank" rel="noopener noreferrer">配布元のライセンス</a></p></details>`;
  const visual=m.kind==='video'?(printing?'<p>公式実演動画：原本リンクから視聴できます。</p>':`<video controls playsinline preload="metadata" aria-label="${esc(m.caption)}"><source src="${esc(assetUrl(m.file))}" type="video/mp4">${esc(m.caption)}</video>`):`<div class="roblox-image-viewport" tabindex="0" role="region" aria-label="${esc(m.caption)}（拡大時は枠内をスクロール）"><img src="${esc(assetUrl(m.file))}" alt="${esc(m.caption)}" width="${m.width}" height="${m.height}" style="width:${zoom*m.width/(m.viewWidth||m.width)}%;max-width:${m.width}px"></div>`;
- return `<figure class="roblox-media" data-media="${esc(item.id)}">${visual}${m.viewWidth&&!printing?'<p class="roblox-image-hint">操作する部分を拡大しています。枠内を横へ動かすと周りも見られます。</p>':''}<figcaption><strong>${m.kind==='video'?'動画で追う場所':'画像で見る場所'}：</strong>${esc(item.look)}</figcaption>${credit}</figure>`;
+ return `<figure class="roblox-media" data-media="${esc(item.id)}">${visual}${m.viewWidth&&!printing?'<p class="roblox-image-hint">操作する部分を拡大しています。枠内を横へ動かすと周りも見られます。</p>':''}<figcaption><strong>${m.kind==='video'?'動画で追う場所':m.kind==='studio'?'Studio実画面で見る場所':'画像で見る場所'}：</strong>${esc(item.look)}</figcaption>${credit}</figure>`;
 }
 function taskMedia(items,zoom,printing){
  const normal=items.filter(m=>!m.id.startsWith('shape-')&&!m.id.startsWith('material-'));

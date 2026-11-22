@@ -1424,7 +1424,14 @@ async function assertRobloxPage(page,lesson,n){
   assert.ok(visible.includes(task.expected)&&checks.includes(task.expected),'Outcome is taught next to its own operation');
   const actual=await page.locator(`#robloxCurrentSheet [data-task="${i+1}"] [data-media]`).evaluateAll(nodes=>nodes.map(node=>node.dataset.media));
   assert.deepEqual([...actual].sort(),task.media.map(m=>m.id).sort(),'Images belong to this operation, never an unrelated hero or glossary');
-  for(const media of task.media)assert.ok(visible.includes(media.look),'Image points out exactly what to inspect');
+  for(const media of task.media){
+   assert.ok(visible.includes(media.look),'Image points out exactly what to inspect');
+   if(media.id.startsWith('studio-')){
+    const figure=page.locator(`#robloxCurrentSheet [data-media="${media.id}"]`);
+    assert.equal(await figure.locator('figcaption strong').textContent(),'Studio実画面で見る場所：');
+    assert.equal(await figure.locator('details summary').textContent(),'撮影情報');
+   }
+  }
   if(task.code)assert.ok(visible.includes(task.code));
  }
  if(current.compare)assert.ok(body.includes(current.compare.predict)&&body.includes(current.compare.result));
@@ -1433,7 +1440,7 @@ async function assertRobloxPage(page,lesson,n){
  assert.equal(await page.locator('#webHtmlEditor').count(),0);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page-level horizontal overflow');
  const images=await page.locator('#robloxCurrentSheet img').evaluateAll(imgs=>imgs.map(i=>({complete:i.complete,w:i.naturalWidth,src:i.src})));
- assert.ok(images.every(i=>i.complete&&i.w>0&&i.src.includes('/roblox-level1-media/')));
+ assert.ok(images.every(i=>i.complete&&i.w>0&&(i.src.includes('/roblox-level1-media/')||i.src.includes('/roblox-studio-media/'))));
 }
 
 for(const mobile of [false,true])test(`Roblox eight official projects show meaningful tasks, exact image context and synchronized pages (${mobile?'mobile':'desktop'})`,async t=>{
@@ -1454,7 +1461,8 @@ for(const mobile of [false,true])test(`Roblox eight official projects show meani
   assert.equal(await page.locator('#robloxPagePrev').isDisabled(),true);
  }
  await openRobloxLesson(page,course.lessons[0]);assert.equal(await page.getByRole('link',{name:'公式：Roblox Studioの準備・インストール'}).getAttribute('href'),'https://create.roblox.com/docs/ja-jp/studio/setup');
- assert.equal(seen.size,36);assert.equal(await page.evaluate(()=>window.__firebase.writes.length),0,'Preview does not write Firestore');
+ const expectedMedia=course.lessons.flatMap(lesson=>lesson.pages.flatMap(current=>current.tasks.flatMap(task=>task.media))).length;
+ assert.equal(seen.size,expectedMedia);assert.equal(await page.evaluate(()=>window.__firebase.writes.length),0,'Preview does not write Firestore');
 });
 
 for(const mobile of [false,true])test(`Roblox revised lesson transitions, help return and submitted reflection preserve the active work (${mobile?'mobile':'desktop'})`,async t=>{

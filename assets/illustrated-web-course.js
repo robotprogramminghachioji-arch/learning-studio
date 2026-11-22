@@ -1,5 +1,5 @@
 import {WEB_VISUALS} from './web-visual-data.js?v=75b0ec66910e';
-import {assetUrl} from './asset-versions.js?v=e423564f0ba4';
+import {assetUrl} from './asset-versions.js?v=ec490c3eda08';
 import {foundationLesson} from './web-course.js?v=be177bdf308e';
 import {mountFloatingEditor} from './floating-editor.js?v=b65cb3698b73';
 import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';

@@ -1,4 +1,4 @@
-import {assetUrl} from './asset-versions.js?v=e423564f0ba4';
+import {assetUrl} from './asset-versions.js?v=ec490c3eda08';
 let ready;
 const scripts=new Map();
 function script(file){

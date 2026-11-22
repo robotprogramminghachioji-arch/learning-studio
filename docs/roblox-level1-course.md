@@ -28,7 +28,7 @@
 - 広いツールバーは原本を変更せず、ブラウザの表示枠で操作部分へ寄せて拡大します。横へ動かすと周囲も見られます。表示倍率変更時も操作箇所を初期表示します。
 - 公式画像のサンプル名と自分の作品名が異なる構造の説明では、両方の名前と対応を明記します。架空のStudio画面や生成画像は使用しません。
 
-改訂で27点の公式原本画像を追加し、再掲や用途が合わなかった10点を外しました。現在は35画像・1MP4動画（約3秒）を同梱し、第7回には公式章に掲載されたYouTube実演へのリンクも置いています。これは現在公開されている公式資料の原本で、制作環境でStudioを新規に撮影した画像ではありません。
+公式原本35画像・1MP4動画を維持し、第6回「足場02を作る」には、学習用デモPlace1を操作して撮影したRoblox Studio画面を本文中に1枚追加します。画面には足場01・02、Explorerで選択中の足場02、PropertiesのAnchoredがオンの状態が写っています。操作ごとの画像は同じ画面を再利用せず、公式画像も実画面写真も各工程に合う別の画像を使います。
 
 ## 公式出典と権利表示
 
@@ -40,7 +40,7 @@
 - [Testing modes](https://create.roblox.com/docs/studio/testing-modes)・[Place files](https://create.roblox.com/docs/projects/place-files)・[Sparkles API](https://create.roblox.com/docs/reference/engine/classes/Sparkles)
 - [公式章掲載のAssistant実演動画](https://www.youtube.com/watch?v=PqB6DC_kxHM)
 
-Roblox Corporationの公開資料を参照しています。素材ごとの原本URL・出典ページ・取得日・参照リビジョン・実寸・バイト数・SHA-256を [roblox-media.json](../assets/roblox-media.json) に記録しています。「Roblox公式の原本・出典」から作者、CC BY 4.0、原本リンクを開け、印刷時は権利表示も展開します。元の画像・映像のバイト列は変更していません。公式のリポジトリは [Roblox/creator-docs](https://github.com/Roblox/creator-docs) です。
+Roblox Corporationの公開資料を参照しています。公式素材ごとの原本URL・出典ページ・取得日・参照リビジョン・実寸・バイト数・SHA-256は [roblox-media.json](../assets/roblox-media.json) に記録しています。公式画像の「Roblox公式の原本・出典」から作者、CC BY 4.0、原本リンクを開けます。Studioで撮影した画像は [roblox-studio-media.json](../assets/roblox-studio-media.json) に出所とハッシュを記録し、ページ内の「撮影情報」でデモ画面であることを示します。公式のリポジトリは [Roblox/creator-docs](https://github.com/Roblox/creator-docs) です。
 
 [CC BY 4.0の本文](../assets/roblox-level1-media/LICENSE-CC-BY-4.0.txt) と [公式コードのMITライセンス](../assets/roblox-level1-media/LICENSE-CODE-MIT.txt) を収録しています。第7回の手動コードは公式の課題を基に、親の部品・SparkleColor・接触中の体の部品の記録を使って再現する教材用コードです。コード欄で公式APIとライセンスを参照できます。公式教材そのものの翻訳版・認定コースを名乗るものではありません。
 
@@ -58,7 +58,7 @@ Roblox Corporationの公開資料を参照しています。素材ごとの原�
 
 ブラウザではPC・スマホの全8教材×4ページ、画像の実読込・操作ごとの対応・再掲なし、ページ送り、320px・375px・横向き、拡大時の操作箇所、動画再生と退出時停止、ヘルプ往復、提出・下書き、登録公開、旧標準文の読み替えと独自編集・提出の保持を検証します。全8教材をPDFへ出力し、比較表・コード・説明・権利表示が含まれることも確認します。Firebase通信境界はテストで代替し、本番データへ書き込みません。スマホはChromiumのエミュレーションです。
 
-このLinux環境ではWindows／Mac専用のRoblox Studioを起動できないため、以下は先生のPCで授業前に確認してください。
+Windows上のRoblox Studioで個人用ファイルを使わず、学習用の別Place1を操作しました。実画面画像はこのデモで撮影したものです。授業前には、教室のStudioの版や画面配置に合わせて、以下を確認してください。
 
 1. 公式見本のEdit in Studio、Explorer／Properties、Play／Stop、PCへの保存と再読込。
 2. 自分の追加部品と、元の見本の部品を選び分けられること。ジャンプは実際のアバターで試し、幅と間隔を調整すること。
@@ -67,4 +67,4 @@ Roblox Corporationの公開資料を参照しています。素材ごとの原�
 5. Assistantの利用可否。使えない場合の手動Scriptの挿入先と、光の3状態・2周の結果。コードの全暗記は求めず、対象・条件・検証を重視すること。
 6. 完成ファイルの再読込、他の人によるプレイ、改善後の再テスト、教室でのクラウド保存と公開範囲の扱い。
 
-本文原稿は `assets/roblox-course.json`、素材台帳は `assets/roblox-media.json`、表示は `assets/roblox-reader.js` です。更新後に `npm run version:assets` と `npm test` を実行します。生成チェックは原本ハッシュ、素材の重複、画像の注目箇所、手順と標準文、授業時間、記録表の構造も確認します。生成物もコミットするため、GitHub Pagesで追加ビルドは不要です。
+本文原稿は `assets/roblox-course.json`、公式素材台帳は `assets/roblox-media.json`、Studio実画面台帳は `assets/roblox-studio-media.json`、表示は `assets/roblox-reader.js` です。更新後に `npm run version:assets` と `npm test` を実行します。生成チェックは原本・撮影画像のハッシュ、素材の重複、画像の注目箇所、手順と標準文、授業時間、記録表の構造も確認します。生成物もコミットするため、GitHub Pagesで追加ビルドは不要です。

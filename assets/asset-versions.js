@@ -142,7 +142,8 @@ const versions={
   "assets/roblox-level1-media/studio.jpg": "58a4888c1b0e",
   "assets/roblox-level1-media/test-modes.png": "65f5590da073",
   "assets/roblox-level1-media/transform-toolbar.png": "e4992d20c891",
-  "assets/roblox-level1-media/values.png": "2ce4036c0e0f"
+  "assets/roblox-level1-media/values.png": "2ce4036c0e0f",
+  "assets/roblox-studio-media/l1-06-footing02-properties.png": "4a0d5ec0ce46"
 };
 
 export function assetUrl(value){
