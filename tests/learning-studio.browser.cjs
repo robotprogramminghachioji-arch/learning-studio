@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const http=require('node:http');
 const fs=require('node:fs/promises');
 const path=require('node:path');
+const os=require('node:os');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
 let server,browser,base;
@@ -1413,10 +1414,13 @@ async function assertRobloxPage(page,lesson,n){
  await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet').getAttribute('aria-busy')==='false');
  const body=await page.locator('#robloxCurrentSheet').textContent(),checks=await page.locator('#robloxCurrentCheck').textContent();
  assert.ok(body.includes(current.reading)&&body.includes(current.record));
+ assert.equal(await page.locator('#robloxCurrentSheet .roblox-page-check li').count(),current.tasks.length,'Every page contains its own progress checklist');
+ assert.ok(body.includes('このページの学習・進捗チェック'));
  assert.equal(await page.locator('#robloxCurrentSheet .roblox-step').count(),current.tasks.length);
  for(let i=0;i<current.tasks.length;i++){
   const task=current.tasks[i],visible=await page.locator(`#robloxCurrentSheet [data-task="${i+1}"]`).textContent();
   for(const action of task.actions)assert.ok(visible.includes(action),`${lesson.id} page ${n} shows actual numbered action`);
+  assert.ok(visible.includes('クリックする場所・操作'),'Operations are explicitly paired with the click target instructions');
   assert.ok(visible.includes(task.expected)&&checks.includes(task.expected),'Outcome is taught next to its own operation');
   const actual=await page.locator(`#robloxCurrentSheet [data-task="${i+1}"] [data-media]`).evaluateAll(nodes=>nodes.map(node=>node.dataset.media));
   assert.deepEqual([...actual].sort(),task.media.map(m=>m.id).sort(),'Images belong to this operation, never an unrelated hero or glossary');
@@ -1442,7 +1446,7 @@ for(const mobile of [false,true])test(`Roblox eight official projects show meani
    await assertRobloxPage(page,lesson,n);
    const ids=await page.locator('#robloxCurrentSheet [data-media]').evaluateAll(nodes=>nodes.map(node=>node.dataset.media));
    for(const id of ids){assert.equal(seen.has(id),false,'Original is used once in the entire course: '+id);seen.add(id);}
-   await page.locator('#robloxCurrentPage').scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/roblox-v2-${lesson.id}-p${n}-${mobile?'mobile':'desktop'}.png`});
+   await page.locator('#robloxCurrentPage').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(os.tmpdir(),`roblox-v2-${lesson.id}-p${n}-${mobile?'mobile':'desktop'}.png`)});
    if(n<lesson.pages.length)await page.locator(n%2?'#robloxPageNext':'#robloxBottomNext').click();
   }
   assert.equal(await page.locator('#robloxPageNext').isDisabled(),true);
@@ -1485,7 +1489,7 @@ for(const mobile of [false,true])test(`Roblox task images and actual official vi
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const focus=await page.locator('[data-media="anchor-toolbar"] .roblox-image-viewport').evaluate(frame=>{const img=frame.querySelector('img'),r=frame.getBoundingClientRect(),i=img.getBoundingClientRect();return {target:i.left+i.width*0.70,left:r.left,right:r.right};});
   assert.ok(focus.target>=focus.left&&focus.target<=focus.right,'Highlighted Anchor button remains in the visible image region');
-  await page.screenshot({path:`/tmp/roblox-v2-controls-${mobile?'mobile':'desktop'}-${size.width}.png`});
+  await page.screenshot({path:path.join(os.tmpdir(),`roblox-v2-controls-${mobile?'mobile':'desktop'}-${size.width}.png`)});
  }
  await page.locator('#robloxPageSelect').selectOption('1');const video=page.locator('#robloxCurrentSheet video');
  await page.waitForFunction(()=>document.querySelector('#robloxCurrentSheet video').readyState>=1);
@@ -1556,7 +1560,7 @@ test('Roblox revised print includes every working task, comparison, code, origin
   }
   assert.ok(printed.includes(lesson.question));
   assert.equal(await page.locator('#robloxPrintPages details:not([open])').count(),0);
-  const pdf=await page.pdf({path:`/tmp/roblox-v2-${lesson.id}.pdf`,format:'A4',printBackground:true});assert.ok((await PDFDocument.load(pdf)).getPageCount()>=source.pages.length);
+  const pdf=await page.pdf({path:path.join(os.tmpdir(),`roblox-v2-${lesson.id}.pdf`),format:'A4',printBackground:true});assert.ok((await PDFDocument.load(pdf)).getPageCount()>=source.pages.length);
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));assert.equal(await page.locator('#robloxPrintPages').count(),0);
  }
 });
@@ -1620,13 +1624,13 @@ for(const mobile of [false,true])test(`Roblox shape gallery, record tables and c
  const course=await robloxData(),page=await openStudio(t,{role:'teacher',mobile,startAtHome:true});
  if(mobile)await page.setViewportSize({width:320,height:812});
  await openRobloxLesson(page,course.lessons[1]);assert.equal(await page.locator('#robloxCurrentSheet .roblox-gallery img').count(),5);await assertRobloxPage(page,course.lessons[1],1);
- await page.screenshot({path:`/tmp/roblox-v2-shapes-${mobile?'mobile':'desktop'}.png`});
+ await page.screenshot({path:path.join(os.tmpdir(),`roblox-v2-shapes-${mobile?'mobile':'desktop'}.png`)});
  await openRobloxLesson(page,course.lessons[6]);await page.locator('#robloxPageSelect').selectOption('3');await assertRobloxPage(page,course.lessons[6],3);
- const script=course.lessons[6].pages[2].tasks[1].code;assert.equal(await page.locator('#robloxCurrentSheet .roblox-code pre').textContent(),script);
+ const script=course.lessons[6].pages[2].tasks[1].code;assert.equal((await page.locator('#robloxCurrentSheet .roblox-code pre').textContent()).replace(/\r\n/g,'\n'),script.replace(/\r\n/g,'\n'));
  assert.ok(script.includes('SparkleColor')&&script.includes('Touched:Connect')&&script.includes('TouchEnded:Connect'));
  await page.context().grantPermissions(['clipboard-read','clipboard-write']);await page.locator('[data-roblox-copy="1"]').click();
  await page.waitForFunction(()=>document.querySelector('[data-roblox-copy="1"]').textContent.includes('コピーしました'));
- assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),script);
+ assert.equal((await page.evaluate(()=>navigator.clipboard.readText())).replace(/\r\n/g,'\n'),script.replace(/\r\n/g,'\n'));
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
- await page.locator('.roblox-code').scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/roblox-v2-script-${mobile?'mobile':'desktop'}.png`});
+ await page.locator('.roblox-code').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(os.tmpdir(),`roblox-v2-script-${mobile?'mobile':'desktop'}.png`)});
 });

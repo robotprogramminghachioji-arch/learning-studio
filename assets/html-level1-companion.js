@@ -1,13 +1,13 @@
-import {assetUrl} from './asset-versions.js?v=98dbb950db16';
-import {pageKey,requiredTask,pageRequirementsMet,learningState,unlockedThrough,pageStatus,mergeHistory} from './html-level1-progress.js?v=6870227eeca4';
-import {mountFloatingEditor} from './floating-editor.js?v=5b7434c51c8f';
-import {mountPageNavigation} from './page-navigation.js?v=067885ce2b97';
+import {assetUrl} from './asset-versions.js?v=e423564f0ba4';
+import {pageKey,requiredTask,pageRequirementsMet,learningState,unlockedThrough,pageStatus,mergeHistory} from './html-level1-progress.js?v=e51799bf4723';
+import {mountFloatingEditor} from './floating-editor.js?v=b65cb3698b73';
+import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 import {DEFAULT_WORKBOOK} from './workbook-defaults.js?v=95ab371178ef';
-import {validateWorkbook,questionKey} from './workbook-model.js?v=1fbf7052033a';
-import {mountWorkbookEditor} from './workbook-editor.js?v=cedc87c9aeef';
-import {renderDocumentPage,downloadWorkbookPdf} from './workbook-pdf.js?v=12e50497b6ea';
+import {validateWorkbook,questionKey} from './workbook-model.js?v=c60e4dd1a572';
+import {mountWorkbookEditor} from './workbook-editor.js?v=b8006faeee40';
+import {renderDocumentPage,downloadWorkbookPdf} from './workbook-pdf.js?v=ab2ab4f1ad4f';
 
 const escapeHtml = s => String(s??'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const pad = n => String(n).padStart(2,'0');

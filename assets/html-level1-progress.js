@@ -1,4 +1,4 @@
-import {questionKey} from './workbook-model.js?v=1fbf7052033a';
+import {questionKey} from './workbook-model.js?v=c60e4dd1a572';
 // Page gates are a classroom workflow; Firestore rules remain the access boundary.
 export const pageKey=n=>`p${String(n).padStart(2,'0')}`;
 export function requiredTask(task,page,index){
