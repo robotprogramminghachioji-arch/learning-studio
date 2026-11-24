@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="小学4年生から高校生を対象にしたRoblox・Luauの3年間72回カリキュラム。学習ロードマップをWebで閲覧し、印刷やPDF保存ができます。">
+  <title>Robloxで学ぶプログラミング｜3年間72回カリキュラム</title>
+  <style>
+    :root{color-scheme:light;--ink:#19324f;--muted:#52677f;--line:#d3e0eb;--blue:#1e5b91;--pale:#edf5fc;--paper:#fff;--green:#26745c}
+    *{box-sizing:border-box}
+    body{margin:0;background:#edf2f7;color:var(--ink);font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.65}
+    a{color:#125d9c;text-underline-offset:2px}
+    .topbar{max-width:1120px;margin:18px auto 0;padding:0 22px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+    .topbar a{font-weight:700}
+    .topbar button{border:0;border-radius:9px;background:#194c7a;color:#fff;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer}
+    .topbar button:hover{background:#113b62}
+    main{max-width:1120px;margin:18px auto 50px;padding:0 22px}
+    .hero{background:linear-gradient(125deg,#163f69,#24739a);border-radius:18px;padding:36px;color:white;box-shadow:0 12px 30px #19324f20}
+    .eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;opacity:.9}
+    h1{font-size:clamp(28px,4vw,42px);line-height:1.25;margin:9px 0 10px}
+    .hero p{max-width:790px;margin:8px 0;color:#f1f7fc}
+    .facts{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
+    .facts span{border:1px solid #ffffff70;border-radius:999px;padding:5px 12px;font-size:14px}
+    .intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 4px 14px #19324f0a}
+    .card h2,.card h3{margin:0 0 8px;line-height:1.35}
+    .card p{margin:6px 0;color:var(--muted)}
+    .card ul{margin:8px 0 0;padding-left:1.3em}
+    .section-title{margin:30px 0 10px;font-size:24px}
+    .section-lead{color:var(--muted);margin:0 0 16px}
+    .schedule{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;counter-reset:step}
+    .schedule div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;min-height:110px}
+    .schedule strong{display:block;color:var(--blue);margin-bottom:4px}
+    .year-section{margin-top:26px;background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 5px 18px #19324f0a}
+    .year-heading{padding:20px 24px;background:var(--pale);border-bottom:1px solid var(--line)}
+    .year-heading h2{margin:0;font-size:25px}
+    .year-heading p{margin:5px 0 0;color:var(--muted)}
+    .project{display:inline-block;margin-top:8px;padding:4px 9px;border-radius:7px;background:#fff;color:#1b5c88;font-size:13px;font-weight:700}
+    .print-year-label{display:none}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    th,td{padding:9px 11px;text-align:left;vertical-align:top;border-bottom:1px solid #e3ebf2}
+    th{background:#f8fafc;color:#334f6d;font-size:13px}
+    tr:last-child td{border-bottom:0}
+    th:first-child,td:first-child{width:54px;text-align:center;font-weight:700;color:var(--blue)}
+    th:nth-child(2),td:nth-child(2){width:29%;font-weight:700}
+    td:nth-child(3){color:#435a73}
+    .status{margin-top:22px;border-left:5px solid #3a8a6d;background:#edf7f2;padding:16px 19px;border-radius:7px}
+    .status h2{margin:0 0 6px;font-size:19px;color:#205e49}
+    .status p{margin:5px 0;color:#355b4e}
+    .status a{font-weight:700}
+    .notes{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 21px}
+    .notes h2{font-size:19px;margin:0 0 7px}
+    .notes ul{margin:7px 0;padding-left:1.3em}
+    .sources{font-size:13px;color:var(--muted)}
+    footer{max-width:1120px;margin:0 auto 28px;padding:0 22px;color:var(--muted);font-size:12px}
+    @media(max-width:760px){.topbar,main{padding-left:14px;padding-right:14px}.topbar{align-items:flex-start}.topbar button{padding:9px 12px}.hero{padding:25px 21px;border-radius:13px}.intro-grid{grid-template-columns:1fr}.schedule{grid-template-columns:repeat(2,1fr)}.year-section{overflow:visible}.year-section table{width:100%;min-width:0}.year-section thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.year-section tbody{display:grid;gap:8px;padding:10px}.year-section tbody tr{display:grid;grid-template-columns:1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}.year-section td{display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px;padding:8px 10px;text-align:left;font-size:14px}.year-section td::before{content:attr(data-label);color:var(--muted);font-weight:600;font-size:12px}.year-section td:first-child,.year-section td:nth-child(2){width:auto;text-align:left}.year-heading{padding:16px}}
+    @page{size:A4 portrait;margin:14mm 13mm 16mm}
+    @media print{
+      body{background:#fff;color:#172b40;font-size:10pt;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .topbar{display:none}main{max-width:none;margin:0;padding:0}.hero{border-radius:0;padding:18mm 15mm 12mm;box-shadow:none;min-height:74mm;break-inside:avoid}
+      h1{font-size:28pt}.hero p{font-size:11pt}.facts{gap:6px}.facts span{font-size:9pt}
+      .intro-grid{gap:7mm;margin:7mm 0}.card{padding:4mm;border-radius:2mm;box-shadow:none;break-inside:avoid}.card h2,.card h3{font-size:12pt}.card p,.card li{font-size:9pt}
+      .section-title{font-size:17pt;margin:9mm 0 2mm}.section-lead{font-size:9pt;margin-bottom:4mm}.schedule{gap:2mm}.schedule div{min-height:0;padding:3mm;font-size:8pt}.schedule strong{font-size:9pt}
+      #years{break-before:page}.year-section{margin-top:7mm;border-radius:0;overflow:visible;box-shadow:none;break-inside:auto}.year-section:not(:first-of-type){break-before:page}.year-heading{padding:5mm}.year-heading h2{display:none}.year-heading p,.project{font-size:9pt}.print-year-label{display:table-row}.print-year-label th{text-align:left;background:#edf5fc;font-size:14pt;padding:4mm}
+      thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}th,td{padding:2.1mm 2mm;font-size:8.6pt;line-height:1.32}th{font-size:8pt}th:first-child,td:first-child{width:10mm}th:nth-child(2),td:nth-child(2){width:30%}
+      .status,.notes{break-inside:avoid;box-shadow:none}.status{margin-top:7mm;padding:4mm}.notes{padding:4mm;margin-top:5mm}.status h2,.notes h2{font-size:12pt}.status p,.notes li{font-size:9pt}
+      a{color:#174f7b;text-decoration:none}.sources{font-size:8pt}footer{display:none}
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar" aria-label="ページ操作">
+    <a href="index.html">← Learning Studioへ戻る</a>
+    <button type="button" onclick="window.print()">印刷・PDF保存</button>
+  </nav>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">ROBLOX × LUAU · 3 YEAR PROGRAM</div>
+      <h1>Robloxで学ぶプログラミング</h1>
+      <p>小学4年生から高校生まで、Roblox Studioでゲームを作りながら、プログラミングの基本からオリジナル作品の設計・テストまで学ぶ3年間のカリキュラムです。</p>
+      <p>月2回、全72回を通して「作る → 動かす → 結果を確かめる → 改善する」を繰り返します。年齢や経験に応じて基本課題とチャレンジ課題を選べます。</p>
+      <div class="facts"><span>対象 小学4年生〜高校生</span><span>期間 3年間・36か月</span><span>月2回・全72回</span><span>1回 約90分</span><span>合計 約108時間</span></div>
+    </header>
+    <section class="intro-grid" aria-label="学習の全体像">
+      <article class="card"><h2>1年目｜基礎</h2><p>StudioとLuauの基本を身につけ、小さなゲームを設計して完成させます。</p><ul><li>Part・Explorer・Properties</li><li>変数・条件・ループ・関数</li><li>イベント・得点・UI・テスト</li></ul></article>
+      <article class="card"><h2>2年目｜仕組み</h2><p>複数の仕組みをつなぎ、プレイヤーが参加して遊べる中規模ゲームを作ります。</p><ul><li>テーブル・ModuleScript</li><li>Player・Tool・RemoteEvent</li><li>ラウンド・チーム・ショップ</li></ul></article>
+      <article class="card"><h2>3年目｜設計と制作</h2><p>安全性やテストを考えながら、オリジナル作品を企画・制作・発表します。</p><ul><li>サーバー・データ保存</li><li>設計・試作・改善</li><li>公開前確認・最終発表</li></ul></article>
+    </section>
+    <section aria-labelledby="flow-heading">
+      <h2 id="flow-heading" class="section-title">毎回の進め方 90分の目安</h2>
+      <p class="section-lead">時間は目安です。操作の習熟度に合わせて制作を次回へ続け、急いで終わらせるより動作確認と改善を大切にします。</p>
+      <div class="schedule"><div><strong>0〜10分｜準備</strong>前回の作品を開き、今日の完成条件を確認</div><div><strong>10〜25分｜見本</strong>操作やコードの例を一つずつ試す</div><div><strong>25〜65分｜制作</strong>基本課題に取り組み、自分の変更を加える</div><div><strong>65〜85分｜テスト</strong>Playで確かめ、問題を直して再テスト</div><div><strong>85〜90分｜記録</strong>できたことと次に試すことを書く</div></div>
+    </section>
+    <div id="years">
+      <h2 class="section-title">全72回ロードマップ</h2>
+      <p class="section-lead">各回のテーマと制作内容です。見出しを繰り返す表組みなので、印刷時も読みやすくなります。</p>
+    </div>
+    <section class="status" aria-labelledby="status-heading">
+      <h2 id="status-heading">Learning StudioのWeb教材について</h2>
+      <p>現在、Learning Studioには公式Classic Obbyを題材にしたLEVEL1の詳細教材が8回分あります。各教材は操作手順・画像・結果確認・記録を含み、教材ページ内の「教材を印刷・PDF保存」から1回ずつ印刷できます。</p>
+      <p>このページは3年間72回の全体計画です。第1〜8回はLearning Studioにある詳細教材に対応します。第9〜72回はテーマと制作内容を示すロードマップで、手順ごとの本文・画像教材はこれから制作する範囲です。<a href="index.html">Learning Studioのコース一覧へ戻る</a></p>
+    </section>
+    <section class="notes">
+      <h2>年齢と経験に合わせた取り組み方</h2>
+      <ul><li><strong>基本課題：</strong>手順を見ながら作品を動かし、何が起きたかを言葉や絵で記録します。</li><li><strong>チャレンジ課題：</strong>数値や条件を変えて比較し、理由を説明したり、別の仕組みに作り替えたりします。</li><li><strong>小学生：</strong>まず基本課題を完成します。コード入力やアカウント操作は先生・保護者と確認します。</li><li><strong>中高生・経験者：</strong>チャレンジ課題に加え、設計理由、テスト条件、他の人が使う場合の安全性も説明します。</li><li><strong>全員：</strong>作品名やコードに氏名・学校名などの個人情報を入れず、公開設定は大人と一緒に確認します。</li></ul>
+      <p class="sources">学習内容の技術確認にはRoblox Creator Hubの公式ドキュメントを使用します。Studioの画面や機能名は更新されることがあるため、授業時には公式ドキュメントも確認してください。</p>
+    </section>
+  </main>
+  <footer>Robloxで学ぶプログラミング｜3年間72回カリキュラム</footer>
+  <script id="roadmap" type="application/json">
+  [
+    {"year":1,"theme":"ゲームづくりとプログラミングの基本","goal":"Studioの操作、Part、イベント、変数、条件分岐、繰り返しを使い、小さなゲームを完成させる。","project":"成果物：遊び方を説明できる小さなオリジナルゲーム","lessons":[
+      [1,"Studioを始めて、見本で遊ぼう","Classic Obbyを開く、Explorer・Properties、Play／Stop、PC保存"],[2,"5つの形を使い、最初の足場を追加しよう","Partの5種類、部品選択、SizeのX・Y・Z"],[3,"移動・拡大・回転でジャンプコースを作ろう","Move・Scale・Rotate、スナップ、ジャンプテスト"],[4,"固定・衝突・テストモードを実験しよう","Anchored・CanCollide、Test・Test Here・Run"],[5,"色・材質・透明度で、迷わないコースを作ろう","Color・RGB・Material・Transparency"],[6,"複製・Model・検索で、周回コースを組み立てよう","Duplicate、Modelの親子、Explorer検索"],[7,"公式Assistant教材で、触れると光る足場を作ろう","Script・Touched・Assistantの変更確認・Outputで検証"],[8,"テスト・保存し、改造したゲームを発表しよう","テスト表、他者のプレイ、改善、PC保存と発表"],[9,"変数で値を覚える","local、数値・文字列・真偽値"],[10,"条件で分ける","if・elseif・else、比較"],[11,"くり返しを使う","for、while、安全な待ち時間"],[12,"関数で整理する","関数、引数、戻り値の入口"],[13,"コインを集めよう","触れた判定、消えるコイン、得点"],[14,"UIで得点を表示","ScreenGui、TextLabel、更新"],[15,"ゴールとタイマー","状態管理、制限時間、勝利条件"],[16,"障害物コースの企画と試作","遊びのルール、紙の設計図、基本ステージ"],[17,"演出を加え、テストして直す","音、色変化、Output、原因の切り分け"],[18,"発表会とふりかえり","作品紹介、次の目標"]]},
+    {"year":2,"theme":"ゲームの仕組みを組み立てる","goal":"関数やテーブル、UI、プレイヤーとのやりとりを組み合わせ、中規模ゲームの流れを設計する。","project":"成果物：ラウンドやショップなど複数の機能が連携するゲーム","lessons":[
+      [19,"前年度の復習と設計","変数・イベント・条件の復習"],[20,"テーブルで一覧を扱う","配列、インデックス、長さ"],[21,"関数を使いこなす","引数、戻り値、責務"],[22,"ModuleScript入門","コードを分けて再利用"],[23,"プレイヤーの参加・退出","Players、PlayerAdded、CharacterAdded"],[24,"キャラクターを動かす","Humanoid、速度、ジャンプ"],[25,"ツールを作る","Tool、装備、使うイベント"],[26,"ProximityPrompt","近づいて調べる・拾う"],[27,"RemoteEventの入口","クライアントとサーバーの通信"],[28,"UIから操作する","LocalScript、ボタン、入力"],[29,"ラウンド制ゲーム","待機・開始・終了の状態"],[30,"チーム分けとスポーン","Team、SpawnLocationの活用"],[31,"敵NPCの基本","経路の考え方、簡単な追跡"],[32,"ショップを作る","価格、所持コイン、購入判定"],[33,"データを守る設計","サーバーで確認する理由"],[34,"中規模ゲーム設計","機能分解、データの流れ図"],[35,"制作スプリント","試作、レビュー、修正"],[36,"中級作品発表","デモ、設計説明、ふりかえり"]]},
+    {"year":3,"theme":"設計・保存・公開とオリジナル制作","goal":"サーバーとクライアント、データ保存、テスト、安全性を考え、オリジナル作品を制作・発表する。","project":"成果物：テストと改善を経た卒業制作。公開は本人・保護者・先生が相談して判断","lessons":[
+      [37,"クライアントとサーバー","実行場所、複製、権限"],[38,"通信の設計","RemoteEvent、入力の検証"],[39,"安全なゲーム設計","型・距離・状態・回数の確認"],[40,"DataStoreの基本","保存の用途、失敗への備え"],[41,"データの読み書き","pcall、初期値、保存タイミング"],[42,"ランキングの設計","OrderedDataStoreの考え方"],[43,"ゲーム内設定を作る","設定値、Config ModuleScript"],[44,"コードを読みやすくする","命名、型注釈の入口、分割"],[45,"アニメーションと演出","Animation、Tween、フィードバック"],[46,"サウンドと雰囲気","音量、タイミング、アクセシビリティ"],[47,"マップの最適化","パーツ数、Streaming、整理"],[48,"テスト計画を作る","境界値、複数人、再現手順"],[49,"遊びやすさの評価","チュートリアル、難易度調整"],[50,"公開前の安全確認","プライバシー、権利、説明文"],[51,"作品企画書","対象プレイヤー、ループ、完成条件"],[52,"データ設計と画面設計","状態遷移、UI試作"],[53,"プロトタイプ制作1","最小限の遊びを作る"],[54,"プロトタイプ発表","試遊して改善点を集める"],[55,"本制作1：コア機能","主要な遊びを完成"],[56,"本制作2：UIと演出","見やすさと手応え"],[57,"本制作3：進行と保存","必要な進行データを実装"],[58,"本制作4：マルチプレイ","通信とサーバー検証"],[59,"本制作5：テスト","不具合修正、性能確認"],[60,"本制作6：仕上げ","チュートリアル、作品説明"],[61,"作品の品質レビュー","他者視点のチェック"],[62,"公開準備","権限、サムネイル、説明"],[63,"発表資料を作る","遊び方と工夫を伝える"],[64,"最終発表会","デモ、質問、相互評価"],[65,"作品改善ラウンド1","データを見て改善"],[66,"作品改善ラウンド2","操作・バランス調整"],[67,"コードレビュー","読みやすさ、保守性"],[68,"次の機能を設計","優先順位と見積もり"],[69,"発展テーマ選択","NPC、建築、UI、ミニゲーム"],[70,"発展制作","個人またはチーム開発"],[71,"最終デモ準備","動作確認、発表練習"],[72,"卒業制作発表","作品公開判断、学びの記録"]]}
+  ]
+  </script>
+  <script>
+    const roadmap=JSON.parse(document.getElementById('roadmap').textContent);
+    const root=document.getElementById('years');
+    for(const year of roadmap){
+      const section=document.createElement('section');section.className='year-section';
+      const heading=document.createElement('header');heading.className='year-heading';
+      const title=document.createElement('h2');title.textContent=`${year.year}年目｜${year.theme}`;heading.append(title);
+      const goal=document.createElement('p');goal.textContent=year.goal;heading.append(goal);
+      const project=document.createElement('span');project.className='project';project.textContent=year.project;heading.append(project);section.append(heading);
+      const table=document.createElement('table');table.setAttribute('aria-label',`${year.year}年目の学習内容`);
+      const thead=document.createElement('thead');const printRow=document.createElement('tr');printRow.className='print-year-label';const printLabel=document.createElement('th');printLabel.colSpan=3;printLabel.textContent=`${year.year}年目｜${year.theme}`;printRow.append(printLabel);thead.append(printRow);const headerRow=document.createElement('tr');
+      for(const label of ['回','テーマ','学ぶこと・作るもの']){const th=document.createElement('th');th.scope='col';th.textContent=label;headerRow.append(th)}thead.append(headerRow);table.append(thead);
+      const tbody=document.createElement('tbody');
+      for(const lesson of year.lessons){const row=document.createElement('tr');for(let i=0;i<lesson.length;i++){const cell=document.createElement('td');cell.dataset.label=['回','テーマ','学ぶこと・作るもの'][i];cell.textContent=lesson[i];row.append(cell)}tbody.append(row)}table.append(tbody);section.append(table);root.append(section);
+    }
+  </script>
+</body>
+</html>
+
