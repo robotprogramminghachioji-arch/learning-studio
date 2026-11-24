@@ -1,5 +1,7 @@
 # Roblox Studio LEVEL1：公式Classic Obbyを改造する
 
+3年間・全72回のロードマップは [Robloxで学ぶプログラミング](../roblox-curriculum.html) で確認できます。このWebページはスマートフォンでも閲覧でき、ブラウザの「印刷・PDF保存」から全体計画を印刷できます。全体ロードマップと、Learning Studioに登録するLEVEL1の詳細教材（全8回）は別の資料として扱います。
+
 全8教材・各75分・合計10時間の目安です。公式のBuilding curriculumの全4章（Get started／Work with parts／AI Assistant／Test and save）と、Studio・Parts・Explorer・Propertiesの公式解説を、日本語の実習へ組み直しています。画像だけを借りる構成から、公式で扱う操作と制作物を実際に試す構成へ改訂しました。
 
 ## 8回の制作と公式教材の対応
@@ -68,3 +70,4 @@ Windows上のRoblox Studioで個人用の復元ファイルを使わず、学習
 6. 完成ファイルの再読込、他の人によるプレイ、改善後の再テスト、教室でのクラウド保存と公開範囲の扱い。
 
 本文原稿は `assets/roblox-course.json`、公式素材台帳は `assets/roblox-media.json`、Studio実画面台帳は `assets/roblox-studio-media.json`、表示は `assets/roblox-reader.js` です。更新後に `npm run version:assets` と `npm test` を実行します。生成チェックは原本・撮影画像のハッシュ、素材の重複、画像の注目箇所、手順と標準文、授業時間、記録表の構造も確認します。生成物もコミットするため、GitHub Pagesで追加ビルドは不要です。
+
