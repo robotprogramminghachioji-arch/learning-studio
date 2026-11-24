@@ -1,5 +1,5 @@
 import {ROBLOX_MEDIA,ROBLOX_COURSE} from './roblox-course-data.js?v=37b0fd0dfe39';
-import {robloxLesson} from './roblox-course.js?v=ab0064519788';
+import {robloxLesson} from './roblox-course.js?v=90204a98a65f';
 import {assetUrl} from './asset-versions.js?v=fc2d4c08e156';
 import {mountPageNavigation} from './page-navigation.js?v=2e96ac5ac303';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -97,3 +97,4 @@ export function mountRobloxReader({container,lesson,uid,initialPage,scrollOnEntr
  const observer=new MutationObserver(()=>{if(!container.isConnected){stopVideos();events.abort();document.getElementById('robloxPrintPages')?.remove();observer.disconnect();}});
  observer.observe(document.getElementById('app'),{childList:true,subtree:true});
 }
+
