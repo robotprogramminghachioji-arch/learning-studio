@@ -381,6 +381,8 @@ body:has(#robloxWorkbook) #app{max-width:1480px}
  .roblox-print-question{padding:12px;border-top:1px solid #cbdbe9}.roblox-print-question>div{height:30mm;border:1px solid #cbdbe9;padding:10px;color:#5c7288}
 }
 /* Each official image now belongs to one specific working task. */
+.roblox-official-embed{margin:22px 0;padding:18px;background:#f3f7fc;border:1px solid #c6d6e7;border-radius:12px}.roblox-official-embed h3{margin-top:0!important}.roblox-official-embed-frame{display:block;width:100%;height:min(82vh,1000px);min-height:680px;border:1px solid #aabbd0;border-radius:8px;background:#fff}.roblox-official-embed>p:last-child{font-size:14px}
+
 .roblox-official{background:#eef5ff;border-left:4px solid #4e78a5;padding:14px 18px;border-radius:6px}.roblox-official h3{margin-top:0}.roblox-start{padding:12px;background:#fff6de;border-radius:8px}.roblox-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.roblox-gallery .roblox-media{margin:12px 0}.roblox-gallery .roblox-media figcaption{font-size:13px}.roblox-media figcaption strong{color:#204578}.roblox-record{padding:16px;border:1px solid #a8cdb5;border-radius:10px;background:#eff9f3;margin:20px 0}.roblox-record h3{margin-top:0}.roblox-table-wrap{overflow:auto;max-width:100%;margin:22px 0}.roblox-record-table{border-collapse:collapse;width:100%;font-size:14px;background:white}.roblox-record-table th,.roblox-record-table td{border:1px solid #c8d8e6;padding:10px;min-width:85px;vertical-align:top;overflow-wrap:anywhere}.roblox-record-table th{background:#edf4fc;color:#204578}.roblox-code{border:1px solid #bdd1e3;border-radius:10px;background:#f1f6fb;overflow:hidden;margin:20px 0}.roblox-code>div{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px}.roblox-code pre{margin:0;padding:16px;background:#142c48;color:#f4f8fc;overflow:auto;font-size:14px;line-height:1.7;tab-size:4}.roblox-code>p{padding:0 12px;font-size:13px}.roblox-official-video,.roblox-save-note{padding:14px;background:#eef4fc;border-radius:8px}.roblox-check-panel h3{font-size:16px}
 @media(max-width:600px){.roblox-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.roblox-gallery .roblox-media figcaption{font-size:12px}.roblox-official{padding:12px}.roblox-code pre{font-size:12px}.roblox-gallery .roblox-origin{font-size:11px}}
 @media print{
@@ -390,6 +392,8 @@ body:has(#robloxWorkbook) #app{max-width:1480px}
  #robloxPrintPages .roblox-gallery img{max-height:45mm}
  #robloxPrintPages .roblox-table-wrap{overflow:visible}
  #robloxPrintPages .roblox-record-table{font-size:9pt}
+ #robloxPrintPages .roblox-official-embed-frame{display:none}
+ #robloxPrintPages .roblox-official-embed{break-inside:avoid;padding:8px}
  #robloxPrintPages .roblox-record-table th,#robloxPrintPages .roblox-record-table td{min-width:0;padding:6px}
  #robloxPrintPages .roblox-code{overflow:visible}
  #robloxPrintPages .roblox-code pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow:visible;font-size:9pt}
@@ -400,3 +404,4 @@ body:has(#robloxWorkbook) #app{max-width:1480px}
 body:has(#robloxWorkbook) #robloxCurrentPage{background:none;border:0;padding:0;margin:8px 0 14px}
 .roblox-live-goal{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .roblox-image-hint{font-size:12px!important;color:#4b6682;padding:6px 0;margin:0!important}
+
