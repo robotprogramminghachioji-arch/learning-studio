@@ -1,5 +1,5 @@
 import {ROBLOX_COURSE,robloxLesson,robloxLessonData,withRobloxTemplates,refreshRobloxText,robloxLevelIntro,robloxLessonIntro} from './roblox-course.js?v=90204a98a65f';
-import {mountRobloxReader} from './roblox-reader.js?v=83e1dab9637c';
+import {mountRobloxReader} from './roblox-reader.js?v=4b62864fbf3f';
 import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=7c8095f96b97';
 import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,refreshCourseText,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=be177bdf308e';
 import {mountFinalAssessment} from './final-assessment.js?v=7a1ea26cf553';
@@ -409,4 +409,3 @@ async function manageFoundations(action,course='web'){
  }catch(err){out.innerHTML=msg(`処理を完了できませんでした：${err.message}。一部が保存されている場合があります。画面を開き直して状態を確認し、再実行してください。`,true);}
  finally{buttons.forEach(b=>b.disabled=false);}
 }
-
