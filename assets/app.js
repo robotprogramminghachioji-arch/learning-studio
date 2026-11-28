@@ -1,5 +1,5 @@
 import {ROBLOX_COURSE,robloxLesson,robloxLessonData,withRobloxTemplates,refreshRobloxText,robloxLevelIntro,robloxLessonIntro} from './roblox-course.js?v=90204a98a65f';
-import {mountRobloxReader} from './roblox-reader.js?v=da7825d185f8';
+import {mountRobloxReader} from './roblox-reader.js?v=83e1dab9637c';
 import {mountIllustratedWebCourse} from './illustrated-web-course.js?v=7c8095f96b97';
 import {WEB_COURSE,foundationLesson,courseLessonData,withCourseTemplates,refreshCourseText,roadmapHtml,levelIntro,lessonIntro} from './web-course.js?v=be177bdf308e';
 import {mountFinalAssessment} from './final-assessment.js?v=7a1ea26cf553';
